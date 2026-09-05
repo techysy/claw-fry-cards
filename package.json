@@ -1,0 +1,58 @@
+{
+  "name": "claw-fry-cards",
+  "version": "0.1.0",
+  "description": "🦞 claw-fry-cards — OpenClaw 飞书流式卡片插件（CardKit v2.0 实时工具进度 · 统一面板 · 打字机收尾）",
+  "type": "module",
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "openclaw": {
+    "extensions": [
+      "./dist/index.mjs"
+    ]
+  },
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      }
+    }
+  },
+  "files": [
+    "dist/",
+    "openclaw.plugin.json"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src tests"
+  },
+  "keywords": [
+    "openclaw",
+    "feishu",
+    "lark",
+    "cardkit",
+    "streaming-card",
+    "crayfish"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "openclaw": ">=2026.2.26"
+  },
+  "peerDependenciesMeta": {
+    "openclaw": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsdown": "^0.12.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  }
+}

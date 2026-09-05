@@ -1,0 +1,83 @@
+{
+  "id": "claw-fry-cards",
+  "activation": {
+    "onStartup": true
+  },
+  "name": "Claw Fry Cards",
+  "description": "🦞 小龙虾版飞书流式卡片 — CardKit v2.0 实时工具进度、统一面板、打字机收尾。作为官方飞书通道（@larksuite/openclaw-lark）的伴侣插件运行。",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "$defs": {
+      "secretRef": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "source": { "type": "string", "enum": ["env", "file", "exec", "store"] },
+          "provider": { "type": "string" },
+          "id": { "type": "string" }
+        },
+        "required": ["source", "provider", "id"]
+      },
+      "secretInput": {
+        "anyOf": [
+          { "type": "string", "minLength": 1 },
+          { "$ref": "#/$defs/secretRef" }
+        ]
+      }
+    },
+    "properties": {
+      "feishu": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "brand": { "type": "string", "enum": ["feishu", "lark"], "default": "feishu" },
+          "app_id": { "type": "string" },
+          "app_secret": { "anyOf": [{ "type": "string" }, { "$ref": "#/$defs/secretRef" }] }
+        }
+      },
+      "chats": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "allowlist": { "type": "array", "items": { "type": "string" } },
+          "blocklist": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "streaming": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "header_enabled": { "type": "boolean", "default": false },
+          "footer_enabled": { "type": "boolean", "default": true },
+          "footer_fields": {
+            "type": "array",
+            "items": { "type": "array", "items": { "type": "string" } }
+          },
+          "width_mode": { "type": "string", "enum": ["default", "compact", "fill"], "default": "default" },
+          "body_text_size": { "type": "string", "enum": ["normal_v2", "normal"], "default": "normal_v2" },
+          "flush_interval_ms": { "type": "number", "default": 100 },
+          "typewriter_max_ms": { "type": "number", "default": 3000 },
+          "stale_timeout_sec": { "type": "number", "default": 900 }
+        }
+      },
+      "display": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "show_tool_use": { "type": "boolean", "default": true },
+          "show_context": { "type": "boolean", "default": true },
+          "context_display_mode": {
+            "type": "string",
+            "enum": ["text", "bar", "text_bar"],
+            "default": "text_bar"
+          },
+          "truncate_model_name": { "type": "boolean", "default": true },
+          "unified_panel_min_duration": { "type": "number", "default": 5 },
+          "cancel_text_on_card": { "type": "boolean", "default": true },
+          "loading_icon_img_key": { "type": "string" }
+        }
+      }
+    }
+  }
+}
