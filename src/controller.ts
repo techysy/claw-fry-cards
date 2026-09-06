@@ -43,6 +43,8 @@ export type Logger = {
 const GRACE_MS_AFTER_AGENT_END = 5000;
 
 export class ClawCardController {
+  private static instanceSeq = 0;
+  private readonly inst: string;
   private readonly cfg: ClawConfig;
   private readonly client: FeishuClient;
   private readonly log: Logger;
@@ -52,6 +54,8 @@ export class ClawCardController {
     this.cfg = cfg;
     this.client = client;
     this.log = log;
+    this.inst = `c${++ClawCardController.instanceSeq}`;
+    log.info(`controller_init inst=${this.inst}`);
   }
 
   /** 全部活动会话（供 status 命令/测试）。 */
@@ -95,8 +99,18 @@ export class ClawCardController {
     const chatId = this.resolveChatId(event.from, ctx);
     if (!chatId || !this.chatAllowed(chatId)) return;
 
-    // 同会话上一张卡还挂着：先封为停止，避免卡片堆积
+    // 双重注册下同一事件可能投递两次：同一 messageId 且会话仍在处理 → 幂等跳过
     const existing = this.sessions.get(sessionKey);
+    if (
+      existing &&
+      existing.message_id === (event.messageId ?? "") &&
+      !isTerminal(existing.phase)
+    ) {
+      this.log.info(`message_deduplicated inst=${this.inst} session=${sessionKey} message_id=${event.messageId}`);
+      return;
+    }
+
+    // 同会话上一张卡还挂着：先封为停止，避免卡片堆积
     if (existing && !isTerminal(existing.phase)) {
       void this.seal(existing, { isAborted: true }).catch(() => undefined);
     }
@@ -114,7 +128,7 @@ export class ClawCardController {
     }
     session.phase = CARD_PHASES.streaming;
     session.flush.setCardMessageReady(true);
-    this.log.info(`session_created session=${sessionKey} card=${session.card_id?.slice(0, 12)}`);
+    this.log.info(`session_created inst=${this.inst} size=${this.sessions.size} session=${sessionKey} card=${session.card_id?.slice(0, 12)}`);
 
     const timeoutMs = this.cfg.streaming.staleTimeoutSec * 1000;
     session.stale_timer = setTimeout(() => {
@@ -212,7 +226,7 @@ export class ClawCardController {
     }
     const session = this.sessions.get(key);
     if (!session || isTerminal(session.phase)) {
-      this.log.info(`llm_output_skipped reason=no_active_session key=${key} phase=${session?.phase ?? "none"}`);
+      this.log.info(`llm_output_skipped inst=${this.inst} size=${this.sessions.size} reason=no_active_session key=${key} phase=${session?.phase ?? "none"}`);
       return;
     }
     if (event.contextTokenBudget && event.contextTokenBudget > 0) {
@@ -224,7 +238,7 @@ export class ClawCardController {
       input_tokens: event.usage?.input ?? session.footer.input_tokens ?? 0,
       output_tokens: (session.footer.output_tokens ?? 0) + (event.usage?.output ?? 0),
     };
-    this.log.info(`llm_output_recorded session=${key} model=${session.footer.model} in=${session.footer.input_tokens ?? 0}`);
+    this.log.info(`llm_output_recorded inst=${this.inst} session=${key} model=${session.footer.model} in=${session.footer.input_tokens ?? 0}`);
   }
 
   // ── message_sending / reply_payload_sending：答案打字机 + 封卡 + 接管 ──
@@ -311,7 +325,7 @@ export class ClawCardController {
       await this.removeLoadingIconSafe(session);
       return false;
     }
-    this.log.info(`card_completed session=${key} card=${session.card_id?.slice(0, 12)}`);
+    this.log.info(`card_completed inst=${this.inst} session=${key} card=${session.card_id?.slice(0, 12)}`);
     return true;
   }
 
@@ -485,7 +499,7 @@ export class ClawCardController {
       : opts.isAborted
         ? CARD_PHASES.aborted
         : CARD_PHASES.completed;
-    this.log.info(`session_disposed session=${session.sessionKey} phase=${session.phase}`);
+    this.log.info(`session_disposed inst=${this.inst} session=${session.sessionKey} phase=${session.phase}`);
   }
 
   private async removeLoadingIconSafe(session: CardSession): Promise<void> {

@@ -7,6 +7,11 @@ import { parseConfig } from "./config";
 import { FeishuClient } from "./feishu";
 import type { HookRegistrar } from "./types";
 
+// 网关会以多种 registrationMode（discovery / full 等）多次调用 register()。
+// 若每次都新建 controller，钩子事件会分散在不同实例上（会话表分裂，
+// 表现为统一面板缺模型名/上下文）——用模块级单例共享同一份会话状态。
+let sharedController: ClawCardController | null = null;
+
 export default definePluginEntry({
   id: "claw-fry-cards",
   name: "Claw Fry Cards",
@@ -27,23 +32,22 @@ export default definePluginEntry({
       );
       return;
     }
-    if (!cfg.display.cancelTextOnCard) {
-      log.info("cancel_text_on_card=false → 卡片与官方通道文本回复同时投递");
-    }
 
-    let client: FeishuClient;
-    try {
-      client = new FeishuClient({
-        appId: cfg.feishu.appId,
-        appSecret: cfg.feishu.appSecret,
-        brand: cfg.feishu.brand,
-      });
-    } catch (err) {
-      log.error(`init failed: ${String(err)}`);
-      return;
+    if (!sharedController) {
+      let client: FeishuClient;
+      try {
+        client = new FeishuClient({
+          appId: cfg.feishu.appId,
+          appSecret: cfg.feishu.appSecret,
+          brand: cfg.feishu.brand,
+        });
+      } catch (err) {
+        log.error(`init failed: ${String(err)}`);
+        return;
+      }
+      sharedController = new ClawCardController(cfg, client, log);
     }
-
-    const controller = new ClawCardController(cfg, client, log);
+    const controller = sharedController;
     const registrar: HookRegistrar = api;
 
     registrar.on("message_received", (event, ctx) => controller.onMessageReceived(event, ctx));
