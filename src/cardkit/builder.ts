@@ -1,4 +1,4 @@
-/** CardKit v2.0 卡片构建器 — 🦞 小龙虾品牌（移植自 hermes-fry-cards cardkit/builder.py）。 */
+/** CardKit v2.0 卡片构建器 — 🦞 虾条品牌（移植自 hermes-fry-cards cardkit/builder.py）。 */
 
 import { i18n, pair, t, LOCALES, type LocaleText } from "./i18n";
 import { downgradeTables, optimizeMarkdownStyle, splitLongText } from "./markdown";

@@ -1,4 +1,4 @@
-# 🦞 小龙虾卡片 (claw-fry-cards)
+# 🦞 虾条卡片 (claw-fry-cards)
 
 > 🦞 OpenClaw 飞书流式卡片插件 — fry-cards 风格的 CardKit v2.0 卡片：实时工具进度 · 统一面板 · 打字机收尾
 
@@ -6,7 +6,7 @@
 [![OpenClaw](https://img.shields.io/badge/OpenClaw-%E2%89%A52026.2.26-2463eb)](https://docs.openclaw.ai)
 [![Node](https://img.shields.io/badge/Node-%E2%89%A522-blue)](https://nodejs.org/)
 
-**claw-fry-cards** 是 [🍟 hermes-fry-cards](https://github.com/techysy/hermes-fry-cards)（薯条卡片）的小龙虾版本：同样的卡片审美（🍟→🦞），平台从 Hermes Gateway 换到 [OpenClaw](https://openclaw.ai)。
+**claw-fry-cards** 是 [🍟 hermes-fry-cards](https://github.com/techysy/hermes-fry-cards)（薯条卡片）的虾条版本：同一条零食货架上的兄弟品牌（🍟→🦞），平台从 Hermes Gateway 换到 [OpenClaw](https://openclaw.ai)。
 
 - [安装指南](INSTALL.md) · [🍟 原版薯条卡片](https://github.com/techysy/hermes-fry-cards)
 

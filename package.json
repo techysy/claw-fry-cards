@@ -38,7 +38,7 @@
     "lark",
     "cardkit",
     "streaming-card",
-    "crayfish"
+    "xiatiao"
   ],
   "license": "MIT",
   "peerDependencies": {
