@@ -129,6 +129,29 @@ openclaw gateway restart
 | `contextDisplayMode` | 📊 上下文段样式：`text`（`129.3k/1.0m (13%)`）/ `bar`（`[██▓░░░░░] 13%`）/ `text_bar`（fry 同款 `129.3k/1.0m [██▓░░░░░] 13%`） | `text_bar` |
 | `expanded` | 面板默认展开 | `false` |
 
+### 🏷️ 模型别名（含时段人设）
+
+面板里的模型名可按模型映射为友好名，并支持**按时间自动切换**（如 DeepSeek 高峰/空闲计费时段的人设）：
+
+```json
+"panel": {
+  "modelAliases": {
+    "deepseek-v4-flash": {
+      "name": "梁文谷⚡️",
+      "timeAliases": [
+        { "days": "1-5", "start": "09:00", "end": "12:00", "name": "梁文锋⚡️" },
+        { "days": "1-5", "start": "14:00", "end": "18:00", "name": "梁文锋⚡️" }
+      ]
+    }
+  }
+}
+```
+
+- `days`：生效星期（`0`=周日），支持区间与枚举（`"1-5"`、`"0,6"`、`"1-5,0"`），省略 = 每天
+- `start`/`end`：生效时段 HH:MM（北京时间 UTC+8），支持跨午夜（如 `"22:00"-"02:00"`）
+- 命中第一条规则用其 `name`；都不命中用默认 `name`；静态写法 `"模型id": "名字"` 仍兼容
+- 模型 id 写完整名（`deepseek-v4-flash`）或去掉 provider 的裸名均可
+
 > 指标来源是 agent transcript SQLite（`~/.openclaw/agents/<agent>/agent/openclaw-agent.sqlite`），模型名/token/上下文窗口由最近一轮 usage 事件解析。
 
 ---
