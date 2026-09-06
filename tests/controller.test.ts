@@ -204,10 +204,10 @@ describe("ClawCardController 生命周期", () => {
     }
   });
 
-  it("llm_output 记录模型与 token，封卡 footer 生效", async () => {
+  it("llm_output 记录模型与 token，统一面板 header 生效", async () => {
     const client = new FakeClient();
     const controller = makeController(client, {
-      streaming: { flush_interval_ms: 50, typewriter_max_ms: 50, footer_enabled: true },
+      streaming: { flush_interval_ms: 50, typewriter_max_ms: 50 },
       display: { unified_panel_min_duration: 0 },
     });
     await controller.onMessageReceived({ from: "f", content: "hi", messageId: "om_6" }, FEISHU_CTX);
@@ -225,9 +225,10 @@ describe("ClawCardController 生命周期", () => {
     );
     await controller.onMessageSending({ to: "oc_chat1", content: "答" }, FEISHU_CTX);
     const sealCard = client.calls.find((c) => c.op === "cardkitUpdate")!.args[1] as Record<string, any>;
-    const footer = sealCard.body.elements.at(-1);
-    expect(footer.content).toContain("⇲gpt-5.4");
-    expect(footer.content).toContain("55.6K/1.0M");
+    const panel = sealCard.body.elements.find((e: any) => e.tag === "collapsible_panel");
+    expect(panel).toBeTruthy();
+    expect(panel.header.title.content).toContain("⇲gpt-5.4");
+    expect(panel.header.title.content).toContain("55.6k/1.0m");
     controller.dispose();
   });
 

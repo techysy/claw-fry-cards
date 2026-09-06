@@ -129,15 +129,16 @@ export class ClawCardController {
   // ── 工具进度 ──────────────────────────────────────────────────────────
 
   onBeforeToolCall(event: BeforeToolCallEvent, ctx: HookContext): void {
-    const session = this.sessionForTool(ctx);
+    const session = this.sessionForTool(ctx, event.toolName);
     if (!session) return;
+    this.log.info(`tool_started tool=${event.toolName} card=${session.card_id?.slice(0, 12)}`);
     session.tool.recordStart(event.toolName, this.describeToolParams(event.params));
     session.tool_dirty = true;
     session.flush.scheduleUpdate(() => this.flushToolPanel(session));
   }
 
   onAfterToolCall(event: AfterToolCallEvent, ctx: HookContext): void {
-    const session = this.sessionForTool(ctx);
+    const session = this.sessionForTool(ctx, event.toolName);
     if (!session) return;
     session.tool.recordEnd(event.toolName, {
       error: event.error ?? "",
@@ -150,12 +151,23 @@ export class ClawCardController {
     session.flush.scheduleUpdate(() => this.flushToolPanel(session));
   }
 
-  private sessionForTool(ctx: HookContext): CardSession | undefined {
-    if (!this.isFeishuChannel(ctx)) return undefined;
+  /**
+   * 工具钩子定位会话。工具钩子运行在 agent 侧，ctx.channelId 可能缺失，
+   * 因此不做渠道判断——会话本身只在飞书渠道创建，查得到即是飞书会话。
+   */
+  private sessionForTool(ctx: HookContext, toolName: string): CardSession | undefined {
     const key = ctx.sessionKey;
-    if (!key) return undefined;
+    if (!key) {
+      this.log.info(`tool_skipped tool=${toolName} reason=no_session_key`);
+      return undefined;
+    }
     const session = this.sessions.get(key);
-    if (!session || isTerminal(session.phase) || !session.card_id) return undefined;
+    if (!session || isTerminal(session.phase) || !session.card_id) {
+      this.log.info(
+        `tool_skipped tool=${toolName} reason=no_active_session key=${key} phase=${session?.phase ?? "none"}`,
+      );
+      return undefined;
+    }
     return session;
   }
 
@@ -178,6 +190,9 @@ export class ClawCardController {
             },
           ],
           nextSequence(session),
+        );
+        this.log.info(
+          `tool_panel_flushed card=${session.card_id?.slice(0, 12)} steps=${steps.length}`,
         );
       } catch (err) {
         this.log.debug(`tool_panel_update_failed card=${session.card_id?.slice(0, 12)} err=${String(err)}`);

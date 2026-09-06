@@ -552,14 +552,12 @@ export function buildCompleteCard(opts: CompleteCardOptions): Card {
   }
 
   // 推理+工具合并成底部一个统一面板（在答案之后、footer 之前）
+  // 显示条件只用时间：回复耗时 ≥ unifiedPanelMinDuration 秒即展示，工具/思考存在时并入其 children
   const panelDurationMs = (() => {
     const d = footerData?.duration;
     return typeof d === "number" && d > 0 ? d * 1000 : 0;
   })();
-  const showUnifiedPanel =
-    (reasoningRounds.length > 0 || allToolSteps.length > 0) &&
-    showToolUse &&
-    (allToolSteps.length > 0 || panelDurationMs >= unifiedPanelMinDuration * 1000);
+  const showUnifiedPanel = showToolUse && panelDurationMs >= unifiedPanelMinDuration * 1000;
 
   if (showUnifiedPanel) {
     const borderColor = isError ? "red" : isAborted ? "yellow" : "green";

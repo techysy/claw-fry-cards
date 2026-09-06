@@ -89,7 +89,7 @@ OpenClaw 的飞书消息收发由官方通道插件 [`@larksuite/openclaw-lark`]
 | `display.show_context` | 统一面板显示上下文窗口 | `true` |
 | `display.context_display_mode` | `text` / `bar` / `text_bar` | `text_bar` |
 | `display.truncate_model_name` | `openai/gpt-5.4` → `⇲gpt-5.4` | `true` |
-| `display.unified_panel_min_duration` | 统一面板最小展示耗时（秒） | `5` |
+| `display.unified_panel_min_duration` | 统一面板显示的耗时门槛（秒）：回复耗时 ≥ 此值即显示统一面板（不依赖工具/思考） | `5` |
 | `display.cancel_text_on_card` | 卡片接管后取消官方文本回复 | `true` |
 
 ## 🧪 开发

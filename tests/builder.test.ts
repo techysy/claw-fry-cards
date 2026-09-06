@@ -147,7 +147,23 @@ describe("buildCompleteCard", () => {
     expect(footer.tag === "collapsible_panel" || !String(footer.content ?? "").includes("✅")).toBe(true);
   });
 
-  it("无统一面板时 footer 显示状态与耗时", () => {
+  it("耗时低于门槛时无统一面板，footer 显示状态与耗时", () => {
+    const card = buildCompleteCard({
+      ...base,
+      reasoningRounds: [],
+      allToolSteps: [],
+      toolElapsedMs: 0,
+      footerData: { duration: 3, model: "openai/gpt-5.4" },
+      unifiedPanelMinDuration: 5,
+    }) as Record<string, any>;
+    expect(card.body.elements.find((e: any) => e.tag === "collapsible_panel")).toBeUndefined();
+    const footer = card.body.elements.at(-1);
+    expect(footer.tag).toBe("markdown");
+    expect(footer.content).toContain("✅ Completed");
+    expect(footer.content).toContain("3.0s");
+  });
+
+  it("耗时达到门槛即显示统一面板（即使无工具无思考）", () => {
     const card = buildCompleteCard({
       ...base,
       reasoningRounds: [],
@@ -156,10 +172,10 @@ describe("buildCompleteCard", () => {
       footerData: { duration: 8, model: "openai/gpt-5.4" },
       unifiedPanelMinDuration: 5,
     }) as Record<string, any>;
-    const footer = card.body.elements.at(-1);
-    expect(footer.tag).toBe("markdown");
-    expect(footer.content).toContain("✅ Completed");
-    expect(footer.content).toContain("8.0s");
+    const panel = card.body.elements.find((e: any) => e.tag === "collapsible_panel");
+    expect(panel).toBeTruthy();
+    expect(panel.header.title.content).toContain("🍤 ⇲gpt-5.4");
+    expect(panel.header.title.content).toContain("⏱️ 8.0s");
   });
 });
 
