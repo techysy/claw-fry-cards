@@ -182,38 +182,20 @@ export function formatElapsed(ms: number): string {
   return seconds < 60 ? `${seconds.toFixed(1)}s` : `${Math.floor(seconds / 60)}m ${Math.round(seconds % 60)}s`;
 }
 
-/**
- * Build footer meta-info: notation-sized text with i18n support.
- * Error text is rendered in red; normal text uses default grey (notation).
- */
-function buildFooter(zhText: string, enText: string, isError?: boolean): CardElement[] {
-  const zhContent = isError ? `<font color='red'>${zhText}</font>` : zhText;
-  const enContent = isError ? `<font color='red'>${enText}</font>` : enText;
-  return [
-    {
-      tag: 'markdown',
-      content: enContent,
-      i18n_content: { zh_cn: zhContent, en_us: enContent },
-      text_size: 'notation',
-    },
-  ];
-}
-
 export function compactNumber(value: number): string {
   const abs = Math.abs(value);
   if (abs >= 1_000_000) {
     const m = value / 1_000_000;
-    return Math.abs(m) >= 100 ? `${Math.round(m)}m` : `${m.toFixed(1)}m`;
+    return m >= 100 ? `${Math.round(m)}M` : `${m.toFixed(1)}M`;
   }
   if (abs >= 1_000) {
     const k = value / 1_000;
-    return Math.abs(k) >= 100 ? `${Math.round(k)}k` : `${k.toFixed(1)}k`;
+    return k >= 100 ? `${Math.round(k)}K` : `${k.toFixed(1)}K`;
   }
-  return `${Math.round(value)}`;
+  return String(value);
 }
 
-// ── fry 风格上下文进度（渐变密度条 █▓▒░，移植自 hermes-fry-cards） ──
-
+/** fry 风格上下文进度（渐变密度条 █▓▒░，移植自 hermes-fry-cards） */
 export function contextProgressBar(used: number, total: number, width = 8): string {
   if (total <= 0) return '';
   const pct = Math.min((used / total) * 100, 100);
@@ -250,9 +232,17 @@ function contextUsedLabel(used: number, total: number): string {
   return String(used);
 }
 
+export function formatContextSegment(used: number, total: number, mode: 'text' | 'bar' | 'text_bar' = 'text_bar'): string | null {
+  if (total <= 0 || used == null) return null;
+  const pct = Math.min(100, Math.round((used / total) * 100));
+  if (mode === 'bar') return `[${contextProgressBar(used, total)}] ${pct}%`;
+  const text = `${contextUsedLabel(used, total)}/${contextTotalLabel(total)}`;
+  if (mode === 'text') return `${text} (${pct}%)`;
+  return `${text} [${contextProgressBar(used, total)}] ${pct}%`;
+}
+
 export type ContextDisplayMode = 'text' | 'bar' | 'text_bar';
 
-/** fry 风格上下文段：text → 55.6k/1.0m (5%)；bar → [██▓▒░░░░] 5%；text_bar → 55.6k/1.0m [██▓▒░░░░] 5% */
 /** 模型别名条目：静态字符串或带时间规则的对象 */
 export type ModelAliasEntry =
   | string
@@ -301,15 +291,6 @@ export function resolveModelAlias(entry: ModelAliasEntry | undefined, now = new 
     return rule.name;
   }
   return entry.name;
-}
-
-export function formatContextSegment(used: number, total: number, mode: ContextDisplayMode = 'text_bar'): string | null {
-  if (total <= 0 || used == null) return null;
-  const pct = Math.min(100, Math.round((used / total) * 100));
-  if (mode === 'bar') return `[${contextProgressBar(used, total)}] ${pct}%`;
-  const text = `${contextUsedLabel(used, total)}/${contextTotalLabel(total)}`;
-  if (mode === 'text') return `${text} (${pct}%)`;
-  return `${text} [${contextProgressBar(used, total)}] ${pct}%`;
 }
 
 export function formatFooterRuntimeSegments(params: {
@@ -590,7 +571,6 @@ function buildCompleteCard(params: {
     toolUseElapsedMs,
     showToolUse = true,
     isAborted,
-    footer,
     footerMetrics,
     panel,
   } = params;
@@ -613,18 +593,14 @@ function buildCompleteCard(params: {
 
   if (showUnifiedPanel) {
     const borderColor = isError ? 'red' : isAborted ? 'yellow' : 'green';
-    const stateEmoji = isError ? '❌' : isAborted ? '⏹️' : '';
 
     const rawModel = (footerMetrics?.model ?? '').trim();
-  // 模型显示别名：完整 id 或裸名命中均替换（如 "mimo/mimo-v2.5" → "梁文锋"）
-  const aliasTable = panel?.modelAliases ?? {};
-  const modelAlias = resolveModelAlias(aliasTable[rawModel] ?? aliasTable[rawModel.split('/').pop() ?? '']);
-  const modelShort =
-    aliasTable[rawModel]
+    // 模型显示别名：完整 id 或裸名命中均替换（如 "deepseek-v4-flash" → "梁文谷⚡️"）
+    const aliasTable = panel?.modelAliases ?? {};
+    const modelName = resolveModelAlias(aliasTable[rawModel] ?? aliasTable[rawModel.split('/').pop() ?? '']) ?? rawModel;
 
     const parts: string[] = ['🍤'];
-    if (stateEmoji) parts.push(stateEmoji);
-    if (rawModel) parts.push(rawModel);
+    if (modelName) parts.push(modelName);
     parts.push(`💭${hasReasoning ? 1 : 0}`, `🔧${toolCount}`);
 
     const inT = typeof footerMetrics?.inputTokens === 'number' ? footerMetrics.inputTokens : undefined;
@@ -632,12 +608,14 @@ function buildCompleteCard(params: {
     if (inT != null && outT != null) {
       parts.push(`🎫↑${compactNumber(inT)}↓${compactNumber(outT)}`);
     }
-    const freshTotal = footerMetrics?.totalTokensFresh === false ? undefined : footerMetrics?.totalTokens;
-    const ctxTotal = typeof freshTotal === 'number' && freshTotal > 0 ? freshTotal : undefined;
-    const ctxUsed = typeof footerMetrics?.contextTokens === 'number' ? footerMetrics.contextTokens : undefined;
-    if (ctxTotal != null && ctxUsed != null) {
-      const ctxSeg = formatContextSegment(ctxUsed, ctxTotal, ctxMode);
-      if (ctxSeg) parts.push(`📊${ctxSeg}`);
+    // 📊 上下文：used = 会话实际用量(totalTokens)，total = 模型上下文窗口(contextTokens)
+    const ctxWindow = typeof footerMetrics?.contextTokens === 'number' && footerMetrics.contextTokens > 0 ? footerMetrics.contextTokens : undefined;
+    const ctxUsed = footerMetrics?.totalTokensFresh === false
+      ? undefined
+      : typeof footerMetrics?.totalTokens === 'number' && footerMetrics.totalTokens > 0 ? footerMetrics.totalTokens : undefined;
+    if (ctxWindow != null && ctxUsed != null) {
+      const ctxSeg = formatContextSegment(ctxUsed, ctxWindow, ctxMode);
+      if (ctxSeg) parts.push(ctxSeg);
     }
     if (elapsed > 0) parts.push(`⏱️${formatElapsed(elapsed)}`);
 

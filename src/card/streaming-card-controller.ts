@@ -133,14 +133,17 @@ export class StreamingCardController {
     return Date.now() - this.dispatchStartTime;
   }
 
-  private resolvePanelConfig(): { unifiedPanelMinDurationMs?: number; contextDisplayMode?: 'text' | 'bar' | 'text_bar'; expanded?: boolean } | undefined {
-    const feishuCfg = this.deps.cfg?.channels?.feishu as { panel?: { unifiedPanelMinDuration?: number; contextDisplayMode?: 'text' | 'bar' | 'text_bar'; expanded?: boolean } } | undefined;
+  private resolvePanelConfig(): { unifiedPanelMinDurationMs?: number; contextDisplayMode?: 'text' | 'bar' | 'text_bar'; expanded?: boolean; modelAliases?: Record<string, string> } | undefined {
+    const feishuCfgAll = this.deps.cfg?.channels?.feishu as unknown;
+    log.info('probe: runtime feishu cfg', { feishuCfg: JSON.stringify(feishuCfgAll ?? null) });
+    const feishuCfg = this.deps.cfg?.channels?.feishu as { panel?: { unifiedPanelMinDuration?: number; contextDisplayMode?: 'text' | 'bar' | 'text_bar'; expanded?: boolean; modelAliases?: Record<string, string> } } | undefined;
     const p = feishuCfg?.panel;
     if (!p) return undefined;
     return {
       unifiedPanelMinDurationMs: typeof p.unifiedPanelMinDuration === 'number' ? p.unifiedPanelMinDuration * 1000 : undefined,
       contextDisplayMode: p.contextDisplayMode,
       expanded: p.expanded,
+      modelAliases: p.modelAliases,
     };
   }
 
@@ -687,6 +690,7 @@ export class StreamingCardController {
         );
         const footerMetrics = this.needsFooterMetrics() ? await this.getFooterSessionMetrics() : undefined;
 
+        log.info('finalize panel probe', { panel: JSON.stringify(this.resolvePanelConfig() ?? null) });
         const completeCard = buildCardContent('complete', {
           panel: this.resolvePanelConfig(),
           text: terminalContent.text,
