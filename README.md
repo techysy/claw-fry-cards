@@ -1,12 +1,12 @@
-# 🦞 虾条卡片 (claw-fry-cards)
+# 🍤 虾条卡片 (claw-fry-cards)
 
-> 🦞 OpenClaw 飞书流式卡片插件 — fry-cards 风格的 CardKit v2.0 卡片：实时工具进度 · 统一面板 · 打字机收尾
+> 🍤 OpenClaw 飞书流式卡片插件 — fry-cards 风格的 CardKit v2.0 卡片：实时工具进度 · 统一面板 · 打字机收尾
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![OpenClaw](https://img.shields.io/badge/OpenClaw-%E2%89%A52026.2.26-2463eb)](https://docs.openclaw.ai)
 [![Node](https://img.shields.io/badge/Node-%E2%89%A522-blue)](https://nodejs.org/)
 
-**claw-fry-cards** 是 [🍟 hermes-fry-cards](https://github.com/techysy/hermes-fry-cards)（薯条卡片）的虾条版本：同一条零食货架上的兄弟品牌（🍟→🦞），平台从 Hermes Gateway 换到 [OpenClaw](https://openclaw.ai)。
+**claw-fry-cards** 是 [🍟 hermes-fry-cards](https://github.com/techysy/hermes-fry-cards)（薯条卡片）的虾条版本：同一条零食货架上的兄弟品牌（🍟→🍤），平台从 Hermes Gateway 换到 [OpenClaw](https://openclaw.ai)。
 
 - [安装指南](INSTALL.md) · [🍟 原版薯条卡片](https://github.com/techysy/hermes-fry-cards)
 
@@ -17,7 +17,7 @@
 OpenClaw 的飞书消息收发由官方通道插件 [`@larksuite/openclaw-lark`](https://github.com/larksuite/openclaw-lark) 负责；本插件是一个**伴侣插件**，通过 OpenClaw 公开钩子观测同一轮对话，用自建 CardKit v2.0 卡片接管回复展示：
 
 ```
-用户消息 ──▶ message_received ──▶ 创建流式占位卡（🦞 处理中 + 工具面板 + loading）
+用户消息 ──▶ message_received ──▶ 创建流式占位卡（🍤 处理中 + 工具面板 + loading）
    │
    ├─ before/after_tool_call ──▶ 工具面板实时刷新（图标 / 状态 / 耗时 / 结果预览）
    ├─ llm_output ──────────────▶ 记录模型名、token 用量、上下文窗口
@@ -36,7 +36,7 @@ OpenClaw 的飞书消息收发由官方通道插件 [`@larksuite/openclaw-lark`]
 |------|------|
 | 🎴 **流式卡片** | CardKit v2.0 `streaming_mode` 打字机效果，完成后关流式 |
 | 🔧 **工具调用面板** | `before/after_tool_call` 驱动，实时显示图标、状态（Running/Succeeded/Failed）、耗时、结果预览；工具名→图标映射与 fry-cards 同源 |
-| 🎯 **统一面板** | 完成态底部折叠面板：`🦞 模型 · 💭n · 🔧n · 上下文 · ⏱️ 耗时`，边框颜色随状态（绿=完成 黄=停止 红=错误） |
+| 🎯 **统一面板** | 完成态底部折叠面板：`🍤 模型 · 💭n · 🔧n · 上下文 · ⏱️ 耗时`，边框颜色随状态（绿=完成 黄=停止 红=错误） |
 | 📊 **上下文显示** | `55.6k/1.0m [███▓▒░░░] 6%` 渐变进度条（text / bar / text_bar 三种模式） |
 | 🧠 **推理展示** | `<thinking>` / `<antthinking>` / `Reasoning:` 标签自动剥离进统一面板，不混入答案 |
 | 🌐 **中英双语** | 卡片文本根据飞书客户端语言自动切换 |

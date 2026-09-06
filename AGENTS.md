@@ -2,7 +2,7 @@
 
 ## Project
 
-OpenClaw companion plugin that renders **fry-cards style** Feishu/Lark CardKit v2.0 streaming cards for OpenClaw agent runs. Message transport stays with the official `@larksuite/openclaw-lark` channel plugin; this plugin observes OpenClaw's public plugin hooks and takes over the reply presentation with a streaming card (🦞 brand, ported from hermes-fry-cards).
+OpenClaw companion plugin that renders **fry-cards style** Feishu/Lark CardKit v2.0 streaming cards for OpenClaw agent runs. Message transport stays with the official `@larksuite/openclaw-lark` channel plugin; this plugin observes OpenClaw's public plugin hooks and takes over the reply presentation with a streaming card (🍤 brand, ported from hermes-fry-cards).
 
 - TypeScript, ESM, Node >= 22, built with tsdown, tested with vitest.
 - Plugin identity: `openclaw.plugin.json` (`id: "claw-fry-cards"`), entry `src/index.ts` via `definePluginEntry` (dynamically imported so the pure modules never hard-depend on `openclaw`).
@@ -31,7 +31,7 @@ src/cardkit/            移植自 hermes-fry-cards cardkit/
   markdown.ts             标题降级/表格降级/图片key剥离/长文本分块(2400)
   text.ts                 <thinking>/<antthinking>/Reasoning: 标签解析
   builder.ts              buildStreamingCardV2（占位卡）/ buildCompleteCard（完成卡，
-                          统一面板 header: 🦞 model · 💭n · 🔧n · ctx · ⏱️）/ 工具面板
+                          统一面板 header: 🍤 model · 💭n · 🔧n · ctx · ⏱️）/ 工具面板
 src/streaming/          移植自 hermes-fry-cards streaming/
   session.ts              CardSession 状态机 idle→creating→streaming→completed/aborted/failed
                           + serialized()（per-card 互斥，保证 sequence 单调）

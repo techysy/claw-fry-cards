@@ -1,4 +1,4 @@
-/** CardKit v2.0 卡片构建器 — 🦞 虾条品牌（移植自 hermes-fry-cards cardkit/builder.py）。 */
+/** CardKit v2.0 卡片构建器 — 🍤 虾条品牌（移植自 hermes-fry-cards cardkit/builder.py）。 */
 
 import { i18n, pair, t, LOCALES, type LocaleText } from "./i18n";
 import { downgradeTables, optimizeMarkdownStyle, splitLongText } from "./markdown";
@@ -420,9 +420,9 @@ export function buildFooterElements(
   }
   if (!enLines.length) return [];
 
-  // 🦞 品牌前缀：短回复无统一面板时，footer 是卡片唯一的品牌标识
-  let enContent = `🦞 ${enLines.join("\n")}`;
-  let zhContent = `🦞 ${zhLines.join("\n")}`;
+  // 🍤 品牌前缀：短回复无统一面板时，footer 是卡片唯一的品牌标识
+  let enContent = `🍤 ${enLines.join("\n")}`;
+  let zhContent = `🍤 ${zhLines.join("\n")}`;
   if (isError) {
     enContent = `<font color='red'>${enContent}</font>`;
     zhContent = `<font color='red'>${zhContent}</font>`;
@@ -512,7 +512,7 @@ export type CompleteCardOptions = {
   truncateModel?: boolean;
 };
 
-/** 完成态卡片 — 推理+工具合并成底部统一面板（🦞 header），答案在上面。 */
+/** 完成态卡片 — 推理+工具合并成底部统一面板（🍤 header），答案在上面。 */
 export function buildCompleteCard(opts: CompleteCardOptions): Card {
   const {
     answerText,
@@ -578,7 +578,7 @@ export function buildCompleteCard(opts: CompleteCardOptions): Card {
       const toolPanel = buildToolPanel(allToolSteps, toolElapsedMs, { expanded: panelExpanded, elementId: null });
       if (Array.isArray(toolPanel["elements"])) unifiedChildren.push(...(toolPanel["elements"] as unknown[]));
     }
-    // header: 🦞 model · 💭n · 🔧n · context · ⏱️ elapsed
+    // header: 🍤 model · 💭n · 🔧n · context · ⏱️ elapsed
     let modelName = effectiveFooter?.model ?? "";
     if (modelName && truncateModel && modelName.includes("/")) modelName = truncateModelName(modelName);
     const elapsedMs = toolElapsedMs || panelDurationMs;
@@ -596,7 +596,7 @@ export function buildCompleteCard(opts: CompleteCardOptions): Card {
         contextPart = ` · ${contextProgressWithText(ctxUsed, ctxMax)}`;
       }
     }
-    const headerText = `🦞 ${modelName} · 💭${reasoningRounds.length} · 🔧${allToolSteps.length}${contextPart}${elapsedPart}`;
+    const headerText = `🍤 ${modelName} · 💭${reasoningRounds.length} · 🔧${allToolSteps.length}${contextPart}${elapsedPart}`;
     elements.push({
       tag: "collapsible_panel",
       expanded: panelExpanded,

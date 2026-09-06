@@ -4,7 +4,7 @@
     "onStartup": true
   },
   "name": "Claw Fry Cards",
-  "description": "🦞 虾条卡片 — OpenClaw 飞书流式卡片（CardKit v2.0 实时工具进度、统一面板、打字机收尾）。作为官方飞书通道的伴侣插件运行。",
+  "description": "🍤 虾条卡片 — OpenClaw 飞书流式卡片（CardKit v2.0 实时工具进度、统一面板、打字机收尾）。作为官方飞书通道的伴侣插件运行。",
   "configSchema": {
     "type": "object",
     "additionalProperties": false,

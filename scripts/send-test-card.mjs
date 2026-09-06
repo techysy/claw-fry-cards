@@ -1,4 +1,4 @@
-// 🦞 claw-fry-cards 端到端卡片验证 — 用真实飞书 API 发一张流式测试卡
+// 🍤 claw-fry-cards 端到端卡片验证 — 用真实飞书 API 发一张流式测试卡
 // 用法（在能访问 open.feishu.cn 的环境里）:
 //   FEISHU_APP_ID=cli_xxx FEISHU_APP_SECRET=xxx FEISHU_CHAT_ID=oc_xxx node send-test-card.mjs
 const BASE = process.env.FEISHU_BASE_URL || "https://open.feishu.cn";
@@ -83,11 +83,11 @@ function completeCard() {
     config: { width_mode: "default", wide_screen_mode: true, update_multi: true, locales: ["zh_cn", "en_us"] },
     body: {
       elements: [
-        { tag: "markdown", content: "这是 **claw-fry-cards** 的端到端测试卡 🦞\n\n- 卡片 schema 修复验证通过\n- 统一面板标题带 `tag: plain_text`\n- 上下文 `55.6k/1.0m [█░░░░░░░] 6%`", text_size: "normal_v2" },
+        { tag: "markdown", content: "这是 **claw-fry-cards** 的端到端测试卡 🍤\n\n- 卡片 schema 修复验证通过\n- 统一面板标题带 `tag: plain_text`\n- 上下文 `55.6k/1.0m [█░░░░░░░] 6%`", text_size: "normal_v2" },
         {
           tag: "collapsible_panel",
           expanded: false,
-          header: { title: { tag: "plain_text", content: "🦞 ⇲glm-5.3-flash · 💭0 · 🔧1 · 55.6k/1.0m [█░░░░░░░] 6% · ⏱️ 2.1s" }, text_color: "grey", text_size: "notation" },
+          header: { title: { tag: "plain_text", content: "🍤 ⇲glm-5.3-flash · 💭0 · 🔧1 · 55.6k/1.0m [█░░░░░░░] 6% · ⏱️ 2.1s" }, text_color: "grey", text_size: "notation" },
           border: { color: "green", corner_radius: "5px" },
           elements: [
             { tag: "div", icon: { tag: "standard_icon", token: "setting_outlined", color: "grey" }, text: { tag: "lark_md", content: "**Run command** · <font color='green'>Succeeded</font>", text_size: "notation" } },
@@ -113,7 +113,7 @@ await api(tk, `/open-apis/im/v1/messages?receive_id_type=chat_id`, {
 });
 console.log("sent to chat");
 
-const text = "🦞 这条消息由 claw-fry-cards 测试脚本发送，验证流式卡片链路。";
+const text = "🍤 这条消息由 claw-fry-cards 测试脚本发送，验证流式卡片链路。";
 for (let i = 4; i <= text.length; i += 6) {
   await api(tk, `/open-apis/cardkit/v1/cards/${cardId}/elements/streaming_content/content`, { content: text.slice(0, i), sequence: ++seq }, "PUT");
   await sleep(120);

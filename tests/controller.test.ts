@@ -104,10 +104,10 @@ describe("ClawCardController 生命周期", () => {
     const lastStream = [...client.calls].reverse().find((c) => c.op === "cardkitStreamElement")!;
     expect(lastStream.args[2]).toBe("这是答案");
 
-    // 完成卡为全量替换：统一面板 header 带 🦞
+    // 完成卡为全量替换：统一面板 header 带 🍤
     const sealCard = client.calls.find((c) => c.op === "cardkitUpdate")!.args[1] as Record<string, any>;
     const panel = sealCard.body.elements.find((e: any) => e.tag === "collapsible_panel");
-    expect(panel.header.title.content).toContain("🦞");
+    expect(panel.header.title.content).toContain("🍤");
     expect(panel.border.color).toBe("green");
     // reasoning 内容并入统一面板
     expect(JSON.stringify(panel.elements)).toContain("想");

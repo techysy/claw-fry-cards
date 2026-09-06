@@ -1,4 +1,4 @@
-# 🦞 claw-fry-cards 安装指南
+# 🍤 claw-fry-cards 安装指南
 
 ## 前置要求
 
@@ -86,9 +86,9 @@ openclaw plugins info claw-fry-cards
 
 在飞书里给机器人发一条消息：
 
-1. 立刻出现一张 **🦞 处理中** 蓝色流式卡片（工具面板 + loading 转圈）
+1. 立刻出现一张 **🍤 处理中** 蓝色流式卡片（工具面板 + loading 转圈）
 2. 机器人调用工具时，工具面板实时滚动（图标/状态/耗时）
-3. 回答生成完，卡片收尾为绿色 **✅ Completed** 卡，底部统一面板显示 `🦞 模型 · 💭 · 🔧 · 上下文 · ⏱️ 耗时`
+3. 回答生成完，卡片收尾为绿色 **✅ Completed** 卡，底部统一面板显示 `🍤 模型 · 💭 · 🔧 · 上下文 · ⏱️ 耗时`
 
 ## 卸载
 
@@ -112,4 +112,4 @@ openclaw gateway restart
 | 卡片永远转圈 | 网关进程在封卡前被杀 | 等待 `stale_timeout_sec` 自动封卡；重启后重新发消息即可 |
 | 群里不生效 | allowlist 限制 | 检查 `chats.allowlist` / `blocklist` |
 
-日志统一带 🦞 前缀：`openclaw gateway logs` 或 `~/.openclaw/logs/`。
+日志统一带 🍤 前缀：`openclaw gateway logs` 或 `~/.openclaw/logs/`。

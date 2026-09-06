@@ -80,14 +80,14 @@ describe("buildCompleteCard", () => {
     },
   };
 
-  it("统一面板 header 含 🦞 模型 · 💭 · 🔧 · 上下文 · 耗时", () => {
+  it("统一面板 header 含 🍤 模型 · 💭 · 🔧 · 上下文 · 耗时", () => {
     const card = buildCompleteCard(base) as Record<string, any>;
     const panel = card.body.elements.find(
       (e: any) => e.tag === "collapsible_panel",
     );
     expect(panel).toBeTruthy();
     const title: string = panel.header.title.content;
-    expect(title).toContain("🦞 ⇲gpt-5.4");
+    expect(title).toContain("🍤 ⇲gpt-5.4");
     expect(title).toContain("💭1");
     expect(title).toContain("🔧1");
     expect(title).toContain("55.6k/1.0m");

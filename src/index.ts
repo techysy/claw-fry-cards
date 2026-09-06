@@ -1,4 +1,4 @@
-/** 🦞 claw-fry-cards — OpenClaw 插件入口。 */
+/** 🍤 claw-fry-cards — OpenClaw 插件入口。 */
 
 import { definePluginEntry } from "openclaw/plugin-sdk/plugin-entry";
 import type { OpenClawPluginApi } from "openclaw/plugin-sdk/plugin-entry";
@@ -10,14 +10,14 @@ import type { HookRegistrar } from "./types";
 export default definePluginEntry({
   id: "claw-fry-cards",
   name: "Claw Fry Cards",
-  description: "🦞 OpenClaw 飞书流式卡片（fry-cards 风格：实时工具进度 · 统一面板 · 打字机收尾）",
+  description: "🍤 OpenClaw 飞书流式卡片（fry-cards 风格：实时工具进度 · 统一面板 · 打字机收尾）",
   register(api: OpenClawPluginApi) {
     const cfg = parseConfig(api.pluginConfig);
     const log: Logger = {
-      debug: (msg, ...args) => api.logger.debug?.(`🦞 ${msg}`, ...args),
-      info: (msg, ...args) => api.logger.info?.(`🦞 ${msg}`, ...args),
-      warn: (msg, ...args) => api.logger.warn?.(`🦞 ${msg}`, ...args),
-      error: (msg, ...args) => api.logger.error?.(`🦞 ${msg}`, ...args),
+      debug: (msg, ...args) => api.logger.debug?.(`🍤 ${msg}`, ...args),
+      info: (msg, ...args) => api.logger.info?.(`🍤 ${msg}`, ...args),
+      warn: (msg, ...args) => api.logger.warn?.(`🍤 ${msg}`, ...args),
+      error: (msg, ...args) => api.logger.error?.(`🍤 ${msg}`, ...args),
     };
 
     if (!cfg.feishu.appId || !cfg.feishu.appSecret) {
@@ -55,6 +55,6 @@ export default definePluginEntry({
     registrar.on("agent_end", (event, ctx) => controller.onAgentEnd(event, ctx));
     registrar.on("gateway_stop", () => controller.dispose());
 
-    log.info("claw-fry-cards registered — 等待飞书消息 🦞");
+    log.info("claw-fry-cards registered — 等待飞书消息 🍤");
   },
 });
