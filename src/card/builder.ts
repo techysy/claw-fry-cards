@@ -253,6 +253,56 @@ function contextUsedLabel(used: number, total: number): string {
 export type ContextDisplayMode = 'text' | 'bar' | 'text_bar';
 
 /** fry 风格上下文段：text → 55.6k/1.0m (5%)；bar → [██▓▒░░░░] 5%；text_bar → 55.6k/1.0m [██▓▒░░░░] 5% */
+/** 模型别名条目：静态字符串或带时间规则的对象 */
+export type ModelAliasEntry =
+  | string
+  | {
+      name?: string;
+      timeAliases?: Array<{ days?: string; start?: string; end?: string; name: string }>;
+    };
+
+const CN_TZ_OFFSET_MS = 8 * 60 * 60 * 1000;
+
+/** HH:MM 是否在 [start,end) 内（支持跨午夜） */
+function inTimeRange(hhmm: string, start: string, end: string): boolean {
+  if (!start || !end) return true;
+  if (start === end) return true;
+  if (start < end) return hhmm >= start && hhmm < end;
+  return hhmm >= start || hhmm < end;
+}
+
+/** 星期是否命中规格："1-5"、"0,6"、"1-5,0"（0=周日）；省略 = 每天 */
+function dayMatches(day: number, spec: string | undefined): boolean {
+  if (!spec) return true;
+  for (const part of spec.split(',')) {
+    const range = part.match(/^(d+)-(d+)$/);
+    if (range) {
+      const a = Number(range[1]);
+      const z = Number(range[2]);
+      if (day >= Math.min(a, z) && day <= Math.max(a, z)) return true;
+    } else if (Number(part) === day) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/** 按当前时间（UTC+8）解析模型显示别名 */
+export function resolveModelAlias(entry: ModelAliasEntry | undefined, now = new Date()): string | undefined {
+  if (entry == null) return undefined;
+  if (typeof entry === 'string') return entry;
+  if (typeof entry !== 'object') return undefined;
+  const shifted = new Date(now.getTime() + CN_TZ_OFFSET_MS);
+  const hhmm = `${String(shifted.getUTCHours()).padStart(2, '0')}:${String(shifted.getUTCMinutes()).padStart(2, '0')}`;
+  for (const rule of entry.timeAliases ?? []) {
+    if (!rule?.name) continue;
+    if (!dayMatches(shifted.getUTCDay(), rule.days)) continue;
+    if (!inTimeRange(hhmm, rule.start ?? '00:00', rule.end ?? '23:59')) continue;
+    return rule.name;
+  }
+  return entry.name;
+}
+
 export function formatContextSegment(used: number, total: number, mode: ContextDisplayMode = 'text_bar'): string | null {
   if (total <= 0 || used == null) return null;
   const pct = Math.min(100, Math.round((used / total) * 100));
@@ -568,8 +618,9 @@ function buildCompleteCard(params: {
     const rawModel = (footerMetrics?.model ?? '').trim();
   // 模型显示别名：完整 id 或裸名命中均替换（如 "mimo/mimo-v2.5" → "梁文锋"）
   const aliasTable = panel?.modelAliases ?? {};
+  const modelAlias = resolveModelAlias(aliasTable[rawModel] ?? aliasTable[rawModel.split('/').pop() ?? '']);
   const modelShort =
-    aliasTable[rawModel] ?? aliasTable[rawModel.split('/').pop() ?? ''] ?? rawModel;
+    aliasTable[rawModel]
 
     const parts: string[] = ['🍤'];
     if (stateEmoji) parts.push(stateEmoji);

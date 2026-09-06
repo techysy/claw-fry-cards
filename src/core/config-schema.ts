@@ -73,7 +73,31 @@ const FeishuFooterSchema = z
 export const PanelConfigSchema = z
   .object({
     /** 模型显示别名：model id（或去掉 provider 的裸名）→ 卡片上显示的名字。如 { "mimo/mimo-v2.5": "梁文锋" } */
-    modelAliases: z.record(z.string(), z.string()).optional(),    /** 统一面板显示的耗时门槛（秒）；回复耗时 ≥ 此值或存在思考/工具时显示。0 = 每条都显示。 */
+    modelAliases: z
+      .record(
+        z.string(),
+        z.union([
+          z.string(),
+          z.object({
+            /** 默认显示名（不在任何时间规则内时使用） */
+            name: z.string().optional(),
+            /** 时间规则：命中第一条即用其 name；都未命中用默认名 */
+            timeAliases: z
+              .array(
+                z.object({
+                  /** 生效星期：如 "1-5"（周一至五）、"0,6"（周末），省略 = 每天（0=周日） */
+                  days: z.string().optional(),
+                  /** 生效时段 HH:MM-HH:MM（本地 UTC+8），支持跨午夜 */
+                  start: z.string().optional(),
+                  end: z.string().optional(),
+                  name: z.string(),
+                }),
+              )
+              .optional(),
+          }),
+        ]),
+      )
+      .optional(),    /** 统一面板显示的耗时门槛（秒）；回复耗时 ≥ 此值或存在思考/工具时显示。0 = 每条都显示。 */
     unifiedPanelMinDuration: z.number().optional(),
     /** 面板标题中上下文段的样式：text（纯文本）/ bar（渐变条）/ text_bar（文本+渐变条，fry 默认） */
     contextDisplayMode: z.enum(['text', 'bar', 'text_bar']).optional(),
