@@ -177,7 +177,8 @@ export async function getAppInfo(sdk: Lark.Client, appId: string): Promise<AppIn
 
   // 提取 owner 信息
   const owner = rawApp?.owner as
-    { owner_id?: string; owner_type?: number; type?: number; owner_id_type?: string } | undefined;
+    | { owner_id?: string; owner_type?: number; type?: number; owner_id_type?: string }
+    | undefined;
   const creatorId = rawApp?.creator_id as string | undefined;
 
   // 统一 owner 定义：type=2（企业内成员）用 owner_id，否则回退 creator_id
