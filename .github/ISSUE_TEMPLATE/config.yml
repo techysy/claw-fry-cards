@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Ideas / 想法
+    url: https://github.com/larksuite/openclaw-lark/discussions/categories/ideas
+    about: Have a new idea? Share it in Discussions / 有新想法？请到 Discussions 中分享
+  - name: Question / 提问
+    url: https://github.com/larksuite/openclaw-lark/discussions/categories/q-a
+    about: Have a question? Ask in the Q&A section of Discussions / 有疑问？请到 Discussions 的 Q&A 板块提问

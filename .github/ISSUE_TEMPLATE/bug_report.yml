@@ -1,0 +1,74 @@
+name: Bug Report / Bug 报告
+description: Report a bug / 报告一个 Bug
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for submitting a bug report! Please fill in the following information as completely as possible.
+        感谢你提交 Bug 报告！请尽量完整填写以下信息，以便我们快速定位和修复问题。
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description / 问题描述
+      description: Please describe the issue in detail, screenshots are welcome / 请详细描述你遇到的问题，可以附带截图
+    validations:
+      required: true
+
+  - type: textarea
+    id: error-message
+    attributes:
+      label: Error Message / 错误信息
+      description: Please paste the relevant error logs or messages / 请粘贴相关的错误日志或报错信息
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected Behavior / 期望行为
+      description: What did you expect to happen? / 你期望的正确行为是什么？
+    validations:
+      required: true
+
+  - type: input
+    id: openclaw-version
+    attributes:
+      label: openclaw Version / openclaw 版本
+    validations:
+      required: true
+
+  - type: input
+    id: openclaw-lark-version
+    attributes:
+      label: openclaw-lark (this plugin) Version / openclaw-lark（本插件）版本
+    validations:
+      required: true
+
+  - type: input
+    id: onboard-version
+    attributes:
+      label: onboard Version / onboard 版本
+    validations:
+      required: false
+
+  - type: input
+    id: os-version
+    attributes:
+      label: OS Version / 操作系统版本
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce-steps
+    attributes:
+      label: Steps to Reproduce / 复现步骤
+      description: Please provide detailed steps to reproduce the issue / 请提供详细的复现步骤
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
