@@ -113,6 +113,22 @@ openclaw gateway restart
 | 边框颜色 | 绿 = 完成 · 红 = 出错 · 黄 = 停止 |
 | 展开状态 | 默认折叠，点击展开 |
 
+**面板设置**（`channels.feishu.panel`，全部可选）：
+
+```json
+"panel": {
+  "unifiedPanelMinDuration": 5,
+  "contextDisplayMode": "text_bar",
+  "expanded": false
+}
+```
+
+| 配置项 | 说明 | 默认 |
+|--------|------|------|
+| `unifiedPanelMinDuration` | 面板显示的耗时门槛（秒）；回复 ≥ 此值或有思考/工具时显示，`0` = 每条必出 | `5` |
+| `contextDisplayMode` | 📊 上下文段样式：`text`（`129.3k/1.0m (13%)`）/ `bar`（`[██▓░░░░░] 13%`）/ `text_bar`（fry 同款 `129.3k/1.0m [██▓░░░░░] 13%`） | `text_bar` |
+| `expanded` | 面板默认展开 | `false` |
+
 > 指标来源是 agent transcript SQLite（`~/.openclaw/agents/<agent>/agent/openclaw-agent.sqlite`），模型名/token/上下文窗口由最近一轮 usage 事件解析。
 
 ---

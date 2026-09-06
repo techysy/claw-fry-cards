@@ -133,6 +133,17 @@ export class StreamingCardController {
     return Date.now() - this.dispatchStartTime;
   }
 
+  private resolvePanelConfig(): { unifiedPanelMinDurationMs?: number; contextDisplayMode?: 'text' | 'bar' | 'text_bar'; expanded?: boolean } | undefined {
+    const feishuCfg = this.deps.cfg?.channels?.feishu as { panel?: { unifiedPanelMinDuration?: number; contextDisplayMode?: 'text' | 'bar' | 'text_bar'; expanded?: boolean } } | undefined;
+    const p = feishuCfg?.panel;
+    if (!p) return undefined;
+    return {
+      unifiedPanelMinDurationMs: typeof p.unifiedPanelMinDuration === 'number' ? p.unifiedPanelMinDuration * 1000 : undefined,
+      contextDisplayMode: p.contextDisplayMode,
+      expanded: p.expanded,
+    };
+  }
+
   private needsFooterMetrics(): boolean {
     // 🍤 统一面板 header 恒需指标（模型/token/上下文），不再依赖旧 footer 配置开关
     return true;
@@ -677,6 +688,7 @@ export class StreamingCardController {
         const footerMetrics = this.needsFooterMetrics() ? await this.getFooterSessionMetrics() : undefined;
 
         const completeCard = buildCardContent('complete', {
+          panel: this.resolvePanelConfig(),
           text: terminalContent.text,
           reasoningText: terminalContent.reasoningText,
           reasoningElapsedMs: this.reasoning.reasoningElapsedMs || undefined,

@@ -212,6 +212,56 @@ export function compactNumber(value: number): string {
   return `${Math.round(value)}`;
 }
 
+// ── fry 风格上下文进度（渐变密度条 █▓▒░，移植自 hermes-fry-cards） ──
+
+export function contextProgressBar(used: number, total: number, width = 8): string {
+  if (total <= 0) return '';
+  const pct = Math.min((used / total) * 100, 100);
+  const n = (pct / 100) * width;
+  const cells: string[] = [];
+  for (let i = 0; i < width; i++) {
+    const pos = i + 0.5;
+    if (pos <= n) {
+      if (n - pos >= 0.5) cells.push('█');
+      else if (n - pos >= 0.25) cells.push('▓');
+      else cells.push('▒');
+    } else if (pos - 1 <= n) {
+      const frac = n - (pos - 1);
+      if (frac > 0.66) cells.push('▓');
+      else if (frac > 0.33) cells.push('▒');
+      else cells.push('░');
+    } else {
+      cells.push('░');
+    }
+  }
+  return cells.join('');
+}
+
+function contextTotalLabel(total: number): string {
+  if (total >= 1_000_000) return `${(total / 1_000_000).toFixed(1)}m`;
+  if (total >= 1_000) return `${(total / 1000).toFixed(1)}k`;
+  return String(total);
+}
+
+function contextUsedLabel(used: number, total: number): string {
+  if (total >= 1_000_000 && used < 1_000_000) return `${(used / 1000).toFixed(1)}k`;
+  if (total >= 1_000_000) return `${(used / 1_000_000).toFixed(1)}m`;
+  if (total >= 1_000) return `${(used / 1000).toFixed(1)}k`;
+  return String(used);
+}
+
+export type ContextDisplayMode = 'text' | 'bar' | 'text_bar';
+
+/** fry 风格上下文段：text → 55.6k/1.0m (5%)；bar → [██▓▒░░░░] 5%；text_bar → 55.6k/1.0m [██▓▒░░░░] 5% */
+export function formatContextSegment(used: number, total: number, mode: ContextDisplayMode = 'text_bar'): string | null {
+  if (total <= 0 || used == null) return null;
+  const pct = Math.min(100, Math.round((used / total) * 100));
+  if (mode === 'bar') return `[${contextProgressBar(used, total)}] ${pct}%`;
+  const text = `${contextUsedLabel(used, total)}/${contextTotalLabel(total)}`;
+  if (mode === 'text') return `${text} (${pct}%)`;
+  return `${text} [${contextProgressBar(used, total)}] ${pct}%`;
+}
+
 export function formatFooterRuntimeSegments(params: {
   footer?: {
     status?: boolean;
@@ -324,6 +374,11 @@ export function formatFooterRuntimeSegments(params: {
 export function buildCardContent(
   state: CardState,
   data: {
+    panel?: {
+      unifiedPanelMinDurationMs?: number;
+      contextDisplayMode?: ContextDisplayMode;
+      expanded?: boolean;
+    };
     text?: string;
     reasoningText?: string;
     reasoningElapsedMs?: number;
@@ -370,6 +425,7 @@ export function buildCardContent(
         isAborted: data.isAborted,
         footer: data.footer,
         footerMetrics: data.footerMetrics,
+    panel: data.panel,
       });
     case 'confirm':
       return buildConfirmCard(data.confirmData!);
@@ -446,6 +502,11 @@ function buildStreamingCard(
 
 function buildCompleteCard(params: {
   text: string;
+  panel?: {
+    unifiedPanelMinDurationMs?: number;
+    contextDisplayMode?: ContextDisplayMode;
+    expanded?: boolean;
+  };
   elapsedMs?: number;
   isError?: boolean;
   reasoningText?: string;
@@ -479,6 +540,7 @@ function buildCompleteCard(params: {
     isAborted,
     footer,
     footerMetrics,
+    panel,
   } = params;
   const elements: CardElement[] = [];
 
@@ -491,8 +553,11 @@ function buildCompleteCard(params: {
   const toolCount = toolUseSteps?.length ?? 0;
   const hasReasoning = !!reasoningText?.trim();
   const elapsed = elapsedMs ?? 0;
+  const panelMinMs = panel?.unifiedPanelMinDurationMs ?? 5000;
+  const panelExpanded = panel?.expanded ?? false;
+  const ctxMode: ContextDisplayMode = panel?.contextDisplayMode ?? 'text_bar';
   const showUnifiedPanel =
-    showToolUse && (elapsed >= 5000 || hasReasoning || toolCount > 0);
+    showToolUse && (elapsed >= panelMinMs || hasReasoning || toolCount > 0);
 
   if (showUnifiedPanel) {
     const borderColor = isError ? 'red' : isAborted ? 'yellow' : 'green';
@@ -517,8 +582,8 @@ function buildCompleteCard(params: {
     const ctxTotal = typeof freshTotal === 'number' && freshTotal > 0 ? freshTotal : undefined;
     const ctxUsed = typeof footerMetrics?.contextTokens === 'number' ? footerMetrics.contextTokens : undefined;
     if (ctxTotal != null && ctxUsed != null) {
-      const pct = Math.min(100, Math.round((ctxUsed / ctxTotal) * 100));
-      parts.push(`📊${compactNumber(ctxUsed)}/${compactNumber(ctxTotal)} ${pct}%`);
+      const ctxSeg = formatContextSegment(ctxUsed, ctxTotal, ctxMode);
+      if (ctxSeg) parts.push(`📊${ctxSeg}`);
     }
     if (elapsed > 0) parts.push(`⏱️${formatElapsed(elapsed)}`);
 
@@ -545,7 +610,7 @@ function buildCompleteCard(params: {
 
     elements.push({
       tag: 'collapsible_panel',
-      expanded: false,
+      expanded: panelExpanded,
       header: {
         title: {
           tag: 'plain_text',
