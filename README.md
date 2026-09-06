@@ -113,11 +113,9 @@ npm test            # vitest
 
 构建产物分 chunk（`index.mjs` + `monitor-<hash>.mjs`），部署时需全部拷贝到扩展目录并删除旧 hash 残留文件。
 
-## 🙏 归属与致谢
+## 🙏 归属
 
-- **[larksuite/openclaw-lark](https://github.com/larksuite/openclaw-lark)**（MIT，© Lark/飞书开放平台团队）— 本项目的基座，通道能力全部承自官方代码
-- **[@Mirr0ch1](https://github.com/Mirr0ch1)** — OpenClaw 2.0 SDK 适配（原工作见 [Mirr0ch1/openclaw-lark-2](https://github.com/Mirr0ch1/openclaw-lark-2)），本项目的适配提交移植自其成果
-- **[@techysy](https://github.com/techysy) [hermes-fry-cards](https://github.com/techysy/hermes-fry-cards)** — 虾条/薯条流式卡片的样式与交互设计源头
+基于 [larksuite/openclaw-lark](https://github.com/larksuite/openclaw-lark)（MIT）· 2.0 适配：[@Mirr0ch1](https://github.com/Mirr0ch1) · 卡片样式：[hermes-fry-cards](https://github.com/techysy/hermes-fry-cards)
 
 ## 🔒 安全提示
 
