@@ -165,7 +165,7 @@ describe('buildCardContent – tool-use step rendering', () => {
 
   function toolUseElements(card: ReturnType<typeof buildCardContent>) {
     // 虾条布局：工具行在统一面板（collapsible_panel）的 children 里
-    const panel = (card.elements ?? []).find((el) => (el as Record<string, unknown>).tag === 'collapsible_panel') ?? {};
+    const panel = ((card.elements ?? []).find((el) => (el as Record<string, unknown>).tag === 'collapsible_panel') ?? {}) as Record<string, unknown>;
     return (panel.elements ?? []) as Array<Record<string, unknown>>;
   }
 
@@ -188,7 +188,7 @@ describe('buildCardContent – tool-use step rendering', () => {
       toolUseSteps,
     });
 
-    const panel = (card.elements ?? []).find((el) => (el as Record<string, unknown>).tag === 'collapsible_panel') ?? {};
+    const panel = ((card.elements ?? []).find((el) => (el as Record<string, unknown>).tag === 'collapsible_panel') ?? {}) as Record<string, unknown>;
     const [titleRow, detailRow, outputRow] = toolUseElements(card);
     expect(panel.vertical_spacing).toBe('4px');
     expect(((titleRow?.icon ?? {}) as Record<string, unknown>).color).toBe('grey');
