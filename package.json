@@ -1,6 +1,6 @@
 {
   "name": "claw-fry-cards",
-  "version": "0.1.0",
+  "version": "2026.9.1",
   "description": "🍤 claw-fry-cards — OpenClaw 飞书流式卡片插件（CardKit v2.0 实时工具进度 · 统一面板 · 打字机收尾）",
   "type": "module",
   "main": "./dist/index.mjs",

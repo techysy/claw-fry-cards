@@ -1,8 +1,8 @@
 # Changelog
 
-## 0.1.0 (2026-09-06)
+## 2026.9.1 (2026-09-06)
 
-首个版本 — fry-cards 卡片样式的 OpenClaw 移植版。
+首个版本 — fry-cards 卡片样式的 OpenClaw 移植版（版本号对齐 OpenClaw 日期式风格，适配 OpenClaw 2026.9.1）。
 
 - 🍤 OpenClaw 伴侣插件：官方飞书通道（`@larksuite/openclaw-lark`）继续负责消息收发，本插件通过公开钩子接管回复展示
 - 🎴 CardKit v2.0 流式占位卡（`streaming_mode` + loading 图标 + 工具面板），`message_received` 触发创建
