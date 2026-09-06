@@ -6,6 +6,8 @@
 [![OpenClaw](https://img.shields.io/badge/OpenClaw-%E2%89%A52026.2.26-2463eb)](https://docs.openclaw.ai)
 [![Node](https://img.shields.io/badge/Node-%E2%89%A522-blue)](https://nodejs.org/)
 
+> 📌 **相关项目**：[🍤 openclaw-lark-cards](https://github.com/techysy/openclaw-lark-cards) — 官方飞书通道的 2.0 适配 fork（原生流式 + 虾条面板）。本插件（伴侣插件）与它**二选一**：要轻量挂靠官方通道用 claw-fry-cards，要完整通道级卡片体验用 openclaw-lark-cards。
+
 **claw-fry-cards** 是 [🍟 hermes-fry-cards](https://github.com/techysy/hermes-fry-cards)（薯条卡片）的虾条版本：同一条零食货架上的兄弟品牌（🍟→🍤），平台从 Hermes Gateway 换到 [OpenClaw](https://openclaw.ai)。
 
 - [安装指南](INSTALL.md) · [🍟 原版薯条卡片](https://github.com/techysy/hermes-fry-cards)
