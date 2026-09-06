@@ -567,8 +567,6 @@ function buildCompleteCard(params: {
     reasoningText,
     reasoningElapsedMs,
     toolUseSteps,
-    toolUseTitleSuffix,
-    toolUseElapsedMs,
     showToolUse = true,
     isAborted,
     footerMetrics,
