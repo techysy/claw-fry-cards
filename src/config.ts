@@ -81,7 +81,7 @@ export function parseConfig(raw: unknown): ClawConfig {
     },
     streaming: {
       headerEnabled: bool(streaming.header_enabled, false),
-      footerEnabled: bool(streaming.footer_enabled, true),
+      footerEnabled: bool(streaming.footer_enabled, false),
       footerFields: fieldMatrix(streaming.footer_fields),
       widthMode: str(streaming.width_mode, "default"),
       bodyTextSize: str(streaming.body_text_size, "normal_v2"),

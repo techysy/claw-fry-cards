@@ -207,7 +207,7 @@ describe("ClawCardController 生命周期", () => {
   it("llm_output 记录模型与 token，封卡 footer 生效", async () => {
     const client = new FakeClient();
     const controller = makeController(client, {
-      streaming: { flush_interval_ms: 50, typewriter_max_ms: 50 },
+      streaming: { flush_interval_ms: 50, typewriter_max_ms: 50, footer_enabled: true },
       display: { unified_panel_min_duration: 0 },
     });
     await controller.onMessageReceived({ from: "f", content: "hi", messageId: "om_6" }, FEISHU_CTX);

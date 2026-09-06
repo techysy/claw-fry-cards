@@ -53,7 +53,7 @@ OpenClaw 的飞书消息收发由官方通道插件 [`@larksuite/openclaw-lark`]
   "chats":   { "allowlist": ["oc_xxx"], "blocklist": [] },
   "streaming": {
     "header_enabled": false,
-    "footer_enabled": true,
+    "footer_enabled": false,
     "footer_fields": [["status", "elapsed", "context", "model"]],
     "flush_interval_ms": 100,
     "typewriter_max_ms": 3000,
@@ -79,7 +79,7 @@ OpenClaw 的飞书消息收发由官方通道插件 [`@larksuite/openclaw-lark`]
 | `feishu.brand` | `feishu` / `lark` | `feishu` |
 | `chats.allowlist` / `blocklist` | 会话白/黑名单（chat_id） | 空=全部启用 |
 | `streaming.header_enabled` | 卡片顶部状态栏 | `false` |
-| `streaming.footer_enabled` | 底部元数据栏 | `true` |
+| `streaming.footer_enabled` | 底部元数据栏（有统一面板时自动隐藏） | `false` |
 | `streaming.footer_fields` | footer 字段布局 | `[[status, elapsed, context, model]]` |
 | `streaming.width_mode` | 卡片宽度 (`default` / `compact` / `fill`) | `default` |
 | `streaming.flush_interval_ms` | 打字机分片间隔 | `100` |
