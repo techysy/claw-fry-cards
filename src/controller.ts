@@ -201,13 +201,20 @@ export class ClawCardController {
   }
 
   // ── llm_output：记录模型与用量 ────────────────────────────────────────
+  // llm_output 运行在 agent 侧，ctx.channelId 可能缺失，不做渠道判断——
+  // 会话只在飞书渠道创建，查得到即是飞书会话。
 
   onLlmOutput(event: LlmOutputEvent, ctx: HookContext): void {
-    if (!this.isFeishuChannel(ctx)) return;
     const key = ctx.sessionKey;
-    if (!key) return;
+    if (!key) {
+      this.log.info("llm_output_skipped reason=no_session_key");
+      return;
+    }
     const session = this.sessions.get(key);
-    if (!session || isTerminal(session.phase)) return;
+    if (!session || isTerminal(session.phase)) {
+      this.log.info(`llm_output_skipped reason=no_active_session key=${key} phase=${session?.phase ?? "none"}`);
+      return;
+    }
     if (event.contextTokenBudget && event.contextTokenBudget > 0) {
       session.context_token_budget = event.contextTokenBudget;
     }
@@ -217,6 +224,7 @@ export class ClawCardController {
       input_tokens: event.usage?.input ?? session.footer.input_tokens ?? 0,
       output_tokens: (session.footer.output_tokens ?? 0) + (event.usage?.output ?? 0),
     };
+    this.log.info(`llm_output_recorded session=${key} model=${session.footer.model} in=${session.footer.input_tokens ?? 0}`);
   }
 
   // ── message_sending / reply_payload_sending：答案打字机 + 封卡 + 接管 ──
@@ -310,7 +318,7 @@ export class ClawCardController {
   // ── agent_end：兜底收尾 ───────────────────────────────────────────────
 
   onAgentEnd(event: AgentEndEvent, ctx: HookContext): void {
-    if (!this.isFeishuChannel(ctx)) return;
+    // agent 侧钩子不做渠道判断（channelId 可能缺失），会话存在即飞书会话
     const key = ctx.sessionKey;
     if (!key) return;
     const session = this.sessions.get(key);
