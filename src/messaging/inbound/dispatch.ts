@@ -19,7 +19,7 @@ import type { RuntimeEnv } from 'openclaw/plugin-sdk/runtime-env';
 import type { HistoryEntry } from 'openclaw/plugin-sdk/reply-history';
 import { clearHistoryEntriesIfEnabled } from 'openclaw/plugin-sdk/reply-history';
 import type { MessageContext } from '../types';
-import type { FeishuGroupConfig, LarkAccount  } from '../../core/types';
+import type { FeishuGroupConfig, LarkAccount } from '../../core/types';
 import { larkLogger } from '../../core/lark-logger';
 import { ticketElapsed } from '../../core/lark-ticket';
 import { createFeishuReplyDispatcher } from '../../card/reply-dispatcher';
@@ -189,9 +189,7 @@ async function dispatchSyntheticMessage(
         }
 
         if (info.kind === 'final') {
-          dc.log(
-            `feishu[${dc.account.accountId}]: synthetic final payload dropped (target=${dc.ctx.chatId})`,
-          );
+          dc.log(`feishu[${dc.account.accountId}]: synthetic final payload dropped (target=${dc.ctx.chatId})`);
         }
       },
       onSkip: (_payload, info) => {
@@ -382,9 +380,7 @@ export async function dispatchToAgent(params: {
   //     and bot-peer suppression for bot→bot group scenarios (#32980).
   //     See src/messaging/inbound/bot-content.ts for the full rationale.
   const replyInThreadConfig =
-    params.groupConfig?.replyInThread ??
-    params.defaultGroupConfig?.replyInThread ??
-    dc.account.config?.replyInThread;
+    params.groupConfig?.replyInThread ?? params.defaultGroupConfig?.replyInThread ?? dc.account.config?.replyInThread;
   const routing = await resolveFeishuReplyRouting(dc, { replyInThreadConfig });
 
   // 1b. Resolve thread session isolation (async: may query group info API)
@@ -558,8 +554,8 @@ export async function dispatchToAgent(params: {
   // 8. Dispatch: system command vs. normal message
   //    Comment targets always go to normal dispatch — system command
   //    delivery uses sendMessageFeishu which can't reach comment threads.
-  const isCommand = !isCommentFlow &&
-    dc.core.channel.commands.isControlCommandMessage(params.ctx.content, params.accountScopedCfg);
+  const isCommand =
+    !isCommentFlow && dc.core.channel.commands.isControlCommandMessage(params.ctx.content, params.accountScopedCfg);
 
   // Resolve per-group skill filter (per-group > default "*")
   const skillFilter = dc.isGroup ? (params.groupConfig?.skills ?? params.defaultGroupConfig?.skills) : undefined;

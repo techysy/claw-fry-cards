@@ -28,7 +28,7 @@ import type { LarkAccount } from '../../core/types';
 import { getMessageFeishu } from '../outbound/fetch';
 import type { PermissionError } from './permission';
 import { PERMISSION_ERROR_COOLDOWN_MS, permissionErrorNotifiedAt } from './permission';
-import { batchResolveUserNames, getUserNameCache, resolveBotName, resolveUserName  } from './user-name-cache';
+import { batchResolveUserNames, getUserNameCache, resolveBotName, resolveUserName } from './user-name-cache';
 import { buildFeishuMediaPayload, downloadResources } from './media-resolver';
 
 // ---------------------------------------------------------------------------

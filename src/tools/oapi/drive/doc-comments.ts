@@ -41,12 +41,9 @@ const DocCommentsSchema = Type.Object({
   file_token: Type.String({
     description: '云文档token或wiki节点token(可从文档URL获取)。如果是wiki token，会自动转换为实际文档的obj_token',
   }),
-  file_type: StringEnum(
-    ['doc', 'docx', 'sheet', 'file', 'slides', 'wiki'],
-    {
-      description: '文档类型。wiki类型会自动解析为实际文档类型(docx/sheet/bitable等)',
-    },
-  ),
+  file_type: StringEnum(['doc', 'docx', 'sheet', 'file', 'slides', 'wiki'], {
+    description: '文档类型。wiki类型会自动解析为实际文档类型(docx/sheet/bitable等)',
+  }),
   // list action参数
   is_whole: Type.Optional(
     Type.Boolean({
@@ -268,9 +265,7 @@ export function registerDocCommentsTool(api: OpenClawPluginApi): boolean {
               actualFileToken = node.obj_token;
               actualFileType = node.obj_type;
 
-              log.info(
-                `doc_comments: wiki token converted, obj_type="${actualFileType}"`,
-              );
+              log.info(`doc_comments: wiki token converted, obj_type="${actualFileType}"`);
             } catch (err) {
               log.error(`doc_comments: failed to convert wiki token: ${err}`);
               return json({
@@ -330,9 +325,7 @@ export function registerDocCommentsTool(api: OpenClawPluginApi): boolean {
               return json({ error: 'comment_id 参数必填' });
             }
 
-            log.info(
-              `doc_comments.list_replies: comment_id="${p.comment_id}"`,
-            );
+            log.info(`doc_comments.list_replies: comment_id="${p.comment_id}"`);
 
             // Single-page fetch — return items + pagination metadata,
             // consistent with the list action's API semantics.
@@ -424,9 +417,7 @@ export function registerDocCommentsTool(api: OpenClawPluginApi): boolean {
               return json({ error: 'elements 参数必填且不能为空' });
             }
 
-            log.info(
-              `doc_comments.reply: comment_id="${p.comment_id}", elements=${p.elements.length}`,
-            );
+            log.info(`doc_comments.reply: comment_id="${p.comment_id}", elements=${p.elements.length}`);
 
             const sdkElements = convertElementsToSDKFormat(p.elements);
 
@@ -439,12 +430,13 @@ export function registerDocCommentsTool(api: OpenClawPluginApi): boolean {
             try {
               res = await client.invoke(
                 'feishu_doc_comments.reply',
-                (sdk) => (sdk as any).request({
-                  method: 'POST',
-                  url: replyUrl,
-                  params: replyParams,
-                  data: { content: { elements: sdkElements } },
-                }),
+                (sdk) =>
+                  (sdk as any).request({
+                    method: 'POST',
+                    url: replyUrl,
+                    params: replyParams,
+                    data: { content: { elements: sdkElements } },
+                  }),
                 { as: 'tenant' },
               );
             } catch (_firstErr) {
@@ -452,12 +444,13 @@ export function registerDocCommentsTool(api: OpenClawPluginApi): boolean {
               log.info(`doc_comments.reply: first attempt failed, trying reply_elements format`);
               res = await client.invoke(
                 'feishu_doc_comments.reply',
-                (sdk) => (sdk as any).request({
-                  method: 'POST',
-                  url: replyUrl,
-                  params: replyParams,
-                  data: { reply_elements: sdkElements },
-                }),
+                (sdk) =>
+                  (sdk as any).request({
+                    method: 'POST',
+                    url: replyUrl,
+                    params: replyParams,
+                    data: { reply_elements: sdkElements },
+                  }),
                 { as: 'tenant' },
               );
             }

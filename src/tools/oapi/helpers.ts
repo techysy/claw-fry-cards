@@ -91,7 +91,6 @@ export function createFeishuClientFromConfig(config: OpenClawConfig): LarkClient
 // OAPI 专用：返回值格式化（简化版）
 // ---------------------------------------------------------------------------
 
-
 /**
  * 格式化返回值为 JSON（OAPI 工具常用简化接口）
  *
@@ -439,7 +438,6 @@ export { handleInvokeErrorWithAutoAuth } from '../auto-auth';
 // ---------------------------------------------------------------------------
 // Schema 辅助：LLM 友好的字符串枚举
 // ---------------------------------------------------------------------------
-
 
 /**
  * 创建 LLM 友好的字符串枚举 schema。

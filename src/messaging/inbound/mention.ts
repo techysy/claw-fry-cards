@@ -105,4 +105,3 @@ export function buildMentionedCardContent(targets: MentionInfo[], message: strin
   const mentionTags = targets.map(formatMentionForCard).join(' ');
   return `${mentionTags}\n${message}`;
 }
-

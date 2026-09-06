@@ -19,7 +19,7 @@ import type { OpenClawConfig } from 'openclaw/plugin-sdk/core';
 import type { RuntimeEnv } from 'openclaw/plugin-sdk/runtime-env';
 import type { HistoryEntry } from 'openclaw/plugin-sdk/reply-history';
 import { DEFAULT_GROUP_HISTORY_LIMIT } from 'openclaw/plugin-sdk/reply-history';
-import type { FeishuReactionCreatedEvent, MessageContext  } from '../types';
+import type { FeishuReactionCreatedEvent, MessageContext } from '../types';
 import { getLarkAccount } from '../../core/accounts';
 import { type FeishuMessageInfo, getMessageFeishu } from '../shared/message-lookup';
 import { getChatTypeFeishu, isThreadCapableGroup } from '../../core/chat-info-cache';
@@ -121,7 +121,9 @@ export async function resolveReactionContext(params: {
 
   // 'own': only react to this bot's messages; 'all': also skip other bots' messages.
   if ((reactionMode === 'own' && !isBotMessage) || (reactionMode === 'all' && isOtherBotMessage)) {
-    log(`feishu[${accountId}]: reaction on ${isOtherBotMessage ? 'other bot' : 'non-bot'} message ${messageId}, skipping`);
+    log(
+      `feishu[${accountId}]: reaction on ${isOtherBotMessage ? 'other bot' : 'non-bot'} message ${messageId}, skipping`,
+    );
     return null;
   }
 

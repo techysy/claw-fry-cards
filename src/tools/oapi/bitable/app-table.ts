@@ -17,7 +17,7 @@
 import type { OpenClawPluginApi } from 'openclaw/plugin-sdk/core';
 import { Type } from '@sinclair/typebox';
 
-import { assertLarkOk, createToolContext, handleInvokeErrorWithAutoAuth, json , registerTool } from '../helpers';
+import { assertLarkOk, createToolContext, handleInvokeErrorWithAutoAuth, json, registerTool } from '../helpers';
 import type { PaginatedData } from '../sdk-types';
 
 // ---------------------------------------------------------------------------
@@ -75,7 +75,6 @@ const FeishuBitableAppTableSchema = Type.Union([
       { description: '要批量创建的数据表列表' },
     ),
   }),
-
 ]);
 
 // ---------------------------------------------------------------------------
@@ -301,7 +300,6 @@ export function registerFeishuBitableAppTableTool(api: OpenClawPluginApi): void 
                 table_ids: res.data?.table_ids,
               });
             }
-
           }
         } catch (err) {
           return await handleInvokeErrorWithAutoAuth(err, cfg);
@@ -310,5 +308,4 @@ export function registerFeishuBitableAppTableTool(api: OpenClawPluginApi): void 
     },
     { name: 'feishu_bitable_app_table' },
   );
-
 }

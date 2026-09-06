@@ -86,10 +86,7 @@ function extractReplyText(reply: any): string {
  * Note that this inference is about the root thread, so it must behave the
  * same for both root-comment events and reply events.
  */
-export function inferIsWholeComment(params: {
-  explicitIsWhole?: boolean;
-  quotedText?: string;
-}): boolean {
+export function inferIsWholeComment(params: { explicitIsWhole?: boolean; quotedText?: string }): boolean {
   if (typeof params.explicitIsWhole === 'boolean') {
     return params.explicitIsWhole;
   }
@@ -263,7 +260,7 @@ function buildDriveCommentSurfacePrompt(params: {
     'When document edits are involved, first use feishu_doc.read or feishu_doc.list_blocks to confirm the context, then use feishu_doc writing or updating capabilities to complete the change. After the edit succeeds, notify the user through feishu_drive.reply_comment.',
     'If the document edit fails or you cannot locate the anchor, do not pretend it succeeded. Reply clearly in the comment thread with the reason for failure or the missing information.',
     'If this is a reading-comprehension task, such as summarization, explanation, or extraction, you may directly output the final answer text after confirming the context. The system will automatically reply with that answer in the current comment thread.',
-    'When you produce a user-visible reply, keep it in the same language as the user\'s original comment or reply unless they explicitly ask for another language.',
+    "When you produce a user-visible reply, keep it in the same language as the user's original comment or reply unless they explicitly ask for another language.",
     'If you have already completed the user-visible action through feishu_drive.reply_comment or feishu_drive.add_comment, output NO_REPLY at the end to avoid duplicate sending.',
     'If the user directly asks a question in the comment and a plain text answer is sufficient, output the answer text directly. The system will automatically reply with your final answer in the current comment thread.',
     'If you determine that the current comment does not require any user-visible action, output NO_REPLY at the end.',
@@ -325,9 +322,7 @@ export async function resolveDriveCommentEventTurn(params: {
       commentText = targetReply ? extractReplyText(targetReply) : undefined;
 
       // Build reply chain context (all replies before the target)
-      const chainReplies = commentData.replies.filter(
-        (r: any) => r.reply_id !== event.reply_id,
-      );
+      const chainReplies = commentData.replies.filter((r: any) => r.reply_id !== event.reply_id);
       if (chainReplies.length > 0) {
         replyChainContext = chainReplies
           .map((r: any) => {
@@ -418,14 +413,10 @@ export function parseFeishuDriveCommentNoticeEventPayload(data: unknown): Feishu
   const noticeMeta = (event.notice_meta ?? raw.notice_meta) as Record<string, unknown> | undefined;
 
   // file_token: notice_meta > top-level event > top-level raw
-  const fileToken = (
-    noticeMeta?.file_token ?? event.file_token ?? raw.file_token
-  ) as string | undefined;
+  const fileToken = (noticeMeta?.file_token ?? event.file_token ?? raw.file_token) as string | undefined;
 
   // file_type: notice_meta > top-level
-  const fileType = (
-    noticeMeta?.file_type ?? event.file_type ?? raw.file_type
-  ) as string | undefined;
+  const fileType = (noticeMeta?.file_type ?? event.file_type ?? raw.file_type) as string | undefined;
 
   // comment_id / reply_id are typically at event top-level
   const commentId = (event.comment_id ?? raw.comment_id) as string | undefined;
@@ -439,14 +430,10 @@ export function parseFeishuDriveCommentNoticeEventPayload(data: unknown): Feishu
   const userId = metaUserId ?? fallbackUserId;
 
   // Timestamp: notice_meta.timestamp > top-level action_time
-  const timestamp = (
-    noticeMeta?.timestamp ?? event.action_time ?? raw.action_time
-  ) as string | undefined;
+  const timestamp = (noticeMeta?.timestamp ?? event.action_time ?? raw.action_time) as string | undefined;
 
   // Mention flag: notice_meta.is_mentioned > top-level is_mention
-  const isMentioned = (
-    noticeMeta?.is_mentioned ?? event.is_mention ?? raw.is_mention
-  ) as boolean | undefined;
+  const isMentioned = (noticeMeta?.is_mentioned ?? event.is_mention ?? raw.is_mention) as boolean | undefined;
 
   // Build the canonical, normalized event
   return {

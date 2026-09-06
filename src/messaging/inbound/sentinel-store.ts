@@ -86,11 +86,7 @@ export class SentinelStore {
 
 const registry = new Map<string, SentinelStore>();
 
-export function getSentinelStore(
-  accountId: string,
-  maxThreads?: number,
-  ttlMs?: number,
-): SentinelStore {
+export function getSentinelStore(accountId: string, maxThreads?: number, ttlMs?: number): SentinelStore {
   let store = registry.get(accountId);
   if (!store) {
     store = new SentinelStore(maxThreads, ttlMs);

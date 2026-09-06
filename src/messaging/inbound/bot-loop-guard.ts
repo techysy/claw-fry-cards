@@ -70,11 +70,7 @@ export interface BotTurnVerdict {
  * conversation has been idle past the decay window), then returns
  * `allowed: false` once the count exceeds {@link MAX_CONSECUTIVE_BOT_TURNS}.
  */
-export function noteBotTurnAndCheck(
-  chatId: string,
-  threadId?: string,
-  now: number = Date.now(),
-): BotTurnVerdict {
+export function noteBotTurnAndCheck(chatId: string, threadId?: string, now: number = Date.now()): BotTurnVerdict {
   sweepStale(now);
   const key = loopKey(chatId, threadId);
   const prev = states.get(key);

@@ -115,13 +115,10 @@ const FeishuCalendarEventSchema = Type.Union([
       }),
     ),
     attendee_ability: Type.Optional(
-      StringEnum(
-        ['none', 'can_see_others', 'can_invite_others', 'can_modify_event'],
-        {
-          description:
-            '参与人权限。none（无法编辑、邀请、查看）、can_see_others（可查看参与人列表）、can_invite_others（可邀请其他人）、can_modify_event（可编辑日程）。默认值：none。',
-        },
-      ),
+      StringEnum(['none', 'can_see_others', 'can_invite_others', 'can_modify_event'], {
+        description:
+          '参与人权限。none（无法编辑、邀请、查看）、can_see_others（可查看参与人列表）、can_invite_others（可邀请其他人）、can_modify_event（可编辑日程）。默认值：none。',
+      }),
     ),
     free_busy_status: Type.Optional(
       StringEnum(['busy', 'free'], {
@@ -1081,5 +1078,4 @@ export function registerFeishuCalendarEventTool(api: OpenClawPluginApi): void {
     },
     { name: 'feishu_calendar_event' },
   );
-
 }

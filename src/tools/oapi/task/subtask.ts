@@ -93,16 +93,14 @@ type FeishuTaskSubtaskParams = { auth_type?: 'tenant' | 'user' } & (
       description?: string;
       due?: { timestamp: string; is_all_day?: boolean };
       start?: { timestamp: string; is_all_day?: boolean };
-      members?: Array<{ id: string;
-        type?: 'user' | 'app';
-        role?: string }>;
+      members?: Array<{ id: string; type?: 'user' | 'app'; role?: string }>;
     }
   | {
       action: 'list';
       task_guid: string;
       page_size?: number;
       page_token?: string;
-      }
+    }
 );
 
 // ---------------------------------------------------------------------------
@@ -253,5 +251,4 @@ export function registerFeishuTaskSubtaskTool(api: OpenClawPluginApi): void {
     },
     { name: 'feishu_task_subtask' },
   );
-
 }

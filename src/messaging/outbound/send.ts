@@ -6,7 +6,7 @@
  */
 
 import type { OpenClawConfig } from 'openclaw/plugin-sdk/core';
-import type { FeishuSendResult, MentionInfo  } from '../types';
+import type { FeishuSendResult, MentionInfo } from '../types';
 import { getLarkAccount } from '../../core/accounts';
 import { LarkClient } from '../../core/lark-client';
 import { larkLogger } from '../../core/lark-logger';

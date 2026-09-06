@@ -14,7 +14,14 @@
 
 import type { OpenClawPluginApi } from 'openclaw/plugin-sdk/core';
 import { Type } from '@sinclair/typebox';
-import { StringEnum, assertLarkOk, createToolContext, handleInvokeErrorWithAutoAuth, json, registerTool } from '../helpers';
+import {
+  StringEnum,
+  assertLarkOk,
+  createToolContext,
+  handleInvokeErrorWithAutoAuth,
+  json,
+  registerTool,
+} from '../helpers';
 import type { PaginatedData } from '../sdk-types';
 
 // ---------------------------------------------------------------------------
@@ -48,9 +55,7 @@ const FeishuCalendarEventAttendeeSchema = Type.Union([
         description: '是否给参会人发送通知（默认 true）',
       }),
     ),
-    attendee_ability: Type.Optional(
-      StringEnum(['none', 'can_see_others', 'can_invite_others', 'can_modify_event']),
-    ),
+    attendee_ability: Type.Optional(StringEnum(['none', 'can_see_others', 'can_invite_others', 'can_modify_event'])),
   }),
 
   // LIST
@@ -72,11 +77,8 @@ const FeishuCalendarEventAttendeeSchema = Type.Union([
         description: '分页标记',
       }),
     ),
-    user_id_type: Type.Optional(
-      StringEnum(['open_id', 'union_id', 'user_id']),
-    ),
+    user_id_type: Type.Optional(StringEnum(['open_id', 'union_id', 'user_id'])),
   }),
-
 ]);
 
 // ---------------------------------------------------------------------------
@@ -225,7 +227,6 @@ export function registerFeishuCalendarEventAttendeeTool(api: OpenClawPluginApi):
                 page_token: data?.page_token,
               });
             }
-
           }
         } catch (err) {
           return await handleInvokeErrorWithAutoAuth(err, cfg);
@@ -234,5 +235,4 @@ export function registerFeishuCalendarEventAttendeeTool(api: OpenClawPluginApi):
     },
     { name: 'feishu_calendar_event_attendee' },
   );
-
 }

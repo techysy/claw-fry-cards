@@ -50,11 +50,7 @@ const MEDIA_RETRY_DELAY_MS = 1000;
  * Only retries when the error carries a recognised retryable HTTP status
  * code. All other errors are thrown immediately.
  */
-async function withRetry<T>(
-  fn: () => Promise<T>,
-  label: string,
-  maxRetries = MEDIA_RETRY_MAX,
-): Promise<T> {
+async function withRetry<T>(fn: () => Promise<T>, label: string, maxRetries = MEDIA_RETRY_MAX): Promise<T> {
   let lastError: unknown;
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
@@ -66,9 +62,7 @@ async function withRetry<T>(
         throw err;
       }
       const delay = MEDIA_RETRY_DELAY_MS * (attempt + 1);
-      log.warn(
-        `${label}: HTTP ${status}, retrying (${attempt + 1}/${maxRetries}) after ${delay}ms`,
-      );
+      log.warn(`${label}: HTTP ${status}, retrying (${attempt + 1}/${maxRetries}) after ${delay}ms`);
       await new Promise((r) => setTimeout(r, delay));
     }
   }
@@ -969,8 +963,7 @@ async function validateRemoteUrl(raw: string): Promise<void> {
     // URL contains a literal IP address — check it directly.
     if (isPrivateIP(hostname)) {
       throw new Error(
-        `[feishu-media] Access to private/reserved IP "${hostname}" is denied (SSRF protection). ` +
-          `URL: "${raw}"`,
+        `[feishu-media] Access to private/reserved IP "${hostname}" is denied (SSRF protection). ` + `URL: "${raw}"`,
       );
     }
   } else {

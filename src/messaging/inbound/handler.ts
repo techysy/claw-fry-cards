@@ -19,10 +19,7 @@
 import type { OpenClawConfig } from 'openclaw/plugin-sdk/core';
 import type { RuntimeEnv } from 'openclaw/plugin-sdk/runtime-env';
 import type { HistoryEntry } from 'openclaw/plugin-sdk/reply-history';
-import {
-  DEFAULT_GROUP_HISTORY_LIMIT,
-  recordPendingHistoryEntryIfEnabled,
-} from 'openclaw/plugin-sdk/reply-history';
+import { DEFAULT_GROUP_HISTORY_LIMIT, recordPendingHistoryEntryIfEnabled } from 'openclaw/plugin-sdk/reply-history';
 import { resolveSenderCommandAuthorization } from 'openclaw/plugin-sdk/command-auth';
 import { isNormalizedSenderAllowed } from 'openclaw/plugin-sdk/allow-from';
 import type { FeishuMessageEvent } from '../types';
@@ -315,12 +312,9 @@ export async function handleFeishuMessage(params: {
           // notice in its own language (same mechanism as /help, /doctor).
           // replyInThread precedence matches dispatch (group > default > account).
           const replyInThreadCfg =
-            groupConfig?.replyInThread ??
-            defaultGroupConfig?.replyInThread ??
-            account.config?.replyInThread;
+            groupConfig?.replyInThread ?? defaultGroupConfig?.replyInThread ?? account.config?.replyInThread;
           const inThread =
-            Boolean(ctx.threadId) &&
-            (account.config?.threadSession === true || replyInThreadCfg === true);
+            Boolean(ctx.threadId) && (account.config?.threadSession === true || replyInThreadCfg === true);
           await sendMessageFeishu({
             cfg: accountScopedCfg,
             to: ctx.chatId,

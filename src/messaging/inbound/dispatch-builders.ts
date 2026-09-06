@@ -22,8 +22,7 @@ import type { SentinelEntry } from './sentinel-store';
 // Mention annotation
 // ---------------------------------------------------------------------------
 
-const MENTION_USAGE_HINT =
-  'To @mention in a reply, use `<at user_id="ou_xxx">Name</at>`; plain "@Name" won\'t notify.';
+const MENTION_USAGE_HINT = 'To @mention in a reply, use `<at user_id="ou_xxx">Name</at>`; plain "@Name" won\'t notify.';
 
 /**
  * Build a `[System: ...]` mention annotation when the message @-mentions
@@ -35,10 +34,7 @@ const MENTION_USAGE_HINT =
  * InboundHistory, etc.), so we only inject the mention data that the SDK
  * does not natively support.
  */
-export function buildMentionAnnotation(
-  ctx: MessageContext,
-  sentinels?: SentinelEntry[],
-): string | undefined {
+export function buildMentionAnnotation(ctx: MessageContext, sentinels?: SentinelEntry[]): string | undefined {
   // When this bot itself was @-mentioned, tell the agent explicitly. The
   // leading self-mention is stripped from the body, so without this the
   // agent has no signal that it was the addressee and may mis-attribute
@@ -95,11 +91,7 @@ function formatSentinelFeedback(sentinels: SentinelEntry[] | undefined): string 
  * the body cleaner and avoiding misleading heuristics for non-text
  * message types (merge_forward, interactive cards, etc.).
  */
-export function buildMessageBody(
-  ctx: MessageContext,
-  quotedContent?: string,
-  sentinels?: SentinelEntry[],
-): string {
+export function buildMessageBody(ctx: MessageContext, quotedContent?: string, sentinels?: SentinelEntry[]): string {
   let messageBody = ctx.content;
   if (quotedContent) {
     messageBody = `[Replying to: "${quotedContent}"]\n\n${ctx.content}`;
@@ -135,10 +127,7 @@ export function buildMessageBody(
  * The SDK's `detectAndLoadPromptImages` will discover image paths from
  * the text and inject them as multimodal content blocks.
  */
-export function buildBodyForAgent(
-  ctx: MessageContext,
-  sentinels?: SentinelEntry[],
-): string {
+export function buildBodyForAgent(ctx: MessageContext, sentinels?: SentinelEntry[]): string {
   const mentionAnnotation = buildMentionAnnotation(ctx, sentinels);
   if (mentionAnnotation) {
     return `${ctx.content}\n\n${mentionAnnotation}`;
@@ -211,10 +200,7 @@ export function buildInboundPayload(
  * BotOpenId is omitted when unknown (e.g. startup race before the bot info
  * probe completes) to avoid surfacing an empty identity to the agent.
  */
-export function buildFeishuIdentityFields(
-  ctx: MessageContext,
-  botOpenId?: string,
-): Record<string, unknown> {
+export function buildFeishuIdentityFields(ctx: MessageContext, botOpenId?: string): Record<string, unknown> {
   return {
     SenderIsBot: ctx.senderIsBot ?? false,
     ...(botOpenId ? { BotOpenId: botOpenId } : {}),
@@ -237,10 +223,7 @@ const FEISHU_BOT_AT_BOT_GUIDANCE =
  * works, and when to stop; then appends any operator-configured group
  * systemPrompt. Returns `undefined` only when there is nothing to inject.
  */
-export function buildFeishuGroupSystemPrompt(
-  configured: string | undefined,
-  botOpenId?: string,
-): string | undefined {
+export function buildFeishuGroupSystemPrompt(configured: string | undefined, botOpenId?: string): string | undefined {
   const parts: string[] = [];
   if (botOpenId) {
     parts.push(`Your own Feishu open_id is "${botOpenId}"; any @-mention of this open_id refers to you.`);

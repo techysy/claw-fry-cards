@@ -16,7 +16,7 @@
 import type { OpenClawPluginApi } from 'openclaw/plugin-sdk/core';
 import { Type } from '@sinclair/typebox';
 
-import { assertLarkOk, createToolContext, handleInvokeErrorWithAutoAuth, json , registerTool } from '../helpers';
+import { assertLarkOk, createToolContext, handleInvokeErrorWithAutoAuth, json, registerTool } from '../helpers';
 import type { FieldData, PaginatedData } from '../sdk-types';
 
 // ---------------------------------------------------------------------------
@@ -264,11 +264,9 @@ export function registerFeishuBitableAppTableFieldTool(api: OpenClawPluginApi): 
                 );
                 assertLarkOk(listRes);
 
-                 
                 const listData = listRes.data as
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  | PaginatedData<{ field_id?: string; field_name?: string; type?: number; property?: any }>
-                  | undefined;
+                  PaginatedData<{ field_id?: string; field_name?: string; type?: number; property?: any }> | undefined;
                 const currentField = listData?.items?.find((f) => f.field_id === p.field_id);
 
                 if (!currentField) {
@@ -359,5 +357,4 @@ export function registerFeishuBitableAppTableFieldTool(api: OpenClawPluginApi): 
     },
     { name: 'feishu_bitable_app_table_field' },
   );
-
 }

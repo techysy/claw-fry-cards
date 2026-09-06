@@ -90,11 +90,7 @@ export function buildDispatchContext(params: {
   const feishuFrom = `feishu:${ctx.senderId}`;
   // Comment targets use the comment target string directly as the "To"
   // so the outbound routing layer can detect it and route through Drive API.
-  const feishuTo = isComment
-    ? ctx.chatId
-    : isGroup
-      ? `chat:${ctx.chatId}`
-      : `user:${ctx.senderId}`;
+  const feishuTo = isComment ? ctx.chatId : isGroup ? `chat:${ctx.chatId}` : `user:${ctx.senderId}`;
 
   const envelopeFrom = isGroup ? `${ctx.chatId}:${ctx.senderId}` : ctx.senderId;
 

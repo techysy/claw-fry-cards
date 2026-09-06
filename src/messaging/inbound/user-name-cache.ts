@@ -148,8 +148,7 @@ export async function resolveBotName(params: {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const bot: any = res?.data?.bots?.[openId];
-    const name: string =
-      bot?.name || bot?.i18n_names?.zh_cn || bot?.i18n_names?.en_us || '';
+    const name: string = bot?.name || bot?.i18n_names?.zh_cn || bot?.i18n_names?.en_us || '';
 
     // Cache even empty names to avoid repeated API calls for bots
     // whose names we cannot resolve.

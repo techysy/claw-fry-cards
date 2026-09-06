@@ -64,10 +64,9 @@ const FeishuWikiSpaceNodeSchema = Type.Union([
       description: 'node token',
     }),
     obj_type: Type.Optional(
-      StringEnum(
-        ['doc', 'sheet', 'mindnote', 'bitable', 'file', 'docx', 'slides', 'wiki'],
-        { description: 'obj_type' },
-      ),
+      StringEnum(['doc', 'sheet', 'mindnote', 'bitable', 'file', 'docx', 'slides', 'wiki'], {
+        description: 'obj_type',
+      }),
     ),
   }),
 
@@ -77,10 +76,7 @@ const FeishuWikiSpaceNodeSchema = Type.Union([
     space_id: Type.String({
       description: 'space_id',
     }),
-    obj_type: StringEnum(
-      ['sheet', 'mindnote', 'bitable', 'file', 'docx', 'slides'],
-      { description: 'obj_type' },
-    ),
+    obj_type: StringEnum(['sheet', 'mindnote', 'bitable', 'file', 'docx', 'slides'], { description: 'obj_type' }),
     parent_node_token: Type.Optional(
       Type.String({
         description: 'parent_node_token',

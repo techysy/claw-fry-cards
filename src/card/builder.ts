@@ -232,7 +232,11 @@ function contextUsedLabel(used: number, total: number): string {
   return String(used);
 }
 
-export function formatContextSegment(used: number, total: number, mode: 'text' | 'bar' | 'text_bar' = 'text_bar'): string | null {
+export function formatContextSegment(
+  used: number,
+  total: number,
+  mode: 'text' | 'bar' | 'text_bar' = 'text_bar',
+): string | null {
   if (total <= 0 || used == null) return null;
   const pct = Math.min(100, Math.round((used / total) * 100));
   if (mode === 'bar') return `[${contextProgressBar(used, total)}] ${pct}%`;
@@ -424,7 +428,7 @@ export function buildCardContent(
   data: {
     panel?: {
       unifiedPanelMinDurationMs?: number;
-    modelAliases?: Record<string, string>;
+      modelAliases?: Record<string, string>;
       contextDisplayMode?: ContextDisplayMode;
       expanded?: boolean;
     };
@@ -474,7 +478,7 @@ export function buildCardContent(
         isAborted: data.isAborted,
         footer: data.footer,
         footerMetrics: data.footerMetrics,
-    panel: data.panel,
+        panel: data.panel,
       });
     case 'confirm':
       return buildConfirmCard(data.confirmData!);
@@ -604,8 +608,7 @@ function buildCompleteCard(params: {
   const panelMinMs = panel?.unifiedPanelMinDurationMs ?? 5000;
   const panelExpanded = panel?.expanded ?? false;
   const ctxMode: ContextDisplayMode = panel?.contextDisplayMode ?? 'text_bar';
-  const showUnifiedPanel =
-    showToolUse && (elapsed >= panelMinMs || hasReasoning || toolCount > 0);
+  const showUnifiedPanel = showToolUse && (elapsed >= panelMinMs || hasReasoning || toolCount > 0);
 
   if (showUnifiedPanel) {
     const borderColor = isError ? 'red' : isAborted ? 'yellow' : 'green';
@@ -613,7 +616,8 @@ function buildCompleteCard(params: {
     const rawModel = (footerMetrics?.model ?? '').trim();
     // 模型显示别名：完整 id 或裸名命中均替换（如 "deepseek-v4-flash" → "梁文谷⚡️"）
     const aliasTable = panel?.modelAliases ?? {};
-    const modelName = resolveModelAlias(aliasTable[rawModel] ?? aliasTable[rawModel.split('/').pop() ?? '']) ?? rawModel;
+    const modelName =
+      resolveModelAlias(aliasTable[rawModel] ?? aliasTable[rawModel.split('/').pop() ?? '']) ?? rawModel;
 
     const parts: string[] = ['🍤'];
     if (modelName) parts.push(modelName);
@@ -625,10 +629,16 @@ function buildCompleteCard(params: {
       parts.push(`🎫↑${compactNumber(inT)}↓${compactNumber(outT)}`);
     }
     // 📊 上下文：used = 会话实际用量(totalTokens)，total = 模型上下文窗口(contextTokens)
-    const ctxWindow = typeof footerMetrics?.contextTokens === 'number' && footerMetrics.contextTokens > 0 ? footerMetrics.contextTokens : undefined;
-    const ctxUsed = footerMetrics?.totalTokensFresh === false
-      ? undefined
-      : typeof footerMetrics?.totalTokens === 'number' && footerMetrics.totalTokens > 0 ? footerMetrics.totalTokens : undefined;
+    const ctxWindow =
+      typeof footerMetrics?.contextTokens === 'number' && footerMetrics.contextTokens > 0
+        ? footerMetrics.contextTokens
+        : undefined;
+    const ctxUsed =
+      footerMetrics?.totalTokensFresh === false
+        ? undefined
+        : typeof footerMetrics?.totalTokens === 'number' && footerMetrics.totalTokens > 0
+          ? footerMetrics.totalTokens
+          : undefined;
     if (ctxWindow != null && ctxUsed != null) {
       const ctxSeg = formatContextSegment(ctxUsed, ctxWindow, ctxMode);
       if (ctxSeg) parts.push(ctxSeg);
@@ -701,10 +711,12 @@ function buildCompleteCard(params: {
     footerEnLines.push(fp.detailEn.join(' · '));
   }
   if (footerZhLines.length > 0) {
-    elements.push(...buildFooter(footerZhLines.join(String.fromCharCode(10)), footerEnLines.join(String.fromCharCode(10)), isError));
+    elements.push(
+      ...buildFooter(footerZhLines.join(String.fromCharCode(10)), footerEnLines.join(String.fromCharCode(10)), isError),
+    );
   }
 
-// Use the answer text as the feed preview summary.
+  // Use the answer text as the feed preview summary.
   // Strip markdown syntax so the preview reads as plain text.
   const summaryText = text.replace(/[*_`#>[\]()~]/g, '').trim();
   const summary = summaryText ? { content: summaryText.slice(0, 120) } : undefined;

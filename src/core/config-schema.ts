@@ -97,7 +97,7 @@ export const PanelConfigSchema = z
           }),
         ]),
       )
-      .optional(),    /** 统一面板显示的耗时门槛（秒）；回复耗时 ≥ 此值或存在思考/工具时显示。0 = 每条都显示。 */
+      .optional() /** 统一面板显示的耗时门槛（秒）；回复耗时 ≥ 此值或存在思考/工具时显示。0 = 每条都显示。 */,
     unifiedPanelMinDuration: z.number().optional(),
     /** 面板标题中上下文段的样式：text（纯文本）/ bar（渐变条）/ text_bar（文本+渐变条，fry 默认） */
     contextDisplayMode: z.enum(['text', 'bar', 'text_bar']).optional(),

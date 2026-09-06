@@ -39,10 +39,7 @@ const storage = new AsyncLocalStorage<BotPeerContext>();
  * The outbound adapter's `currentBotPeerContext()` inside `fn` (and any
  * promises it spawns) will see this store.
  */
-export function runWithBotPeerContext<T>(
-  ctx: BotPeerContext,
-  fn: () => Promise<T>,
-): Promise<T> {
+export function runWithBotPeerContext<T>(ctx: BotPeerContext, fn: () => Promise<T>): Promise<T> {
   return storage.run(ctx, fn);
 }
 

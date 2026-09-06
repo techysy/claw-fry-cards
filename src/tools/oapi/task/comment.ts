@@ -15,7 +15,14 @@
 import type { OpenClawPluginApi } from 'openclaw/plugin-sdk/core';
 import { Type } from '@sinclair/typebox';
 
-import { StringEnum, assertLarkOk, createToolContext, handleInvokeErrorWithAutoAuth, json, registerTool } from '../helpers';
+import {
+  StringEnum,
+  assertLarkOk,
+  createToolContext,
+  handleInvokeErrorWithAutoAuth,
+  json,
+  registerTool,
+} from '../helpers';
 import type { PaginatedData } from '../sdk-types';
 
 // ---------------------------------------------------------------------------
@@ -81,7 +88,7 @@ type FeishuTaskCommentParams = { auth_type?: 'tenant' | 'user' } & (
   | {
       action: 'get';
       comment_id: string;
-      }
+    }
 );
 
 // ---------------------------------------------------------------------------
@@ -228,5 +235,4 @@ export function registerFeishuTaskCommentTool(api: OpenClawPluginApi): void {
     },
     { name: 'feishu_task_comment' },
   );
-
 }

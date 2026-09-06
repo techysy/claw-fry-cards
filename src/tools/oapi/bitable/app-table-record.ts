@@ -21,7 +21,14 @@
 import type { OpenClawPluginApi } from 'openclaw/plugin-sdk/core';
 import { Type } from '@sinclair/typebox';
 
-import { StringEnum, assertLarkOk, createToolContext, handleInvokeErrorWithAutoAuth, json, registerTool } from '../helpers';
+import {
+  StringEnum,
+  assertLarkOk,
+  createToolContext,
+  handleInvokeErrorWithAutoAuth,
+  json,
+  registerTool,
+} from '../helpers';
 import type { PaginatedData } from '../sdk-types';
 
 // ---------------------------------------------------------------------------
@@ -123,7 +130,18 @@ const FeishuBitableAppTableRecordSchema = Type.Union([
             Type.Object({
               field_name: Type.String({ description: '字段名' }),
               operator: StringEnum(
-                ['is', 'isNot', 'contains', 'doesNotContain', 'isEmpty', 'isNotEmpty', 'isGreater', 'isGreaterEqual', 'isLess', 'isLessEqual'],
+                [
+                  'is',
+                  'isNot',
+                  'contains',
+                  'doesNotContain',
+                  'isEmpty',
+                  'isNotEmpty',
+                  'isGreater',
+                  'isGreaterEqual',
+                  'isLess',
+                  'isLessEqual',
+                ],
                 { description: '运算符' },
               ),
               value: Type.Optional(
@@ -673,5 +691,4 @@ export function registerFeishuBitableAppTableRecordTool(api: OpenClawPluginApi):
     },
     { name: 'feishu_bitable_app_table_record' },
   );
-
 }

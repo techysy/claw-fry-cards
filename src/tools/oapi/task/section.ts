@@ -17,7 +17,15 @@
 
 import type { OpenClawPluginApi } from 'openclaw/plugin-sdk/core';
 import { Type } from '@sinclair/typebox';
-import { StringEnum, assertLarkOk, createToolContext, handleInvokeErrorWithAutoAuth, json, parseTimeToTimestampMs, registerTool } from '../helpers';
+import {
+  StringEnum,
+  assertLarkOk,
+  createToolContext,
+  handleInvokeErrorWithAutoAuth,
+  json,
+  parseTimeToTimestampMs,
+  registerTool,
+} from '../helpers';
 import type { PaginatedData } from '../sdk-types';
 
 // ---------------------------------------------------------------------------
@@ -41,7 +49,8 @@ const FeishuTaskSectionSchema = Type.Union([
     resource_type: StringEnum(['tasklist', 'my_tasks']),
     resource_id: Type.Optional(
       Type.String({
-        description: '自定义分组要归属的资源id。当resource_type为"tasklist"时这里需要填写清单的GUID；当resource_type为"my_tasks"时，无需填写。',
+        description:
+          '自定义分组要归属的资源id。当resource_type为"tasklist"时这里需要填写清单的GUID；当resource_type为"my_tasks"时，无需填写。',
       }),
     ),
     insert_before: Type.Optional(
@@ -195,7 +204,7 @@ type FeishuTaskSectionParams = { auth_type?: 'tenant' | 'user' } & (
       created_from?: string;
       created_to?: string;
       user_id_type?: 'open_id' | 'union_id' | 'user_id';
-      }
+    }
 );
 
 // ---------------------------------------------------------------------------
@@ -395,7 +404,7 @@ export function registerFeishuTaskSectionTool(api: OpenClawPluginApi): void {
               if (p.page_size !== undefined) paramsData.page_size = p.page_size;
               if (p.page_token !== undefined) paramsData.page_token = p.page_token;
               if (p.completed !== undefined) paramsData.completed = p.completed;
-              
+
               if (p.created_from) {
                 const ts = parseTimeToTimestampMs(p.created_from);
                 if (ts) paramsData.created_from = ts;

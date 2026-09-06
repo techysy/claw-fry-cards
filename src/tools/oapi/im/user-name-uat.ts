@@ -112,7 +112,9 @@ export async function batchResolveUserNamesAsUser(params: {
 
   // 2. 分批通过 SDK 调用 contact/v3/users/basic_batch（UAT）
   const totalBatches = Math.ceil(uniqueMissing.length / BATCH_SIZE);
-  log(`batchResolveUserNamesAsUser: resolving ${uniqueMissing.length} user(s) in ${totalBatches} batch(es), ${result.size} cache hit(s)`);
+  log(
+    `batchResolveUserNamesAsUser: resolving ${uniqueMissing.length} user(s) in ${totalBatches} batch(es), ${result.size} cache hit(s)`,
+  );
 
   for (let i = 0; i < uniqueMissing.length; i += BATCH_SIZE) {
     const chunk = uniqueMissing.slice(i, i + BATCH_SIZE);
@@ -146,8 +148,7 @@ export async function batchResolveUserNamesAsUser(params: {
         const openId: string | undefined = user.user_id;
         // 实际返回 name 为字符串，兼容文档中 name.value 的对象结构
         const rawName = user.name;
-        const name: string | undefined =
-          typeof rawName === 'string' ? rawName : rawName?.value;
+        const name: string | undefined = typeof rawName === 'string' ? rawName : rawName?.value;
         if (openId && name) {
           cache.delete(openId);
           cache.set(openId, { name, expireAt: Date.now() + UAT_TTL_MS });
@@ -157,7 +158,9 @@ export async function batchResolveUserNamesAsUser(params: {
       }
       const unresolvedCount = chunk.length - resolved;
       if (unresolvedCount > 0) {
-        log(`batchResolveUserNamesAsUser: batch ${batchIndex}/${totalBatches}: ${resolved} resolved, ${unresolvedCount} missing name`);
+        log(
+          `batchResolveUserNamesAsUser: batch ${batchIndex}/${totalBatches}: ${resolved} resolved, ${unresolvedCount} missing name`,
+        );
       }
     } catch (err) {
       // 授权/权限错误向上冒泡，由上层 handleInvokeErrorWithAutoAuth 处理自动授权

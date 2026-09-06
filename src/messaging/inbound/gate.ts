@@ -26,7 +26,7 @@
 import type { OpenClawConfig } from 'openclaw/plugin-sdk/core';
 import type { HistoryEntry } from 'openclaw/plugin-sdk/reply-history';
 import type { MessageContext } from '../types';
-import type { FeishuConfig, FeishuGroupConfig, LarkAccount  } from '../../core/types';
+import type { FeishuConfig, FeishuGroupConfig, LarkAccount } from '../../core/types';
 import { LarkClient } from '../../core/lark-client';
 import {
   isFeishuGroupAllowed,
@@ -72,10 +72,7 @@ export function resolveAllowBots(params: {
   accountFeishuCfg?: FeishuConfig;
 }): boolean | 'mentions' {
   return (
-    params.groupConfig?.allowBots ??
-    params.defaultConfig?.allowBots ??
-    params.accountFeishuCfg?.allowBots ??
-    'mentions'
+    params.groupConfig?.allowBots ?? params.defaultConfig?.allowBots ?? params.accountFeishuCfg?.allowBots ?? 'mentions'
   );
 }
 
@@ -287,9 +284,7 @@ function checkBotSenderGate(params: {
 
   // 3. allowBots === false → drop
   if (allowBots === false) {
-    log(
-      `feishu[${account.accountId}]: drop bot sender ${ctx.senderId} in ${ctx.chatId} (allowBots=false)`,
-    );
+    log(`feishu[${account.accountId}]: drop bot sender ${ctx.senderId} in ${ctx.chatId} (allowBots=false)`);
     return { allowed: false, reason: 'bot_sender_disabled' };
   }
 
@@ -313,13 +308,9 @@ function checkBotSenderGate(params: {
   //    requirement would silently negate `allowBots=true` in most configs.
   if (isGroup) {
     const requireMention =
-      groupConfig?.requireMention ??
-      defaultConfig?.requireMention ??
-      accountFeishuCfg?.requireMention;
+      groupConfig?.requireMention ?? defaultConfig?.requireMention ?? accountFeishuCfg?.requireMention;
     if (requireMention === true && !mentionedBot(ctx)) {
-      log(
-        `feishu[${account.accountId}]: drop bot sender ${ctx.senderId} (no_mention)`,
-      );
+      log(`feishu[${account.accountId}]: drop bot sender ${ctx.senderId} (no_mention)`);
       // Intentionally NO historyEntry — bot messages never enter chat history.
       return { allowed: false, reason: 'no_mention' };
     }

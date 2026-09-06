@@ -51,11 +51,7 @@ export class UserNameCache {
   private inFlight = new Map<string, Promise<void>>();
   private maxChats: number;
 
-  constructor(
-    maxSize = DEFAULT_MAX_SIZE,
-    ttlMs = DEFAULT_TTL_MS,
-    maxChats = DEFAULT_MAX_CHATS,
-  ) {
+  constructor(maxSize = DEFAULT_MAX_SIZE, ttlMs = DEFAULT_TTL_MS, maxChats = DEFAULT_MAX_CHATS) {
     this.maxSize = maxSize;
     this.ttlMs = ttlMs;
     this.maxChats = maxChats;

@@ -6,7 +6,7 @@
  */
 
 import type { ContentConverterFn } from './types';
-import { formatDuration, safeParse  } from './utils';
+import { formatDuration, safeParse } from './utils';
 
 export const convertVideo: ContentConverterFn = (raw) => {
   const parsed = safeParse(raw) as

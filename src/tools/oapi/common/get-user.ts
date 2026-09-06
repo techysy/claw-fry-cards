@@ -11,7 +11,14 @@
 
 import type { OpenClawPluginApi } from 'openclaw/plugin-sdk/core';
 import { Type } from '@sinclair/typebox';
-import { StringEnum, assertLarkOk, createToolContext, handleInvokeErrorWithAutoAuth, json, registerTool } from '../helpers';
+import {
+  StringEnum,
+  assertLarkOk,
+  createToolContext,
+  handleInvokeErrorWithAutoAuth,
+  json,
+  registerTool,
+} from '../helpers';
 
 // ---------------------------------------------------------------------------
 // Schema
@@ -146,5 +153,4 @@ export function registerGetUserTool(api: OpenClawPluginApi): void {
     },
     { name: 'feishu_get_user' },
   );
-
 }

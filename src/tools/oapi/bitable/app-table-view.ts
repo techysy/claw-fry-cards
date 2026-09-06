@@ -16,7 +16,7 @@
 import type { OpenClawPluginApi } from 'openclaw/plugin-sdk/core';
 import { Type } from '@sinclair/typebox';
 
-import { assertLarkOk, createToolContext, handleInvokeErrorWithAutoAuth, json , registerTool } from '../helpers';
+import { assertLarkOk, createToolContext, handleInvokeErrorWithAutoAuth, json, registerTool } from '../helpers';
 import type { PaginatedData } from '../sdk-types';
 
 // ---------------------------------------------------------------------------
@@ -66,7 +66,6 @@ const FeishuBitableAppTableViewSchema = Type.Union([
     view_id: Type.String({ description: '视图 ID' }),
     view_name: Type.Optional(Type.String({ description: '新的视图名称' })),
   }),
-
 ]);
 
 // ---------------------------------------------------------------------------
@@ -265,7 +264,6 @@ export function registerFeishuBitableAppTableViewTool(api: OpenClawPluginApi): v
                 view: res.data?.view,
               });
             }
-
           }
         } catch (err) {
           return await handleInvokeErrorWithAutoAuth(err, cfg);
@@ -274,5 +272,4 @@ export function registerFeishuBitableAppTableViewTool(api: OpenClawPluginApi): v
     },
     { name: 'feishu_bitable_app_table_view' },
   );
-
 }

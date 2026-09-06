@@ -35,11 +35,11 @@ const STANDARD_AT_RE = /<at\s+user_id="[^"]*">[^<]*<\/at>/g;
 // Plain `@Name` is intentionally last because the more decorated variants
 // embed an `@` and we want them to claim ownership of their match first.
 const VARIANT_PATTERNS: { re: RegExp; group: number }[] = [
-  { re: /@\[([^\]\n]+)\]/g, group: 1 },        // @[Name]
-  { re: /@<([^>\n]+)>/g, group: 1 },           // @<Name>
-  { re: /<@([^>\n]+)>/g, group: 1 },           // <@Name>
+  { re: /@\[([^\]\n]+)\]/g, group: 1 }, // @[Name]
+  { re: /@<([^>\n]+)>/g, group: 1 }, // @<Name>
+  { re: /<@([^>\n]+)>/g, group: 1 }, // <@Name>
   { re: /<at>\s*([^<\n]+?)\s*<\/at>/g, group: 1 }, // <at>Name</at>
-  { re: /\{\{\s*([^}\n]+?)\s*\}\}/g, group: 1 },   // {{Name}}
+  { re: /\{\{\s*([^}\n]+?)\s*\}\}/g, group: 1 }, // {{Name}}
   // Plain @Name — single token, ASCII/CJK/digit/underscore. Won't match
   // mid-word (preceded by a word char), so email addresses are safe.
   { re: /(^|[^\w@])@([A-Za-z0-9_一-鿿][\w.一-鿿-]{0,30})/g, group: 2 },
@@ -97,11 +97,7 @@ export function normalizeOutboundMentions(text: string, chatId: string): string 
  * present somewhere in the text. If the LLM already mentioned the peer,
  * no-op; otherwise, prepend a standard `<at>` so the peer wakes up.
  */
-export function ensureMention(
-  text: string,
-  peerOpenId: string,
-  peerName: string,
-): string {
+export function ensureMention(text: string, peerOpenId: string, peerName: string): string {
   if (!peerOpenId) return text;
   // Already-mentioned check — match any existing <at user_id="ou_peer">
   // element regardless of the rendered name to preserve idempotency.

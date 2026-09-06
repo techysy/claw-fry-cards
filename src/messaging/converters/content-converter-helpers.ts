@@ -77,9 +77,7 @@ export function resolveMentions(text: string, ctx: ConvertContext): string {
   for (const [key, info] of ctx.mentions) {
     if (info.isBot && ctx.stripBotMentions) {
       result = result.replace(new RegExp(escapeRegExp(key), 'g'), `@${info.name}`);
-      const leadingPattern = new RegExp(
-        `^\\s*@${escapeRegExp(info.name)}[\\s,，:：]*`,
-      );
+      const leadingPattern = new RegExp(`^\\s*@${escapeRegExp(info.name)}[\\s,，:：]*`);
       result = result.replace(leadingPattern, '').trimStart();
     } else {
       result = result.replace(new RegExp(escapeRegExp(key), 'g'), `@${info.name}`);

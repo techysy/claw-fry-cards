@@ -10,10 +10,10 @@
  * between the two code paths when the event schema changes again.
  */
 
-import type { FeishuVcMeetingInvitedEvent } from '../types'
+import type { FeishuVcMeetingInvitedEvent } from '../types';
 
 /** Which bucket the final senderId was picked from. */
-export type VcSenderFallback = 'inviter' | 'none'
+export type VcSenderFallback = 'inviter' | 'none';
 
 export interface ResolvedVcSender {
   /**
@@ -21,17 +21,17 @@ export interface ResolvedVcSender {
    * as the real inviter only; if inviter identity is missing, the event
    * should be skipped instead of degrading to bot/config ids.
    */
-  senderId: string
+  senderId: string;
   /** Raw inviter-level open_id (if present); useful for agent "at inviter" use-cases. */
-  senderOpenId?: string
+  senderOpenId?: string;
   /** Raw inviter-level user_id (if present). */
-  senderUserId?: string
+  senderUserId?: string;
   /** Raw inviter-level union_id (if present). */
-  senderUnionId?: string
+  senderUnionId?: string;
   /** Human-readable name from inviter.user_name. */
-  senderName?: string
+  senderName?: string;
   /** Which bucket the senderId fell back to. */
-  fromFallback: VcSenderFallback
+  fromFallback: VcSenderFallback;
 }
 
 /**
@@ -42,8 +42,8 @@ export interface ResolvedVcSender {
  * alone are not enough.
  */
 function pickId(value?: string | null): string | undefined {
-  const trimmed = value?.trim()
-  return trimmed && trimmed.length > 0 ? trimmed : undefined
+  const trimmed = value?.trim();
+  return trimmed && trimmed.length > 0 ? trimmed : undefined;
 }
 
 /**
@@ -54,21 +54,19 @@ function pickId(value?: string | null): string | undefined {
  *   1. inviter.id.open_id → user_id → union_id
  *   2. empty string + fromFallback='none'
  */
-export function resolveVcSender(
-  event: FeishuVcMeetingInvitedEvent,
-): ResolvedVcSender {
-  const inviterId = event.inviter?.id
+export function resolveVcSender(event: FeishuVcMeetingInvitedEvent): ResolvedVcSender {
+  const inviterId = event.inviter?.id;
 
-  const inviterOpenId = pickId(inviterId?.open_id)
-  const inviterUserId = pickId(inviterId?.user_id)
-  const inviterUnionId = pickId(inviterId?.union_id)
+  const inviterOpenId = pickId(inviterId?.open_id);
+  const inviterUserId = pickId(inviterId?.user_id);
+  const inviterUnionId = pickId(inviterId?.union_id);
 
-  let senderId = ''
-  let fromFallback: VcSenderFallback = 'none'
+  let senderId = '';
+  let fromFallback: VcSenderFallback = 'none';
 
   if (inviterOpenId ?? inviterUserId ?? inviterUnionId) {
-    senderId = inviterOpenId ?? inviterUserId ?? inviterUnionId ?? ''
-    fromFallback = 'inviter'
+    senderId = inviterOpenId ?? inviterUserId ?? inviterUnionId ?? '';
+    fromFallback = 'inviter';
   }
 
   return {
@@ -78,5 +76,5 @@ export function resolveVcSender(
     senderUnionId: inviterUnionId,
     senderName: pickId(event.inviter?.user_name) ?? undefined,
     fromFallback,
-  }
+  };
 }

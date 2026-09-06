@@ -54,13 +54,10 @@ const DocTypeEnum = StringEnum([
   'SHORTCUT',
 ]);
 
-const SortTypeEnum = StringEnum(
-  ['DEFAULT_TYPE', 'OPEN_TIME', 'EDIT_TIME', 'EDIT_TIME_ASC', 'CREATE_TIME'],
-  {
-    description:
-      '排序方式。EDIT_TIME=编辑时间降序（最新文档在前，推荐），EDIT_TIME_ASC=编辑时间升序，CREATE_TIME=按文档创建时间排序，OPEN_TIME=打开时间，DEFAULT_TYPE=默认排序',
-  },
-);
+const SortTypeEnum = StringEnum(['DEFAULT_TYPE', 'OPEN_TIME', 'EDIT_TIME', 'EDIT_TIME_ASC', 'CREATE_TIME'], {
+  description:
+    '排序方式。EDIT_TIME=编辑时间降序（最新文档在前，推荐），EDIT_TIME_ASC=编辑时间升序，CREATE_TIME=按文档创建时间排序，OPEN_TIME=打开时间，DEFAULT_TYPE=默认排序',
+});
 
 // ---------------------------------------------------------------------------
 // Schema - Main

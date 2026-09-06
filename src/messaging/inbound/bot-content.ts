@@ -114,21 +114,14 @@ export async function resolveFeishuReplyRouting(
   opts: { replyInThreadConfig?: boolean } = {},
 ): Promise<FeishuReplyRouting> {
   // Step 1: topic-group thread inference (async + side effects on dc)
-  if (
-    !dc.isThread &&
-    dc.isGroup &&
-    dc.ctx.rootId &&
-    dc.account.config?.threadSession === true
-  ) {
+  if (!dc.isThread && dc.isGroup && dc.ctx.rootId && dc.account.config?.threadSession === true) {
     const threadCapable = await isThreadCapableGroup({
       cfg: dc.accountScopedCfg,
       chatId: dc.ctx.chatId,
       accountId: dc.account.accountId,
     });
     if (threadCapable) {
-      log.info(
-        `inferred thread from root_id=${dc.ctx.rootId} in topic group ${dc.ctx.chatId}`,
-      );
+      log.info(`inferred thread from root_id=${dc.ctx.rootId} in topic group ${dc.ctx.chatId}`);
       dc.isThread = true;
       dc.ctx = { ...dc.ctx, threadId: dc.ctx.rootId };
     }
@@ -144,8 +137,7 @@ export async function resolveFeishuReplyRouting(
   //   - replyInThread config: operators can opt in per-group/account.
   const isTopicSession = dc.isThread && dc.account.config?.threadSession === true;
   const configReplyInThread = opts.replyInThreadConfig === true;
-  const suppressForBotPeer =
-    dc.isGroup && !!dc.ctx.senderIsBot && !isTopicSession && !configReplyInThread;
+  const suppressForBotPeer = dc.isGroup && !!dc.ctx.senderIsBot && !isTopicSession && !configReplyInThread;
   const replyInThread = !suppressForBotPeer && dc.isThread;
   const threadId = replyInThread ? dc.ctx.threadId : undefined;
 

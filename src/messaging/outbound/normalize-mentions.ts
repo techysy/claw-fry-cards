@@ -32,10 +32,7 @@ export function normalizeOutboundMentionsTagPass(text: string): string {
   );
 
   // Generic <at attr=ou_xxx> → <at user_id="ou_xxx">.
-  out = out.replace(
-    /<at\s+(?:id|open_id|user_id)\s*=\s*["']?(ou_[A-Za-z0-9_-]+)["']?\s*>/gi,
-    '<at user_id="$1">',
-  );
+  out = out.replace(/<at\s+(?:id|open_id|user_id)\s*=\s*["']?(ou_[A-Za-z0-9_-]+)["']?\s*>/gi, '<at user_id="$1">');
 
   return out;
 }
@@ -102,10 +99,7 @@ const FALLBACK_PREFETCHES: Prefetch[] = [prefetchChatBots, prefetchChatMembers];
  * disambiguation; remaining misses are dropped without a sentinel to
  * avoid false positives on `@` followed by non-name CJK runs.
  */
-export async function normalizeOutboundMentions(
-  text: string,
-  ctx: NormalizeContext,
-): Promise<NormalizeResult> {
+export async function normalizeOutboundMentions(text: string, ctx: NormalizeContext): Promise<NormalizeResult> {
   let out = normalizeOutboundMentionsTagPass(text);
 
   // Drop redundant `@` immediately preceding a canonical <at> tag.
@@ -150,11 +144,7 @@ function buildMaskPredicate(text: string): (idx: number) => boolean {
   return (idx) => masks.some(([s, e]) => idx >= s && idx < e);
 }
 
-function makeReplacement(
-  start: number,
-  end: number,
-  r: ResolvedCandidate,
-): Replacement {
+function makeReplacement(start: number, end: number, r: ResolvedCandidate): Replacement {
   return { start, end, text: `<at user_id="${r.openId}">${r.displayName}</at>` };
 }
 

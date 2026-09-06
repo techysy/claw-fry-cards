@@ -120,9 +120,7 @@ const FeishuTaskTaskSchema = Type.Union([
           '授权类型，默认 user。使用 user 时为用户身份（只能查看/操作自己有权限的任务），使用 tenant 时为应用身份。',
       }),
     ),
-    user_id_type: Type.Optional(
-      StringEnum(['open_id', 'union_id', 'user_id']),
-    ),
+    user_id_type: Type.Optional(StringEnum(['open_id', 'union_id', 'user_id'])),
   }),
 
   // GET
@@ -136,9 +134,7 @@ const FeishuTaskTaskSchema = Type.Union([
         description: '授权类型，默认 user。',
       }),
     ),
-    user_id_type: Type.Optional(
-      StringEnum(['open_id', 'union_id', 'user_id']),
-    ),
+    user_id_type: Type.Optional(StringEnum(['open_id', 'union_id', 'user_id'])),
   }),
 
   // LIST
@@ -169,9 +165,7 @@ const FeishuTaskTaskSchema = Type.Union([
         description: '授权类型，默认 user。',
       }),
     ),
-    user_id_type: Type.Optional(
-      StringEnum(['open_id', 'union_id', 'user_id']),
-    ),
+    user_id_type: Type.Optional(StringEnum(['open_id', 'union_id', 'user_id'])),
   }),
 
   // PATCH
@@ -259,9 +253,7 @@ const FeishuTaskTaskSchema = Type.Union([
         description: '授权类型，默认 user。',
       }),
     ),
-    user_id_type: Type.Optional(
-      StringEnum(['open_id', 'union_id', 'user_id']),
-    ),
+    user_id_type: Type.Optional(StringEnum(['open_id', 'union_id', 'user_id'])),
   }),
 
   // ADD_MEMBERS
@@ -279,8 +271,7 @@ const FeishuTaskTaskSchema = Type.Union([
         role: Type.Optional(StringEnum(['assignee', 'follower'])),
       }),
       {
-        description:
-          '要添加的成员列表（assignee=负责人，follower=关注人）。成员类型支持 user 和 app，默认为 user。',
+        description: '要添加的成员列表（assignee=负责人，follower=关注人）。成员类型支持 user 和 app，默认为 user。',
       },
     ),
     client_token: Type.Optional(
@@ -293,9 +284,7 @@ const FeishuTaskTaskSchema = Type.Union([
         description: '授权类型，默认 user。',
       }),
     ),
-    user_id_type: Type.Optional(
-      StringEnum(['open_id', 'union_id', 'user_id']),
-    ),
+    user_id_type: Type.Optional(StringEnum(['open_id', 'union_id', 'user_id'])),
   }),
 
   // APPEND_STEPS
@@ -333,94 +322,94 @@ const FeishuTaskTaskSchema = Type.Union([
 
 type FeishuTaskTaskParams =
   | {
-    action: 'create';
-    summary: string;
-    current_user_id?: string;
-    description?: string;
-    due?: {
-      timestamp: string;
-      is_all_day?: boolean;
+      action: 'create';
+      summary: string;
+      current_user_id?: string;
+      description?: string;
+      due?: {
+        timestamp: string;
+        is_all_day?: boolean;
+      };
+      start?: {
+        timestamp: string;
+        is_all_day?: boolean;
+      };
+      members?: Array<{
+        id: string;
+        type?: 'user' | 'app';
+        role?: 'assignee' | 'follower';
+      }>;
+      repeat_rule?: string;
+      tasklists?: Array<{
+        tasklist_guid: string;
+        section_guid?: string;
+      }>;
+      auth_type?: 'tenant' | 'user';
+      user_id_type?: 'open_id' | 'union_id' | 'user_id';
+    }
+  | {
+      action: 'get';
+      task_guid: string;
+      auth_type?: 'tenant' | 'user';
+      user_id_type?: 'open_id' | 'union_id' | 'user_id';
+    }
+  | {
+      action: 'list';
+      page_size?: number;
+      page_token?: string;
+      completed?: boolean;
+      agent_task_status?: number;
+      auth_type?: 'tenant' | 'user';
+      user_id_type?: 'open_id' | 'union_id' | 'user_id';
+    }
+  | {
+      action: 'patch';
+      task_guid: string;
+      summary?: string;
+      description?: string;
+      due?: {
+        timestamp: string;
+        is_all_day?: boolean;
+      };
+      start?: {
+        timestamp: string;
+        is_all_day?: boolean;
+      };
+      completed_at?: string;
+      agent_task_progress?: string;
+      agent_task_status?: number;
+      text_deliveries?: string[];
+      members?: Array<{
+        id: string;
+        type?: 'user' | 'app';
+        role?: 'assignee' | 'follower';
+      }>;
+      repeat_rule?: string;
+      auth_type?: 'tenant' | 'user';
+      user_id_type?: 'open_id' | 'union_id' | 'user_id';
+    }
+  | {
+      action: 'add_members';
+      task_guid: string;
+      members: Array<{
+        id: string;
+        type?: 'user' | 'app';
+        role?: 'assignee' | 'follower';
+      }>;
+      client_token?: string;
+      auth_type?: 'tenant' | 'user';
+      user_id_type?: 'open_id' | 'union_id' | 'user_id';
+    }
+  | {
+      action: 'append_steps';
+      task_guid: string;
+      idempotent_key: string;
+      task_steps: Array<{
+        quote: string;
+        content: string;
+        timestamp: number;
+      }>;
     };
-    start?: {
-      timestamp: string;
-      is_all_day?: boolean;
-    };
-    members?: Array<{
-      id: string;
-      type?: 'user' | 'app';
-      role?: 'assignee' | 'follower';
-    }>;
-    repeat_rule?: string;
-    tasklists?: Array<{
-      tasklist_guid: string;
-      section_guid?: string;
-    }>;
-    auth_type?: 'tenant' | 'user';
-    user_id_type?: 'open_id' | 'union_id' | 'user_id';
-  }
-  | {
-    action: 'get';
-    task_guid: string;
-    auth_type?: 'tenant' | 'user';
-    user_id_type?: 'open_id' | 'union_id' | 'user_id';
-  }
-  | {
-    action: 'list';
-    page_size?: number;
-    page_token?: string;
-    completed?: boolean;
-    agent_task_status?: number;
-    auth_type?: 'tenant' | 'user';
-    user_id_type?: 'open_id' | 'union_id' | 'user_id';
-  }
-  | {
-    action: 'patch';
-    task_guid: string;
-    summary?: string;
-    description?: string;
-    due?: {
-      timestamp: string;
-      is_all_day?: boolean;
-    };
-    start?: {
-      timestamp: string;
-      is_all_day?: boolean;
-    };
-    completed_at?: string;
-    agent_task_progress?: string;
-    agent_task_status?: number;
-    text_deliveries?: string[];
-    members?: Array<{
-      id: string;
-      type?: 'user' | 'app';
-      role?: 'assignee' | 'follower';
-    }>;
-    repeat_rule?: string;
-    auth_type?: 'tenant' | 'user';
-    user_id_type?: 'open_id' | 'union_id' | 'user_id';
-  }
-  | {
-    action: 'add_members';
-    task_guid: string;
-    members: Array<{
-      id: string;
-      type?: 'user' | 'app';
-      role?: 'assignee' | 'follower';
-    }>;
-    client_token?: string;
-    auth_type?: 'tenant' | 'user';
-    user_id_type?: 'open_id' | 'union_id' | 'user_id';
-  }
-  | {
-    action: 'append_steps';
-    task_guid: string;
-    idempotent_key: string;
-    task_steps: Array<{
-      quote: string;
-      content: string;
-      timestamp: number;
-    }>;
-  };
 
 // ---------------------------------------------------------------------------
 // Registration
@@ -763,18 +752,16 @@ export function registerFeishuTaskTaskTool(api: OpenClawPluginApi): void {
                 });
               }
 
-              const tatRes = await rawLarkRequest(
-                {
-                  brand: client.account.brand,
-                  path: '/open-apis/auth/v3/tenant_access_token/internal/',
-                  method: 'POST',
-                  body: {
-                    app_id: client.sdk.appId,
-                    app_secret: client.sdk.appSecret,
-                  },
+              const tatRes = await rawLarkRequest({
+                brand: client.account.brand,
+                path: '/open-apis/auth/v3/tenant_access_token/internal/',
+                method: 'POST',
+                body: {
+                  app_id: client.sdk.appId,
+                  app_secret: client.sdk.appSecret,
                 },
-              );;
-              const token = (tatRes as any)?.tenant_access_token ?? "";
+              });
+              const token = (tatRes as any)?.tenant_access_token ?? '';
 
               const res = await client.invokeByPath(
                 'feishu_task_task.append_steps',
@@ -788,7 +775,7 @@ export function registerFeishuTaskTaskTool(api: OpenClawPluginApi): void {
                     task_steps: p.task_steps,
                   },
                   headers: {
-                    'authorization': `Bearer ${token}`,
+                    authorization: `Bearer ${token}`,
                   },
                 },
               );

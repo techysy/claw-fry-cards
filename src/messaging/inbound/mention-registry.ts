@@ -81,11 +81,7 @@ export function recordSender(chatId: string, openId: string, name: string): void
  *  Alice ") — name comparison is case-insensitive and ignores surrounding
  * whitespace.
  */
-export function lookupByName(
-  chatId: string,
-  name: string,
-  opts: { ttlMs?: number } = {},
-): string | undefined {
+export function lookupByName(chatId: string, name: string, opts: { ttlMs?: number } = {}): string | undefined {
   const chatMap = registry.get(chatId);
   if (!chatMap) return undefined;
   const entry = chatMap.get(normalizeName(name));

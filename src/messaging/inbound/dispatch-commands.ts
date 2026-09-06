@@ -109,9 +109,7 @@ export async function dispatchSystemCommand(
   let delivered = false;
   const suppressToolDetails = isLifecycleSessionCommand(dc.ctx.content);
 
-  dc.log(
-    `feishu[${dc.account.accountId}]: detected system command, using plain-text dispatch`,
-  );
+  dc.log(`feishu[${dc.account.accountId}]: detected system command, using plain-text dispatch`);
   log.info('system command detected, plain-text dispatch');
 
   await dc.core.channel.reply.dispatchReplyWithBufferedBlockDispatcher({

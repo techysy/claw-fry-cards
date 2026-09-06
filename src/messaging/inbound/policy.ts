@@ -52,7 +52,7 @@ export function resolveFeishuAllowlistMatch(params: {
     return { allowed: true, matchKey: senderId, matchSource: 'id' };
   }
 
-/*  // Match by sender display name
+  /*  // Match by sender display name
   const senderName = params.senderName?.toLowerCase();
   if (senderName && allowFrom.includes(senderName)) {
     return { allowed: true, matchKey: senderName, matchSource: 'name' };

@@ -182,8 +182,7 @@ export async function handleFeishuCommentEvent(params: {
   // Fall back to the resolved comment text, where @mentions are normalized
   // into "@<open_id>" by extractElementText().
   const eventMentioned = event.notice_meta?.is_mentioned ?? event.is_mention;
-  const textMentioned =
-    Boolean(botOpenId) && Boolean(turn.commentText?.includes(`@${botOpenId}`));
+  const textMentioned = Boolean(botOpenId) && Boolean(turn.commentText?.includes(`@${botOpenId}`));
   if (eventMentioned !== true && !textMentioned) {
     log(
       `feishu[${accountId}]: comment event not mentioning bot, skipping` +
@@ -244,10 +243,7 @@ export async function handleFeishuCommentEvent(params: {
     `feishu[${accountId}]: comment event on ${commentId}` +
       `${event.reply_id ? ` (reply ${event.reply_id})` : ''}, dispatching to agent`,
   );
-  logger.info(
-    `comment event on ${commentId}` +
-      `${event.reply_id ? ` (reply ${event.reply_id})` : ''}`,
-  );
+  logger.info(`comment event on ${commentId}` + `${event.reply_id ? ` (reply ${event.reply_id})` : ''}`);
 
   const historyLimit = Math.max(
     0,

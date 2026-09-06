@@ -15,13 +15,7 @@
 import type { OpenClawPluginApi } from 'openclaw/plugin-sdk/core';
 import { Type } from '@sinclair/typebox';
 
-import {
-  assertLarkOk,
-  createToolContext,
-  handleInvokeErrorWithAutoAuth,
-  json,
-  registerTool,
-} from '../helpers';
+import { assertLarkOk, createToolContext, handleInvokeErrorWithAutoAuth, json, registerTool } from '../helpers';
 import type { PaginatedData } from '../sdk-types';
 
 // ---------------------------------------------------------------------------

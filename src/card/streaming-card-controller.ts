@@ -133,14 +133,31 @@ export class StreamingCardController {
     return Date.now() - this.dispatchStartTime;
   }
 
-  private resolvePanelConfig(): { unifiedPanelMinDurationMs?: number; contextDisplayMode?: 'text' | 'bar' | 'text_bar'; expanded?: boolean; modelAliases?: Record<string, string> } | undefined {
+  private resolvePanelConfig():
+    | {
+        unifiedPanelMinDurationMs?: number;
+        contextDisplayMode?: 'text' | 'bar' | 'text_bar';
+        expanded?: boolean;
+        modelAliases?: Record<string, string>;
+      }
+    | undefined {
     const feishuCfgAll = this.deps.cfg?.channels?.feishu as unknown;
     log.info('probe: runtime feishu cfg', { feishuCfg: JSON.stringify(feishuCfgAll ?? null) });
-    const feishuCfg = this.deps.cfg?.channels?.feishu as { panel?: { unifiedPanelMinDuration?: number; contextDisplayMode?: 'text' | 'bar' | 'text_bar'; expanded?: boolean; modelAliases?: Record<string, string> } } | undefined;
+    const feishuCfg = this.deps.cfg?.channels?.feishu as
+      | {
+          panel?: {
+            unifiedPanelMinDuration?: number;
+            contextDisplayMode?: 'text' | 'bar' | 'text_bar';
+            expanded?: boolean;
+            modelAliases?: Record<string, string>;
+          };
+        }
+      | undefined;
     const p = feishuCfg?.panel;
     if (!p) return undefined;
     return {
-      unifiedPanelMinDurationMs: typeof p.unifiedPanelMinDuration === 'number' ? p.unifiedPanelMinDuration * 1000 : undefined,
+      unifiedPanelMinDurationMs:
+        typeof p.unifiedPanelMinDuration === 'number' ? p.unifiedPanelMinDuration * 1000 : undefined,
       contextDisplayMode: p.contextDisplayMode,
       expanded: p.expanded,
       modelAliases: p.modelAliases,
@@ -167,12 +184,16 @@ export class StreamingCardController {
       const db = new DatabaseSync(dbPath, { readOnly: true });
       try {
         const window = db
-          .prepare('SELECT session_id FROM session_windows WHERE lower(session_key) = ? ORDER BY updated_at DESC LIMIT 1')
+          .prepare(
+            'SELECT session_id FROM session_windows WHERE lower(session_key) = ? ORDER BY updated_at DESC LIMIT 1',
+          )
           .get(sessionKey) as { session_id: string } | undefined;
         if (!window) return undefined;
 
         const row = db
-          .prepare("SELECT event_json FROM transcript_events WHERE session_id = ? AND event_json LIKE '%usage%' ORDER BY rowid DESC LIMIT 1")
+          .prepare(
+            "SELECT event_json FROM transcript_events WHERE session_id = ? AND event_json LIKE '%usage%' ORDER BY rowid DESC LIMIT 1",
+          )
           .get(window.session_id) as { event_json: string } | undefined;
         if (!row) return undefined;
 
@@ -217,8 +238,12 @@ export class StreamingCardController {
   /** Resolve a model's context window from cfg.models.providers. */
   private resolveContextWindow(provider: string | undefined, model: string | undefined): number | undefined {
     try {
-      const providers = (this.deps.cfg as { models?: { providers?: Record<string, { models?: Array<{ id?: string; contextWindow?: number }> }> } }).models
-        ?.providers ?? {};
+      const providers =
+        (
+          this.deps.cfg as {
+            models?: { providers?: Record<string, { models?: Array<{ id?: string; contextWindow?: number }> }> };
+          }
+        ).models?.providers ?? {};
       const pcfg = provider ? providers[provider] : undefined;
       if (!pcfg || !Array.isArray(pcfg.models)) return undefined;
       const found = pcfg.models.find((m) => m && m.id === model);
@@ -628,7 +653,8 @@ export class StreamingCardController {
       if (this.cardKit.cardMessageId) {
         // 🍤 无 token 增量时的流式补偿：streaming_mode 仍开启时灌入最终全文，
         // CardKit 客户端自行播放逐字打字机动画，随后再关流式、替换终态卡。
-        const isNoReplyLeakPre = !this.text.completedText && SILENT_REPLY_TOKEN.startsWith(this.text.accumulatedText.trim());
+        const isNoReplyLeakPre =
+          !this.text.completedText && SILENT_REPLY_TOKEN.startsWith(this.text.accumulatedText.trim());
         const preDisplayText =
           this.text.completedText || (isNoReplyLeakPre ? '' : this.text.accumulatedText) || EMPTY_REPLY_FALLBACK_TEXT;
         if (idleEffectiveCardId && preDisplayText.trim()) {
