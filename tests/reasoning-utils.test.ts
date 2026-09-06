@@ -3,7 +3,12 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { normalizeToolName, redactInlineSecrets, sanitizeParamsForLog, truncateText } from '../src/card/reasoning-utils';
+import {
+  normalizeToolName,
+  redactInlineSecrets,
+  sanitizeParamsForLog,
+  truncateText,
+} from '../src/card/reasoning-utils';
 
 // ---------------------------------------------------------------------------
 // normalizeToolName

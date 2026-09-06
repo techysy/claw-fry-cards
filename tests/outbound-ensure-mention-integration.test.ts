@@ -10,10 +10,12 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const sendTextLarkMock = vi.hoisted(() => vi.fn().mockResolvedValue({
-  messageId: 'om_sent',
-  chatId: 'oc_test',
-}));
+const sendTextLarkMock = vi.hoisted(() =>
+  vi.fn().mockResolvedValue({
+    messageId: 'om_sent',
+    chatId: 'oc_test',
+  }),
+);
 
 vi.mock('../src/messaging/outbound/deliver', () => ({
   sendTextLark: sendTextLarkMock,
@@ -50,10 +52,7 @@ vi.mock('../src/core/synthetic-target', () => ({
 
 import { feishuOutbound } from '../src/messaging/outbound/outbound';
 import { runWithBotPeerContext } from '../src/messaging/outbound/bot-peer-context';
-import {
-  recordMention,
-  resetMentionRegistry,
-} from '../src/messaging/inbound/mention-registry';
+import { recordMention, resetMentionRegistry } from '../src/messaging/inbound/mention-registry';
 
 const CHAT = 'oc_test';
 
@@ -68,18 +67,15 @@ afterEach(() => {
 
 describe('sendText + ensureMention via AsyncLocalStorage', () => {
   it('injects an <at> element when bot-peer context is active and LLM forgot the @', async () => {
-    await runWithBotPeerContext(
-      { peerOpenId: 'ou_peer_bot', peerName: 'PeerBot' },
-      async () => {
-        await feishuOutbound.sendText!({
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          cfg: {} as any,
-          to: CHAT,
-          text: '好的，我去查',
-          accountId: 'acct1',
-        });
-      },
-    );
+    await runWithBotPeerContext({ peerOpenId: 'ou_peer_bot', peerName: 'PeerBot' }, async () => {
+      await feishuOutbound.sendText!({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        cfg: {} as any,
+        to: CHAT,
+        text: '好的，我去查',
+        accountId: 'acct1',
+      });
+    });
 
     expect(sendTextLarkMock).toHaveBeenCalledTimes(1);
     const sent = sendTextLarkMock.mock.calls[0][0].text;
@@ -104,18 +100,15 @@ describe('sendText + ensureMention via AsyncLocalStorage', () => {
   });
 
   it('is a no-op when the LLM already mentioned the peer correctly', async () => {
-    await runWithBotPeerContext(
-      { peerOpenId: 'ou_peer_bot', peerName: 'PeerBot' },
-      async () => {
-        await feishuOutbound.sendText!({
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          cfg: {} as any,
-          to: CHAT,
-          text: '收到 <at user_id="ou_peer_bot">PeerBot</at>，我去查',
-          accountId: 'acct1',
-        });
-      },
-    );
+    await runWithBotPeerContext({ peerOpenId: 'ou_peer_bot', peerName: 'PeerBot' }, async () => {
+      await feishuOutbound.sendText!({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        cfg: {} as any,
+        to: CHAT,
+        text: '收到 <at user_id="ou_peer_bot">PeerBot</at>，我去查',
+        accountId: 'acct1',
+      });
+    });
 
     const sent = sendTextLarkMock.mock.calls[0][0].text;
     // Standard <at> element appears exactly once.
@@ -124,16 +117,13 @@ describe('sendText + ensureMention via AsyncLocalStorage', () => {
   });
 
   it('does not re-@ the peer on later sends in the same dispatch (cross-chunk de-dup)', async () => {
-    await runWithBotPeerContext(
-      { peerOpenId: 'ou_peer_bot', peerName: 'PeerBot' },
-      async () => {
-        // Two sends within one dispatch (e.g. a reply split into chunks).
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await feishuOutbound.sendText!({ cfg: {} as any, to: CHAT, text: '第一段', accountId: 'acct1' });
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await feishuOutbound.sendText!({ cfg: {} as any, to: CHAT, text: '第二段', accountId: 'acct1' });
-      },
-    );
+    await runWithBotPeerContext({ peerOpenId: 'ou_peer_bot', peerName: 'PeerBot' }, async () => {
+      // Two sends within one dispatch (e.g. a reply split into chunks).
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await feishuOutbound.sendText!({ cfg: {} as any, to: CHAT, text: '第一段', accountId: 'acct1' });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await feishuOutbound.sendText!({ cfg: {} as any, to: CHAT, text: '第二段', accountId: 'acct1' });
+    });
 
     expect(sendTextLarkMock).toHaveBeenCalledTimes(2);
     const first = sendTextLarkMock.mock.calls[0][0].text;
@@ -145,18 +135,15 @@ describe('sendText + ensureMention via AsyncLocalStorage', () => {
 
   it('composes with normalize: LLM writes "@PeerBot", normalize rewrites, ensureMention then no-ops', async () => {
     recordMention(CHAT, 'ou_peer_bot', 'PeerBot');
-    await runWithBotPeerContext(
-      { peerOpenId: 'ou_peer_bot', peerName: 'PeerBot' },
-      async () => {
-        await feishuOutbound.sendText!({
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          cfg: {} as any,
-          to: CHAT,
-          text: '@PeerBot 我去查',
-          accountId: 'acct1',
-        });
-      },
-    );
+    await runWithBotPeerContext({ peerOpenId: 'ou_peer_bot', peerName: 'PeerBot' }, async () => {
+      await feishuOutbound.sendText!({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        cfg: {} as any,
+        to: CHAT,
+        text: '@PeerBot 我去查',
+        accountId: 'acct1',
+      });
+    });
 
     const sent = sendTextLarkMock.mock.calls[0][0].text;
     const matches = sent.match(/<at user_id="ou_peer_bot">/g) ?? [];

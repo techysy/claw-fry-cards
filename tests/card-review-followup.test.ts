@@ -37,22 +37,36 @@ vi.mock('../src/card/flush-controller', () => ({
     constructor() {}
     cancelPendingFlush() {}
     complete() {}
-    waitForFlush() { return Promise.resolve(); }
+    waitForFlush() {
+      return Promise.resolve();
+    }
     setCardMessageReady() {}
-    throttledUpdate() { return Promise.resolve(); }
+    throttledUpdate() {
+      return Promise.resolve();
+    }
   },
 }));
 vi.mock('../src/card/image-resolver', () => ({
   ImageResolver: class {
-    resolveImages(t: string) { return t; }
-    resolveImagesAwait(t: string) { return Promise.resolve(t); }
+    resolveImages(t: string) {
+      return t;
+    }
+    resolveImagesAwait(t: string) {
+      return Promise.resolve(t);
+    }
   },
 }));
 vi.mock('../src/card/unavailable-guard', () => ({
   UnavailableGuard: class {
-    shouldSkip() { return false; }
-    terminate() { return false; }
-    get isTerminated() { return false; }
+    shouldSkip() {
+      return false;
+    }
+    terminate() {
+      return false;
+    }
+    get isTerminated() {
+      return false;
+    }
   },
 }));
 
@@ -69,11 +83,7 @@ function buildTable(label: string): string {
 }
 
 function buildCodeBlockWithTables(count: number): string {
-  return [
-    '```md',
-    ...Array.from({ length: count }, (_, i) => buildTable(`code-${i + 1}`)),
-    '```',
-  ].join('\n\n');
+  return ['```md', ...Array.from({ length: count }, (_, i) => buildTable(`code-${i + 1}`)), '```'].join('\n\n');
 }
 
 // ---------------------------------------------------------------------------
@@ -131,10 +141,7 @@ describe('prepareTerminalCardContent', () => {
       },
     };
 
-    const safeContent = prepareTerminalCardContent(
-      { text: rawText },
-      imageResolver,
-    );
+    const safeContent = prepareTerminalCardContent({ text: rawText }, imageResolver);
 
     expect(safeContent.text).toMatch(/^Resolved/);
     expect(findMarkdownTablesOutsideCodeBlocks(safeContent.text).length).toBe(2);

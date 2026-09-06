@@ -1,9 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import {
-  clearAllSentinelStores,
-  getSentinelStore,
-  type SentinelEntry,
-} from '../src/messaging/inbound/sentinel-store';
+import { clearAllSentinelStores, getSentinelStore, type SentinelEntry } from '../src/messaging/inbound/sentinel-store';
 
 describe('SentinelStore', () => {
   beforeEach(() => clearAllSentinelStores());

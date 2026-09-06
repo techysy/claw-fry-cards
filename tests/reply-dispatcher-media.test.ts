@@ -88,12 +88,16 @@ let terminateReturn = true;
 const terminateCalls: Array<{ source: string; err: unknown }> = [];
 vi.mock('../src/card/unavailable-guard', () => ({
   UnavailableGuard: class {
-    shouldSkip() { return false; }
+    shouldSkip() {
+      return false;
+    }
     terminate(source: string, err?: unknown) {
       terminateCalls.push({ source, err });
       return terminateReturn;
     }
-    get isTerminated() { return false; }
+    get isTerminated() {
+      return false;
+    }
   },
 }));
 
@@ -115,10 +119,12 @@ interface TestContext {
   sentMedia: unknown[];
 }
 
-function createDispatcher(options: {
-  sendMediaImpl?: (payload: unknown) => Promise<void>;
-  terminateReturn?: boolean;
-} = {}): TestContext {
+function createDispatcher(
+  options: {
+    sendMediaImpl?: (payload: unknown) => Promise<void>;
+    terminateReturn?: boolean;
+  } = {},
+): TestContext {
   const sentText: unknown[] = [];
   const sentCards: unknown[] = [];
   const sentMedia: unknown[] = [];
@@ -127,10 +133,18 @@ function createDispatcher(options: {
   terminateReturn = options.terminateReturn ?? true;
   terminateCalls.length = 0;
 
-  mockSendMessageFeishu.mockImplementation(async (payload: unknown) => { sentText.push(payload); });
-  mockSendMarkdownCardFeishu.mockImplementation(async (payload: unknown) => { sentCards.push(payload); });
+  mockSendMessageFeishu.mockImplementation(async (payload: unknown) => {
+    sentText.push(payload);
+  });
+  mockSendMarkdownCardFeishu.mockImplementation(async (payload: unknown) => {
+    sentCards.push(payload);
+  });
 
-  const sendMediaImpl = options.sendMediaImpl ?? (async (payload: unknown) => { sentMedia.push(payload); });
+  const sendMediaImpl =
+    options.sendMediaImpl ??
+    (async (payload: unknown) => {
+      sentMedia.push(payload);
+    });
   mockSendMediaLark.mockImplementation(sendMediaImpl);
 
   const result = createFeishuReplyDispatcher({
@@ -199,7 +213,9 @@ describe('reply-dispatcher media delivery', () => {
   it('failed media send triggers staticGuard terminate', async () => {
     const mediaError = new Error('bot removed from chat');
     const ctx = createDispatcher({
-      sendMediaImpl: async () => { throw mediaError; },
+      sendMediaImpl: async () => {
+        throw mediaError;
+      },
       terminateReturn: true,
     });
 

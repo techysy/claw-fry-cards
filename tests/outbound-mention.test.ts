@@ -6,14 +6,8 @@
  */
 
 import { beforeEach, describe, expect, it } from 'vitest';
-import {
-  ensureMention,
-  normalizeOutboundMentions,
-} from '../src/messaging/outbound/outbound-mention';
-import {
-  recordMention,
-  resetMentionRegistry,
-} from '../src/messaging/inbound/mention-registry';
+import { ensureMention, normalizeOutboundMentions } from '../src/messaging/outbound/outbound-mention';
+import { recordMention, resetMentionRegistry } from '../src/messaging/inbound/mention-registry';
 
 const CHAT = 'oc_test';
 
@@ -26,45 +20,31 @@ beforeEach(() => {
 
 describe('normalizeOutboundMentions — six LLM variants', () => {
   it('@Name → standard <at>', () => {
-    expect(normalizeOutboundMentions('hi @Alice', CHAT)).toBe(
-      'hi <at user_id="ou_alice">Alice</at>',
-    );
+    expect(normalizeOutboundMentions('hi @Alice', CHAT)).toBe('hi <at user_id="ou_alice">Alice</at>');
   });
 
   it('@[Name] → standard <at>', () => {
-    expect(normalizeOutboundMentions('hi @[Alice] there', CHAT)).toBe(
-      'hi <at user_id="ou_alice">Alice</at> there',
-    );
+    expect(normalizeOutboundMentions('hi @[Alice] there', CHAT)).toBe('hi <at user_id="ou_alice">Alice</at> there');
   });
 
   it('@<Name> → standard <at>', () => {
-    expect(normalizeOutboundMentions('hi @<Alice>', CHAT)).toBe(
-      'hi <at user_id="ou_alice">Alice</at>',
-    );
+    expect(normalizeOutboundMentions('hi @<Alice>', CHAT)).toBe('hi <at user_id="ou_alice">Alice</at>');
   });
 
   it('<@Name> → standard <at>', () => {
-    expect(normalizeOutboundMentions('hi <@Alice>!', CHAT)).toBe(
-      'hi <at user_id="ou_alice">Alice</at>!',
-    );
+    expect(normalizeOutboundMentions('hi <@Alice>!', CHAT)).toBe('hi <at user_id="ou_alice">Alice</at>!');
   });
 
   it('<at>Name</at> (no user_id) → standard <at>', () => {
-    expect(normalizeOutboundMentions('hi <at>Alice</at>', CHAT)).toBe(
-      'hi <at user_id="ou_alice">Alice</at>',
-    );
+    expect(normalizeOutboundMentions('hi <at>Alice</at>', CHAT)).toBe('hi <at user_id="ou_alice">Alice</at>');
   });
 
   it('{{Name}} → standard <at>', () => {
-    expect(normalizeOutboundMentions('hi {{Alice}}', CHAT)).toBe(
-      'hi <at user_id="ou_alice">Alice</at>',
-    );
+    expect(normalizeOutboundMentions('hi {{Alice}}', CHAT)).toBe('hi <at user_id="ou_alice">Alice</at>');
   });
 
   it('CJK name', () => {
-    expect(normalizeOutboundMentions('请 @张三 看看', CHAT)).toBe(
-      '请 <at user_id="ou_zhang">张三</at> 看看',
-    );
+    expect(normalizeOutboundMentions('请 @张三 看看', CHAT)).toBe('请 <at user_id="ou_zhang">张三</at> 看看');
   });
 });
 
@@ -84,9 +64,7 @@ describe('normalizeOutboundMentions — boundary behavior', () => {
   });
 
   it('does not touch @ inside email addresses', () => {
-    expect(normalizeOutboundMentions('contact me@example.com', CHAT)).toBe(
-      'contact me@example.com',
-    );
+    expect(normalizeOutboundMentions('contact me@example.com', CHAT)).toBe('contact me@example.com');
   });
 
   it('returns input unchanged when chatId is empty', () => {
@@ -114,14 +92,10 @@ describe('ensureMention — bot-peer safety net', () => {
   });
 
   it('falls back to openId when peerName is missing', () => {
-    expect(ensureMention('reply', 'ou_peer', '')).toBe(
-      '<at user_id="ou_peer">ou_peer</at> reply',
-    );
+    expect(ensureMention('reply', 'ou_peer', '')).toBe('<at user_id="ou_peer">ou_peer</at> reply');
   });
 
   it('returns just the @ element when reply text is empty', () => {
-    expect(ensureMention('', 'ou_peer', 'PeerBot')).toBe(
-      '<at user_id="ou_peer">PeerBot</at>',
-    );
+    expect(ensureMention('', 'ou_peer', 'PeerBot')).toBe('<at user_id="ou_peer">PeerBot</at>');
   });
 });

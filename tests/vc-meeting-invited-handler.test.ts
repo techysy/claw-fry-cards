@@ -1,42 +1,39 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const {
-  dispatchToAgentMock,
-  getLarkAccountMock,
-  readFeishuAllowFromStoreMock,
-  sendPairingReplyMock,
-} = vi.hoisted(() => ({
-  dispatchToAgentMock: vi.fn(),
-  getLarkAccountMock: vi.fn(),
-  readFeishuAllowFromStoreMock: vi.fn(),
-  sendPairingReplyMock: vi.fn(),
-}))
+const { dispatchToAgentMock, getLarkAccountMock, readFeishuAllowFromStoreMock, sendPairingReplyMock } = vi.hoisted(
+  () => ({
+    dispatchToAgentMock: vi.fn(),
+    getLarkAccountMock: vi.fn(),
+    readFeishuAllowFromStoreMock: vi.fn(),
+    sendPairingReplyMock: vi.fn(),
+  }),
+);
 
 vi.mock('../src/messaging/inbound/dispatch', () => ({
   dispatchToAgent: dispatchToAgentMock,
-}))
+}));
 
 vi.mock('../src/core/accounts', () => ({
   getLarkAccount: getLarkAccountMock,
-}))
+}));
 
 vi.mock('../src/messaging/inbound/gate', () => ({
   readFeishuAllowFromStore: readFeishuAllowFromStoreMock,
-}))
+}));
 
 vi.mock('../src/messaging/inbound/gate-effects', () => ({
   sendPairingReply: sendPairingReplyMock,
-}))
+}));
 
 vi.mock('../src/core/lark-logger', () => ({
   larkLogger: () => ({ info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
-}))
+}));
 
-import { handleFeishuVcMeetingInvited } from '../src/messaging/inbound/vc-meeting-invited-handler'
-import { SYNTHETIC_VC_CHAT_ID } from '../src/core/synthetic-target'
+import { handleFeishuVcMeetingInvited } from '../src/messaging/inbound/vc-meeting-invited-handler';
+import { SYNTHETIC_VC_CHAT_ID } from '../src/core/synthetic-target';
 
 beforeEach(() => {
-  vi.clearAllMocks()
+  vi.clearAllMocks();
 
   getLarkAccountMock.mockReturnValue({
     accountId: 'default',
@@ -46,14 +43,14 @@ beforeEach(() => {
     config: { dmPolicy: 'pairing' },
     appId: 'cli_xxx',
     appSecret: 'secret',
-  })
-  readFeishuAllowFromStoreMock.mockResolvedValue([])
-  sendPairingReplyMock.mockResolvedValue(undefined)
-})
+  });
+  readFeishuAllowFromStoreMock.mockResolvedValue([]);
+  sendPairingReplyMock.mockResolvedValue(undefined);
+});
 
 describe('handleFeishuVcMeetingInvited', () => {
   it('dispatches a synthetic natural-language inbound with synthetic chatId', async () => {
-    readFeishuAllowFromStoreMock.mockResolvedValueOnce(['ou_inviter_1'])
+    readFeishuAllowFromStoreMock.mockResolvedValueOnce(['ou_inviter_1']);
 
     await handleFeishuVcMeetingInvited({
       cfg: {} as never,
@@ -64,9 +61,9 @@ describe('handleFeishuVcMeetingInvited', () => {
         invite_time: '1712345678',
       },
       accountId: 'default',
-    })
+    });
 
-    expect(dispatchToAgentMock).toHaveBeenCalledTimes(1)
+    expect(dispatchToAgentMock).toHaveBeenCalledTimes(1);
     expect(dispatchToAgentMock).toHaveBeenCalledWith(
       expect.objectContaining({
         ctx: expect.objectContaining({
@@ -79,7 +76,8 @@ describe('handleFeishuVcMeetingInvited', () => {
           // When the upstream event has no call_id, the synthetic prompt
           // omits the call_id instruction entirely so we don't assume the
           // downstream join tool already accepts that parameter.
-          content: 'Use the available tool to join the meeting with meeting number 123456789 immediately. Do not ask for confirmation.',
+          content:
+            'Use the available tool to join the meeting with meeting number 123456789 immediately. Do not ask for confirmation.',
         }),
         extraInboundFields: expect.objectContaining({
           SyntheticEventType: 'vc.bot.meeting_invited_v1',
@@ -95,11 +93,11 @@ describe('handleFeishuVcMeetingInvited', () => {
         replyToMessageId: undefined,
         skipTyping: true,
       }),
-    )
-  })
+    );
+  });
 
   it('forwards call_id from invite event into synthetic prompt and VcCallId', async () => {
-    readFeishuAllowFromStoreMock.mockResolvedValueOnce(['ou_inviter_1'])
+    readFeishuAllowFromStoreMock.mockResolvedValueOnce(['ou_inviter_1']);
 
     await handleFeishuVcMeetingInvited({
       cfg: {} as never,
@@ -111,9 +109,9 @@ describe('handleFeishuVcMeetingInvited', () => {
         call_id: 'a08e06bf-9a41-44e4-a89c-a7871899e783',
       },
       accountId: 'default',
-    })
+    });
 
-    expect(dispatchToAgentMock).toHaveBeenCalledTimes(1)
+    expect(dispatchToAgentMock).toHaveBeenCalledTimes(1);
     expect(dispatchToAgentMock).toHaveBeenCalledWith(
       expect.objectContaining({
         ctx: expect.objectContaining({
@@ -124,11 +122,11 @@ describe('handleFeishuVcMeetingInvited', () => {
           VcCallId: 'a08e06bf-9a41-44e4-a89c-a7871899e783',
         }),
       }),
-    )
-  })
+    );
+  });
 
   it('falls back to meeting number plus invite time when event_id is absent', async () => {
-    readFeishuAllowFromStoreMock.mockResolvedValueOnce(['ou_inviter_1'])
+    readFeishuAllowFromStoreMock.mockResolvedValueOnce(['ou_inviter_1']);
 
     await handleFeishuVcMeetingInvited({
       cfg: {} as never,
@@ -138,20 +136,20 @@ describe('handleFeishuVcMeetingInvited', () => {
         invite_time: '1712345678',
       },
       accountId: 'default',
-    })
+    });
 
-    expect(dispatchToAgentMock).toHaveBeenCalledTimes(1)
+    expect(dispatchToAgentMock).toHaveBeenCalledTimes(1);
     expect(dispatchToAgentMock).toHaveBeenCalledWith(
       expect.objectContaining({
         ctx: expect.objectContaining({
           messageId: 'vc-invited:123456789:1712345678',
         }),
       }),
-    )
-  })
+    );
+  });
 
   it('prefers inviter user_id over union_id when open_id is absent', async () => {
-    readFeishuAllowFromStoreMock.mockResolvedValueOnce(['u_inviter_1'])
+    readFeishuAllowFromStoreMock.mockResolvedValueOnce(['u_inviter_1']);
 
     await handleFeishuVcMeetingInvited({
       cfg: {} as never,
@@ -164,20 +162,20 @@ describe('handleFeishuVcMeetingInvited', () => {
         invite_time: '1712345678',
       },
       accountId: 'default',
-    })
+    });
 
-    expect(dispatchToAgentMock).toHaveBeenCalledTimes(1)
+    expect(dispatchToAgentMock).toHaveBeenCalledTimes(1);
     expect(dispatchToAgentMock).toHaveBeenCalledWith(
       expect.objectContaining({
         ctx: expect.objectContaining({
           senderId: 'u_inviter_1',
         }),
       }),
-    )
-  })
+    );
+  });
 
   it('falls back to inviter union_id when open_id and user_id are absent', async () => {
-    readFeishuAllowFromStoreMock.mockResolvedValueOnce(['on_inviter_1'])
+    readFeishuAllowFromStoreMock.mockResolvedValueOnce(['on_inviter_1']);
 
     await handleFeishuVcMeetingInvited({
       cfg: {} as never,
@@ -190,17 +188,17 @@ describe('handleFeishuVcMeetingInvited', () => {
         invite_time: '1712345678',
       },
       accountId: 'default',
-    })
+    });
 
-    expect(dispatchToAgentMock).toHaveBeenCalledTimes(1)
+    expect(dispatchToAgentMock).toHaveBeenCalledTimes(1);
     expect(dispatchToAgentMock).toHaveBeenCalledWith(
       expect.objectContaining({
         ctx: expect.objectContaining({
           senderId: 'on_inviter_1',
         }),
       }),
-    )
-  })
+    );
+  });
 
   it('skips dispatch when inviter ids are missing', async () => {
     await handleFeishuVcMeetingInvited({
@@ -211,10 +209,10 @@ describe('handleFeishuVcMeetingInvited', () => {
         invite_time: '1712345678',
       },
       accountId: 'default',
-    })
+    });
 
-    expect(dispatchToAgentMock).not.toHaveBeenCalled()
-  })
+    expect(dispatchToAgentMock).not.toHaveBeenCalled();
+  });
 
   it('skips dispatch entirely when meeting_no is missing', async () => {
     await handleFeishuVcMeetingInvited({
@@ -225,10 +223,10 @@ describe('handleFeishuVcMeetingInvited', () => {
         invite_time: '1712345678',
       },
       accountId: 'default',
-    })
+    });
 
-    expect(dispatchToAgentMock).not.toHaveBeenCalled()
-  })
+    expect(dispatchToAgentMock).not.toHaveBeenCalled();
+  });
 
   it('skips dispatch when both inviter and bot are absent', async () => {
     await handleFeishuVcMeetingInvited({
@@ -238,10 +236,10 @@ describe('handleFeishuVcMeetingInvited', () => {
         invite_time: '1712345678',
       },
       accountId: 'default',
-    })
+    });
 
-    expect(dispatchToAgentMock).not.toHaveBeenCalled()
-  })
+    expect(dispatchToAgentMock).not.toHaveBeenCalled();
+  });
 
   it('skips dispatch when inviter ids are empty strings', async () => {
     await handleFeishuVcMeetingInvited({
@@ -255,10 +253,10 @@ describe('handleFeishuVcMeetingInvited', () => {
         invite_time: '1712345678',
       },
       accountId: 'default',
-    })
+    });
 
-    expect(dispatchToAgentMock).not.toHaveBeenCalled()
-  })
+    expect(dispatchToAgentMock).not.toHaveBeenCalled();
+  });
 
   it('rejects vc invited events when dmPolicy=disabled', async () => {
     getLarkAccountMock.mockReturnValueOnce({
@@ -269,7 +267,7 @@ describe('handleFeishuVcMeetingInvited', () => {
       config: { dmPolicy: 'disabled' },
       appId: 'cli_xxx',
       appSecret: 'secret',
-    })
+    });
 
     await handleFeishuVcMeetingInvited({
       cfg: {} as never,
@@ -278,11 +276,11 @@ describe('handleFeishuVcMeetingInvited', () => {
         inviter: { id: { open_id: 'ou_inviter_1' }, user_name: 'Alice' },
       },
       accountId: 'default',
-    })
+    });
 
-    expect(dispatchToAgentMock).not.toHaveBeenCalled()
-    expect(sendPairingReplyMock).not.toHaveBeenCalled()
-  })
+    expect(dispatchToAgentMock).not.toHaveBeenCalled();
+    expect(sendPairingReplyMock).not.toHaveBeenCalled();
+  });
 
   it('creates a pairing request and skips dispatch when inviter is not paired', async () => {
     await handleFeishuVcMeetingInvited({
@@ -292,17 +290,17 @@ describe('handleFeishuVcMeetingInvited', () => {
         inviter: { id: { open_id: 'ou_inviter_1' }, user_name: 'Alice' },
       },
       accountId: 'default',
-    })
+    });
 
-    expect(dispatchToAgentMock).not.toHaveBeenCalled()
-    expect(sendPairingReplyMock).toHaveBeenCalledTimes(1)
+    expect(dispatchToAgentMock).not.toHaveBeenCalled();
+    expect(sendPairingReplyMock).toHaveBeenCalledTimes(1);
     expect(sendPairingReplyMock).toHaveBeenCalledWith({
       senderId: 'ou_inviter_1',
       chatId: 'ou_inviter_1',
       accountId: 'default',
       accountScopedCfg: expect.any(Object),
-    })
-  })
+    });
+  });
 
   it('rejects allowlist mode when inviter is not explicitly allowed', async () => {
     getLarkAccountMock.mockReturnValueOnce({
@@ -313,7 +311,7 @@ describe('handleFeishuVcMeetingInvited', () => {
       config: { dmPolicy: 'allowlist', allowFrom: [] },
       appId: 'cli_xxx',
       appSecret: 'secret',
-    })
+    });
 
     await handleFeishuVcMeetingInvited({
       cfg: {} as never,
@@ -322,9 +320,9 @@ describe('handleFeishuVcMeetingInvited', () => {
         inviter: { id: { open_id: 'ou_inviter_1' }, user_name: 'Alice' },
       },
       accountId: 'default',
-    })
+    });
 
-    expect(dispatchToAgentMock).not.toHaveBeenCalled()
-    expect(sendPairingReplyMock).not.toHaveBeenCalled()
-  })
-})
+    expect(dispatchToAgentMock).not.toHaveBeenCalled();
+    expect(sendPairingReplyMock).not.toHaveBeenCalled();
+  });
+});

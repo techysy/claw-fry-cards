@@ -43,16 +43,18 @@ describe('dispatchFeishuPluginInteractiveHandler', () => {
     });
 
     expect(response).toEqual({ toast: { type: 'success', content: 'handler reached' } });
-    expect(handler).toHaveBeenCalledWith(expect.objectContaining({
-      channel: 'feishu',
-      accountId: 'account-a',
-      senderId: 'ou_sender',
-      conversationId: 'oc_chat',
-      messageId: 'om_card',
-      namespace: 'example_action.submit',
-      payload: '',
-      action: 'example_action.submit',
-    }));
+    expect(handler).toHaveBeenCalledWith(
+      expect.objectContaining({
+        channel: 'feishu',
+        accountId: 'account-a',
+        senderId: 'ou_sender',
+        conversationId: 'oc_chat',
+        messageId: 'om_card',
+        namespace: 'example_action.submit',
+        payload: '',
+        action: 'example_action.submit',
+      }),
+    );
   });
 
   it('routes Feishu form submit by action.name when action.value is absent', async () => {
@@ -86,17 +88,19 @@ describe('dispatchFeishuPluginInteractiveHandler', () => {
     });
 
     expect(response).toEqual({ toast: { type: 'success', content: 'form handler reached' } });
-    expect(handler).toHaveBeenCalledWith(expect.objectContaining({
-      channel: 'feishu',
-      accountId: 'account-a',
-      senderId: 'ou_sender',
-      conversationId: 'oc_chat',
-      messageId: 'om_card',
-      namespace: 'example_form.submit',
-      payload: '',
-      action: 'example_form.submit',
-      rawEvent,
-    }));
+    expect(handler).toHaveBeenCalledWith(
+      expect.objectContaining({
+        channel: 'feishu',
+        accountId: 'account-a',
+        senderId: 'ou_sender',
+        conversationId: 'oc_chat',
+        messageId: 'om_card',
+        namespace: 'example_form.submit',
+        payload: '',
+        action: 'example_form.submit',
+        rawEvent,
+      }),
+    );
   });
 
   it('routes Feishu form_submit by form name when button action value and name are absent', async () => {
@@ -130,16 +134,18 @@ describe('dispatchFeishuPluginInteractiveHandler', () => {
     });
 
     expect(response).toEqual({ toast: { type: 'success', content: 'form submit handler reached' } });
-    expect(handler).toHaveBeenCalledWith(expect.objectContaining({
-      channel: 'feishu',
-      accountId: 'account-a',
-      senderId: 'ou_sender',
-      conversationId: 'oc_chat',
-      messageId: 'om_card',
-      namespace: 'example_form.submit',
-      payload: '',
-      action: 'example_form.submit',
-      rawEvent,
-    }));
+    expect(handler).toHaveBeenCalledWith(
+      expect.objectContaining({
+        channel: 'feishu',
+        accountId: 'account-a',
+        senderId: 'ou_sender',
+        conversationId: 'oc_chat',
+        messageId: 'om_card',
+        namespace: 'example_form.submit',
+        payload: '',
+        action: 'example_form.submit',
+        rawEvent,
+      }),
+    );
   });
 });

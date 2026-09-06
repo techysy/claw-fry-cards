@@ -18,8 +18,7 @@ vi.mock('../src/channel/chat-queue', () => ({
   enqueueFeishuChatTask: (params: unknown) => mockEnqueueFeishuChatTask(params as never),
   hasActiveTask: () => false,
   getActiveDispatcher: () => undefined,
-  threadScopedKey: (base: string, threadId?: string) =>
-    threadId ? `${base}:thread:${threadId}` : base,
+  threadScopedKey: (base: string, threadId?: string) => (threadId ? `${base}:thread:${threadId}` : base),
 }));
 
 import { handleFeishuMessage as handlerMock } from '../src/messaging/inbound/handler';

@@ -48,7 +48,9 @@ vi.mock('../src/core/lark-client', () => ({
           chunkTextWithMode: (text: string) => (text ? [text] : []),
         },
         reply: {
-          createReplyDispatcherWithTyping: (hooks: { deliver: (payload: unknown, ctx?: { kind?: string }) => Promise<void> }) => ({
+          createReplyDispatcherWithTyping: (hooks: {
+            deliver: (payload: unknown, ctx?: { kind?: string }) => Promise<void>;
+          }) => ({
             dispatcher: {
               sendToolResult: (payload: unknown) => {
                 void hooks.deliver(payload, { kind: 'tool' });
@@ -106,14 +108,22 @@ vi.mock('../src/card/streaming-card-controller', () => ({
     onIdle = controllerSpies.onIdle;
     abortCard = controllerSpies.abortCard;
     shouldSkipForUnavailable = controllerSpies.shouldSkipForUnavailable;
-    terminateIfUnavailable() { return false; }
+    terminateIfUnavailable() {
+      return false;
+    }
   },
 }));
 vi.mock('../src/card/unavailable-guard', () => ({
   UnavailableGuard: class {
-    shouldSkip() { return false; }
-    terminate() { return false; }
-    get isTerminated() { return false; }
+    shouldSkip() {
+      return false;
+    }
+    terminate() {
+      return false;
+    }
+    get isTerminated() {
+      return false;
+    }
   },
 }));
 
@@ -147,8 +157,8 @@ describe('reply-dispatcher tool_use mode', () => {
     expect(result.replyOptions).not.toHaveProperty('onReasoningEnd');
     expect(result.replyOptions).not.toHaveProperty('onAssistantMessageStart');
     expect(result.replyOptions).toHaveProperty('onToolStart');
-    expect((result.replyOptions.shouldEmitToolResult as (() => boolean))()).toBe(false);
-    expect((result.replyOptions.shouldEmitToolOutput as (() => boolean))()).toBe(false);
+    expect((result.replyOptions.shouldEmitToolResult as () => boolean)()).toBe(false);
+    expect((result.replyOptions.shouldEmitToolOutput as () => boolean)()).toBe(false);
 
     await (result.replyOptions.onReasoningStream as (payload: { text: string }) => Promise<void>)({
       text: 'Reasoning:\n_first pass_',

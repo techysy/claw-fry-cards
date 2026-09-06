@@ -54,11 +54,7 @@ function extractHttpStatus(err: unknown): number | undefined {
   return undefined;
 }
 
-async function withRetry<T>(
-  fn: () => Promise<T>,
-  _label: string,
-  maxRetries = MEDIA_RETRY_MAX,
-): Promise<T> {
+async function withRetry<T>(fn: () => Promise<T>, _label: string, maxRetries = MEDIA_RETRY_MAX): Promise<T> {
   let lastError: unknown;
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {

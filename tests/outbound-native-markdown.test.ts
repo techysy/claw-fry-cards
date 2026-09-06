@@ -11,10 +11,7 @@ describe('shouldUseCard — scope A: never force a card for rich text (M2 Task 1
   });
 
   it('AC-M2-E1: tables beyond FEISHU_CARD_TABLE_LIMIT stay on the text path (false)', () => {
-    const manyTables = Array.from(
-      { length: 5 },
-      (_, i) => `| a${i} | b |\n| --- | --- |\n| 1 | 2 |`,
-    ).join('\n\n');
+    const manyTables = Array.from({ length: 5 }, (_, i) => `| a${i} | b |\n| --- | --- |\n| 1 | 2 |`).join('\n\n');
     expect(shouldUseCard(manyTables)).toBe(false);
   });
 

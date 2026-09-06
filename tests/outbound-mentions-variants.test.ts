@@ -11,39 +11,25 @@ describe('tag-level normalization', () => {
   });
 
   it('normalizes single-quoted user_id', () => {
-    expect(
-      normalizeOutboundMentionsTagPass(`<at user_id='ou_abc'>Alice</at>`),
-    ).toBe(`<at user_id="ou_abc">Alice</at>`);
+    expect(normalizeOutboundMentionsTagPass(`<at user_id='ou_abc'>Alice</at>`)).toBe(`<at user_id="ou_abc">Alice</at>`);
   });
 
   it('normalizes unquoted user_id', () => {
-    expect(normalizeOutboundMentionsTagPass(`<at user_id=ou_abc>Alice</at>`)).toBe(
-      `<at user_id="ou_abc">Alice</at>`,
-    );
+    expect(normalizeOutboundMentionsTagPass(`<at user_id=ou_abc>Alice</at>`)).toBe(`<at user_id="ou_abc">Alice</at>`);
   });
 
   it('normalizes id= attribute (card syntax leaked to post)', () => {
-    expect(normalizeOutboundMentionsTagPass(`<at id="ou_abc">Alice</at>`)).toBe(
-      `<at user_id="ou_abc">Alice</at>`,
-    );
-    expect(normalizeOutboundMentionsTagPass(`<at id=ou_abc></at>`)).toBe(
-      `<at user_id="ou_abc"></at>`,
-    );
+    expect(normalizeOutboundMentionsTagPass(`<at id="ou_abc">Alice</at>`)).toBe(`<at user_id="ou_abc">Alice</at>`);
+    expect(normalizeOutboundMentionsTagPass(`<at id=ou_abc></at>`)).toBe(`<at user_id="ou_abc"></at>`);
   });
 
   it('normalizes open_id= attribute', () => {
-    expect(normalizeOutboundMentionsTagPass(`<at open_id="ou_abc">Alice</at>`)).toBe(
-      `<at user_id="ou_abc">Alice</at>`,
-    );
+    expect(normalizeOutboundMentionsTagPass(`<at open_id="ou_abc">Alice</at>`)).toBe(`<at user_id="ou_abc">Alice</at>`);
   });
 
   it('normalizes <at id=all> and <at user_id="all">', () => {
-    expect(normalizeOutboundMentionsTagPass(`<at id=all></at>`)).toBe(
-      `<at user_id="all">Everyone</at>`,
-    );
-    expect(normalizeOutboundMentionsTagPass(`<at user_id="all"></at>`)).toBe(
-      `<at user_id="all">Everyone</at>`,
-    );
+    expect(normalizeOutboundMentionsTagPass(`<at id=all></at>`)).toBe(`<at user_id="all">Everyone</at>`);
+    expect(normalizeOutboundMentionsTagPass(`<at user_id="all"></at>`)).toBe(`<at user_id="all">Everyone</at>`);
   });
 
   it('@all is idempotent: canonical input unchanged on second pass', () => {
@@ -65,10 +51,10 @@ describe('multi-wrap cleanup', () => {
   afterEach(() => vi.restoreAllMocks());
 
   it('strips @ prefix from already-wrapped <at>', async () => {
-    const result = await normalizeOutboundMentions(
-      `hi @<at user_id="ou_abc">Alice</at> there`,
-      { chatId: 'oc_x', account: fakeAccount },
-    );
+    const result = await normalizeOutboundMentions(`hi @<at user_id="ou_abc">Alice</at> there`, {
+      chatId: 'oc_x',
+      account: fakeAccount,
+    });
     expect(result.normalizedText).toBe(`hi <at user_id="ou_abc">Alice</at> there`);
   });
 });

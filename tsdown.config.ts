@@ -12,13 +12,6 @@ export default defineConfig({
   outDir: 'dist',
   dts: true,
   deps: {
-    neverBundle: [
-      /^openclaw(\/.*)?$/,
-      /^@larksuiteoapi\//,
-      /^@sinclair\//,
-      'image-size',
-      'zod',
-      /^node:/,
-    ],
+    neverBundle: [/^openclaw(\/.*)?$/, /^@larksuiteoapi\//, /^@sinclair\//, 'image-size', 'zod', /^node:/],
   },
 });

@@ -58,7 +58,11 @@ vi.mock('../src/core/accounts', () => ({
 }));
 vi.mock('../src/core/lark-client', () => ({
   LarkClient: {
-    runtime: { channel: { commands: { shouldComputeCommandAuthorized: false, resolveCommandAuthorizedFromAuthorizers: vi.fn() } } },
+    runtime: {
+      channel: {
+        commands: { shouldComputeCommandAuthorized: false, resolveCommandAuthorizedFromAuthorizers: vi.fn() },
+      },
+    },
   },
 }));
 vi.mock('../src/core/lark-logger', () => ({ larkLogger: () => ({ info: vi.fn(), warn: vi.fn(), error: vi.fn() }) }));

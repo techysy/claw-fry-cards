@@ -250,7 +250,6 @@ beforeAll(() => {
         resolveRequireMention: (): boolean => true,
       },
     },
-     
   } as any);
 });
 

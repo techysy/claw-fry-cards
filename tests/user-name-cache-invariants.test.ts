@@ -31,9 +31,7 @@ describe('UserNameCache: reverse-index invariants', () => {
     cache.setWithKind('ou_a', 'AliceRenamed', 'user');
 
     expect(cache.lookupByName('Alice')).toEqual([]);
-    expect(cache.lookupByName('AliceRenamed')).toEqual([
-      { openId: 'ou_a', name: 'AliceRenamed', kind: 'user' },
-    ]);
+    expect(cache.lookupByName('AliceRenamed')).toEqual([{ openId: 'ou_a', name: 'AliceRenamed', kind: 'user' }]);
   });
 
   it('two openIds sharing same name: both appear in reverse bucket; deleting one preserves the other', () => {
@@ -48,9 +46,7 @@ describe('UserNameCache: reverse-index invariants', () => {
     // overwrite ou_a with a different name; ou_b should remain
     cache.setWithKind('ou_a', 'OtherName', 'user');
 
-    expect(cache.lookupByName('Zhang')).toEqual([
-      { openId: 'ou_b', name: 'Zhang', kind: 'user' },
-    ]);
+    expect(cache.lookupByName('Zhang')).toEqual([{ openId: 'ou_b', name: 'Zhang', kind: 'user' }]);
   });
 
   it('LRU eviction also removes the entry from the reverse index', () => {
@@ -61,12 +57,8 @@ describe('UserNameCache: reverse-index invariants', () => {
 
     expect(cache.get('ou_a')).toBeUndefined();
     expect(cache.lookupByName('Alice')).toEqual([]); // critical: reverse index cleaned
-    expect(cache.lookupByName('Bob')).toEqual([
-      { openId: 'ou_b', name: 'Bob', kind: 'user' },
-    ]);
-    expect(cache.lookupByName('Charlie')).toEqual([
-      { openId: 'ou_c', name: 'Charlie', kind: 'user' },
-    ]);
+    expect(cache.lookupByName('Bob')).toEqual([{ openId: 'ou_b', name: 'Bob', kind: 'user' }]);
+    expect(cache.lookupByName('Charlie')).toEqual([{ openId: 'ou_c', name: 'Charlie', kind: 'user' }]);
   });
 });
 
@@ -166,7 +158,7 @@ describe('UserNameCache: chat-members LRU and rewrite', () => {
     cache.recordChatBots('oc_c', [{ openId: 'ou_c', name: 'C' }]); // should evict oc_b (oldest), not oc_a
 
     expect(cache.getChatBots('oc_a')).not.toBeNull(); // bumped, survived
-    expect(cache.getChatBots('oc_b')).toBeNull();      // oldest, evicted
+    expect(cache.getChatBots('oc_b')).toBeNull(); // oldest, evicted
     expect(cache.getChatBots('oc_c')).not.toBeNull();
   });
 });

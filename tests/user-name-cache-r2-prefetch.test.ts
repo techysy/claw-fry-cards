@@ -27,7 +27,12 @@ describe('prefetchChatBots', () => {
   it('calls /open-apis/im/v1/chats/{id}/members/bots and seeds cache', async () => {
     const account = makeAccount();
     const requestSpy = vi.fn().mockResolvedValue({
-      data: { items: [{ open_id: 'ou_bot1', name: 'BotOne' }, { open_id: 'ou_bot2', name: 'BotTwo' }] },
+      data: {
+        items: [
+          { open_id: 'ou_bot1', name: 'BotOne' },
+          { open_id: 'ou_bot2', name: 'BotTwo' },
+        ],
+      },
     });
     vi.spyOn(LarkClient, 'fromAccount').mockReturnValue({
       sdk: { request: requestSpy } as any,
@@ -178,9 +183,7 @@ describe('prefetchChatMembers', () => {
 
   it('skips API call when chatMembers cache already fresh', async () => {
     const account = makeAccount();
-    getUserNameCache('acct1').recordChatMembers('oc_chat4', [
-      { openId: 'ou_u', name: 'User', kind: 'user' },
-    ]);
+    getUserNameCache('acct1').recordChatMembers('oc_chat4', [{ openId: 'ou_u', name: 'User', kind: 'user' }]);
 
     const requestSpy = vi.fn();
     vi.spyOn(LarkClient, 'fromAccount').mockReturnValue({ sdk: { request: requestSpy } as any } as any);

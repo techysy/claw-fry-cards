@@ -1,10 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { LarkAccount } from '../src/core/types';
 import { LarkClient } from '../src/core/lark-client';
-import {
-  clearUserNameCache,
-  getUserNameCache,
-} from '../src/messaging/inbound/user-name-cache';
+import { clearUserNameCache, getUserNameCache } from '../src/messaging/inbound/user-name-cache';
 import { normalizeOutboundMentions } from '../src/messaging/outbound/normalize-mentions';
 
 const fakeAccount: LarkAccount = {

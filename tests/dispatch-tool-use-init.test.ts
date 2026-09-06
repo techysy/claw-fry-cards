@@ -181,7 +181,11 @@ beforeEach(() => {
   vi.clearAllMocks();
 
   buildDispatchContextMock.mockReturnValue(createDispatchContext());
-  resolveToolUseDisplayConfigMock.mockReturnValue({ showToolUse: true, showToolResultDetail: false, showFullPaths: false });
+  resolveToolUseDisplayConfigMock.mockReturnValue({
+    showToolUse: true,
+    showToolResultDetail: false,
+    showFullPaths: false,
+  });
   createFeishuReplyDispatcherMock.mockReturnValue({
     dispatcher: createDispatcher(),
     replyOptions: {},
@@ -250,8 +254,10 @@ describe('dispatchToAgent tool_use trace initialization', () => {
     });
 
     expect(buildInboundPayloadMock).toHaveBeenCalledTimes(1);
-    const buildInboundPayloadArgs =
-      buildInboundPayloadMock.mock.calls[0] as unknown as [unknown, { extraFields?: unknown }];
+    const buildInboundPayloadArgs = buildInboundPayloadMock.mock.calls[0] as unknown as [
+      unknown,
+      { extraFields?: unknown },
+    ];
     expect(buildInboundPayloadArgs[1]).toMatchObject({
       extraFields: {
         SyntheticEventType: 'vc.bot.meeting_invited_v1',
@@ -259,5 +265,4 @@ describe('dispatchToAgent tool_use trace initialization', () => {
       },
     });
   });
-
 });

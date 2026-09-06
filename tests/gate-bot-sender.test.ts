@@ -179,7 +179,7 @@ describe('checkMessageGate with bot sender', () => {
 
   it('allowBots=true with explicit requireMention=true + not mentioned → drop (no_mention)', async () => {
     const r = await checkMessageGate({
-      ctx: makeCtx(),  // empty mentions
+      ctx: makeCtx(), // empty mentions
       accountFeishuCfg: {
         allowBots: true,
         requireMention: true,
@@ -196,7 +196,7 @@ describe('checkMessageGate with bot sender', () => {
 
   it('allowBots=true with requireMention unset + not mentioned → allowed (bot path defaults requireMention=false)', async () => {
     const r = await checkMessageGate({
-      ctx: makeCtx(),  // empty mentions, no requireMention in cfg
+      ctx: makeCtx(), // empty mentions, no requireMention in cfg
       accountFeishuCfg: { allowBots: true } as FeishuConfig,
       account: acct,
       accountScopedCfg: { channels: { feishu: { allowBots: true } } } as never,
@@ -296,5 +296,4 @@ describe('checkMessageGate with bot sender', () => {
     expect(r.allowed).toBe(false);
     expect(r.reason).toBe('group_not_allowed');
   });
-
 });

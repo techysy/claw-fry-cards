@@ -8,10 +8,7 @@ import { describe, expect, it } from 'vitest';
 import type { OpenClawConfig } from 'openclaw/plugin-sdk/core';
 import type { ResolverContext } from 'openclaw/plugin-sdk/channel-secret-basic-runtime';
 
-import {
-  collectRuntimeConfigAssignments,
-  secretTargetRegistryEntries,
-} from '../secret-contract-api.ts';
+import { collectRuntimeConfigAssignments, secretTargetRegistryEntries } from '../secret-contract-api.ts';
 
 function secretRef(id: string) {
   return { source: 'file' as const, provider: 'lark-secrets', id };
@@ -74,9 +71,7 @@ describe('Feishu secret contract API — appSecret (always required)', () => {
       accounts: { default: { enabled: true } },
     });
 
-    const topAssignment = context.assignments.find(
-      (a) => a.path === 'channels.feishu.appSecret',
-    );
+    const topAssignment = context.assignments.find((a) => a.path === 'channels.feishu.appSecret');
     expect(topAssignment).toBeDefined();
     topAssignment!.apply('resolved-top-appSecret');
     const feishu = cfg.channels?.feishu as Record<string, unknown>;
@@ -96,13 +91,10 @@ describe('Feishu secret contract API — appSecret (always required)', () => {
       },
     });
 
-    const acctAssignment = context.assignments.find(
-      (a) => a.path === 'channels.feishu.accounts.mediaops.appSecret',
-    );
+    const acctAssignment = context.assignments.find((a) => a.path === 'channels.feishu.accounts.mediaops.appSecret');
     expect(acctAssignment).toBeDefined();
     acctAssignment!.apply('resolved-acct-appSecret');
-    const account = (cfg.channels?.feishu as { accounts: Record<string, Record<string, unknown>> })
-      .accounts.mediaops;
+    const account = (cfg.channels?.feishu as { accounts: Record<string, Record<string, unknown>> }).accounts.mediaops;
     expect(account.appSecret).toBe('resolved-acct-appSecret');
   });
 
@@ -133,9 +125,7 @@ describe.each(['encryptKey', 'verificationToken'] as const)(
         accounts: { default: { enabled: true } },
       });
 
-      const topAssignment = context.assignments.find(
-        (a) => a.path === `channels.feishu.${field}`,
-      );
+      const topAssignment = context.assignments.find((a) => a.path === `channels.feishu.${field}`);
       expect(topAssignment).toBeDefined();
       topAssignment!.apply(`resolved-top-${field}`);
       const feishu = cfg.channels?.feishu as Record<string, unknown>;
@@ -160,8 +150,8 @@ describe.each(['encryptKey', 'verificationToken'] as const)(
       const acctAssignment = context.assignments.find((a) => a.path === acctPath);
       expect(acctAssignment).toBeDefined();
       acctAssignment!.apply(`resolved-acct-${field}`);
-      const account = (cfg.channels?.feishu as { accounts: Record<string, Record<string, unknown>> })
-        .accounts.webhookbot;
+      const account = (cfg.channels?.feishu as { accounts: Record<string, Record<string, unknown>> }).accounts
+        .webhookbot;
       expect(account[field]).toBe(`resolved-acct-${field}`);
     });
 

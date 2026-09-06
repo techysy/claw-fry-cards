@@ -70,9 +70,7 @@ describe('handleFeishuMessage self-echo filter', () => {
       runtime: { log, error: vi.fn(), exit: vi.fn() } as never,
     });
 
-    expect(
-      logs.some((l) => l.includes('drop self-echo') && l.includes('om_echo')),
-    ).toBe(true);
+    expect(logs.some((l) => l.includes('drop self-echo') && l.includes('om_echo'))).toBe(true);
   });
 
   it('does not filter when botOpenId is not yet populated (startup race)', async () => {

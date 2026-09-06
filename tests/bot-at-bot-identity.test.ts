@@ -6,10 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import {
-  buildFeishuGroupSystemPrompt,
-  buildFeishuIdentityFields,
-} from '../src/messaging/inbound/dispatch-builders';
+import { buildFeishuGroupSystemPrompt, buildFeishuIdentityFields } from '../src/messaging/inbound/dispatch-builders';
 import type { MessageContext } from '../src/messaging/types';
 
 function makeCtx(overrides: Partial<MessageContext> = {}): MessageContext {
