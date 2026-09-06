@@ -376,6 +376,7 @@ export function buildCardContent(
   data: {
     panel?: {
       unifiedPanelMinDurationMs?: number;
+    modelAliases?: Record<string, string>;
       contextDisplayMode?: ContextDisplayMode;
       expanded?: boolean;
     };
@@ -506,6 +507,7 @@ function buildCompleteCard(params: {
     unifiedPanelMinDurationMs?: number;
     contextDisplayMode?: ContextDisplayMode;
     expanded?: boolean;
+    modelAliases?: Record<string, string>;
   };
   elapsedMs?: number;
   isError?: boolean;
@@ -564,6 +566,10 @@ function buildCompleteCard(params: {
     const stateEmoji = isError ? '❌' : isAborted ? '⏹️' : '';
 
     const rawModel = (footerMetrics?.model ?? '').trim();
+  // 模型显示别名：完整 id 或裸名命中均替换（如 "mimo/mimo-v2.5" → "梁文锋"）
+  const aliasTable = panel?.modelAliases ?? {};
+  const modelShort =
+    aliasTable[rawModel] ?? aliasTable[rawModel.split('/').pop() ?? ''] ?? rawModel;
 
     const parts: string[] = ['🍤'];
     if (stateEmoji) parts.push(stateEmoji);
