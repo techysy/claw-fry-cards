@@ -1,76 +1,128 @@
-# OpenClaw Lark/Feishu Plugin
+# 🍤 openclaw-lark-cards
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![npm version](https://img.shields.io/npm/v/@larksuite/openclaw-lark.svg)](https://www.npmjs.com/package/@larksuite/openclaw-lark)
-[![Node.js Version](https://img.shields.io/badge/node-%3E%3D22-blue.svg)](https://nodejs.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![OpenClaw](https://img.shields.io/badge/OpenClaw-%E2%89%A52026.8.1-2463eb)](https://openclaw.ai)
+[![Node](https://img.shields.io/badge/Node-%E2%89%A522-blue)](https://nodejs.org/)
 
-[中文版](./README.zh.md) | English
+> OpenClaw 飞书/Lark 通道插件 — 在官方 [@larksuite/openclaw-lark](https://github.com/larksuite/openclaw-lark) 基础上适配 OpenClaw 2.0 SDK，并带来 fry 风格的虾条式流式卡片体验。
 
-This is the official Lark/Feishu plugin for OpenClaw, developed and maintained by the Lark/Feishu Open Platform team. It seamlessly connects your OpenClaw Agent to your Lark/Feishu workspace, enabling it to directly read from and write to messages, docs, bases, calendars, tasks, and more.
+**这是什么**：一个**飞书通道插件**（替代官方 `@larksuite/openclaw-lark` / 内置 `@openclaw/feishu`），负责 OpenClaw Agent 的飞书消息收发，并用 CardKit v2.0 流式卡片呈现每一轮回复。
 
-## Features
+**为什么存在**：官方通道插件停更于 2026-07-16，未适配 OpenClaw 2.0（SDK 导出重构、会话存储迁移 SQLite），在新版网关上无法加载。本项目完成了 2.0 适配，并顺手把流式卡片体验升级到 fry-cards（[🍟 hermes-fry-cards](https://github.com/techysy/hermes-fry-cards) / [🍤 claw-fry-cards](https://github.com/techysy/claw-fry-cards)）同款风格。
 
-This plugin provides comprehensive Lark/Feishu integration for OpenClaw, including:
+---
 
-| Category | Capabilities |
+## ✨ 特性
+
+### 通道能力（承自官方，2.0 全量适配）
+
+| 类别 | 能力 |
 |------|------|
-| 💬 Messenger | Read messages (group/DM history, thread replies), send messages, reply to messages, search messages, download images/files |
-| 📄 Docs | Create, update, and read documents |
-| 📊 Base | Create/manage bases, tables, fields, records (CRUD, batch operations, advanced filtering), views |
-| 📈 Sheets | Create, edit, and view spreadsheets |
-| 📅 Calendar | Manage calendars and events (create/query/update/delete/search), manage attendees, check free/busy status |
-| ✅ Tasks | Manage tasks (create/query/update/complete), manage task lists, subtasks, and comments |
+| 💬 消息 | 群聊/单聊收发、话题回复、消息搜索、图片/文件下载 |
+| 📄 文档 | 云文档创建/更新/读取 |
+| 📊 多维表格 | 数据表/字段/记录 CRUD、批量操作、高级筛选、视图 |
+| 📈 电子表格 | 创建、编辑、查看 |
+| 📅 日历 | 日程 CRUD、参会人、忙闲查询 |
+| ✅ 任务 | 任务/清单/子任务/评论管理 |
 
-Additionally, the plugin supports:
-- **📱 Interactive Cards**: Real-time status updates (Thinking/Generating/Complete), plus confirmation buttons for sensitive operations
-- **🌊 Streaming Responses**: Live streaming text directly within message cards
-- **🔒 Permission Policies**: Flexible access control policies for DMs and group chats
-- **⚙️ Advanced Group Configuration**: Per-group settings including allowlists, skill bindings, and custom system prompts
+### 🍤 虾条式流式卡片（本项目增强）
 
-## Security & Risk Warnings (Read Before Use)
+| 能力 | 说明 |
+|------|------|
+| ⚡ **派发即建卡** | 消息到达 1 秒内出现"处理中"卡片，生成期间不再是空白等待 |
+| ✍️ **打字机输出** | 答案逐字上屏（基于 CardKit streaming_mode 客户端动画） |
+| 🎯 **统一面板** | 完成态底部单一折叠面板，标题一行带全指标：`🍤 ⇲模型 · 💭N · 🔧N · 🎫↑in↓out · 📊上下文 x% · ⏱️耗时` |
+| 🎨 **状态边框** | 面板边框颜色随结果变化：绿=完成 · 红=出错 · 黄=停止；展开可见思考过程与工具步骤明细 |
+| 📊 **会话指标** | 模型名、token 用量、上下文窗口进度（实时读取 agent transcript SQLite） |
 
-This plugin integrates with OpenClaw AI automation capabilities and carries inherent risks such as model hallucinations, unpredictable execution, and prompt injection. After you authorize Lark/Feishu permissions, OpenClaw will act under your user identity within the authorized scope, which may lead to high-risk consequences such as leakage of sensitive data or unauthorized operations. Please use with caution.
+### OpenClaw 2.0 适配（Mirr0ch1 的适配工作 + 本项目整合）
 
-To reduce these risks, the plugin enables default security protections at multiple layers. However, these risks still exist. We strongly recommend that you do not proactively modify any default security settings; once relevant restrictions are relaxed, the risks will increase significantly, and you will bear the consequences.
+- SDK 导入路径迁移（`openclaw/plugin-sdk` → `plugin-sdk/core` 等 100+ 处）
+- 类型迁移（`ClawdbotConfig` → `OpenClawConfig`）、运行时配置 API 对齐
+- 会话指标从 legacy sessions.json 迁移到 agent transcript SQLite
+- 保留官方 TypeScript 源码与构建管线，产出标准 ESM（`dist/index.mjs`）
 
-We recommend using the Lark/Feishu bot connected to OpenClaw as a private conversational assistant. Do not add it to group chats or allow other users to interact with it, to avoid abuse of permissions or data leakage.
+---
 
-Please fully understand all usage risks. By using this plugin, you are deemed to voluntarily assume all related responsibilities.
+## 📦 安装
 
+**要求**：OpenClaw ≥ 2026.8.1（`openclaw -v` 检查）· Node.js ≥ 22
 
-**Disclaimer:**
+```bash
+# 从源码构建安装
+git clone https://github.com/techysy/openclaw-lark-cards.git
+cd openclaw-lark-cards
+npm install --legacy-peer-deps
+npm run build        # 产物在 dist/
 
-This software is licensed under the MIT License. When running, it calls Lark/Feishu Open Platform APIs. To use these APIs, you must comply with the following agreements and privacy policies:
+openclaw plugins install . --force --accept-capabilities
+openclaw gateway restart
+```
 
-- [Feishu Privacy Policy](https://www.feishu.cn/en/privacy?from=openclaw_plugin_readme)
-- [Feishu User Terms of Service](https://www.feishu.cn/en/terms?from=openclaw_plugin_readme)
-- [Feishu Store App Service Provider Security Management Specifications](https://open.larkoffice.com/document/uAjLw4CM/uMzNwEjLzcDMx4yM3ATM/management-practice/app-service-provider-security-management-specifications)
+> ⚠️ 若之前用过官方通道，先卸载并清理残留：`openclaw plugins uninstall feishu --force`（注意该命令会删除 `channels.feishu` 配置，请备份后恢复），并移除 `plugins.entries.feishu` 条目，否则网关收敛机制会把旧通道装回来。
 
-- [Lark Privacy Policy](https://www.larksuite.com/user-terms-of-service)
-- [Lark User Terms of Service](https://www.larksuite.com/privacy-policy)
+## ⚙️ 配置
 
-## Requirements & Installation
+`~/.openclaw/openclaw.json`：
 
-Before you start, make sure you have the following:
+```json
+{
+  "channels": {
+    "feishu": {
+      "enabled": true,
+      "domain": "feishu",
+      "connectionMode": "websocket",
+      "appId": "cli_xxxxxxxx",
+      "appSecret": "xxxxxxxx",
+      "dmPolicy": "open",
+      "allowFrom": ["*"],
+      "groupPolicy": "open",
+      "groupAllowFrom": ["*"],
+      "requireMention": true,
+      "streaming": true,
+      "replyMode": { "default": "streaming", "group": "streaming" }
+    }
+  },
+  "plugins": {
+    "entries": {
+      "openclaw-lark": { "enabled": true }
+    }
+  }
+}
+```
 
-- **Node.js**: `v22` or higher.
-- **OpenClaw**: OpenClaw is installed and works properly. For details, visit the [OpenClaw official website](https://openclaw.ai).
+**流式卡片三层开关**（缺一不可，排障按此顺序检查）：
 
-> **Note**: OpenClaw version must be **2026.2.26** or higher. Check with `openclaw -v`. If below this version, you may encounter issues. Upgrade with:
-> ```bash
-> npm install -g openclaw
-> ```
+| 层 | 配置 | 说明 |
+|----|------|------|
+| ① 总开关 | `streaming: true` | 没有它 `replyMode` 不会被读取，恒为纯文本 |
+| ② 模式 | `replyMode: "streaming"` 或 `{default, group, direct}` | 场景选择；auto 时私聊流式/群聊静态 |
+| ③ 工具展示 | 默认开启 | `toolUseDisplay` 不配置即启用（原版默认关闭，本项目已改） |
 
-## Usage Guide
+飞书应用需开通：`im:message`（收发消息）+ `cardkit:card`（卡片读写）。连接模式推荐 `websocket`（无需公网回调地址）。
 
-[How to Use the Official Lark/Feishu Plugin for OpenClaw](https://bytedance.larkoffice.com/docx/MFK7dDFLFoVlOGxWCv5cTXKmnMh)
+---
 
-## Contributing
+## 🧪 开发
 
-Community contributions are welcome! If you find a bug or have feature suggestions, please submit an [Issue](https://github.com/larksuite/openclaw-larksuite/issues) or a [Pull Request](https://github.com/larksuite/openclaw-larksuite/pulls).
+```bash
+npm install --legacy-peer-deps
+npm run build       # tsdown → dist/
+npm test            # vitest
+```
 
-For major changes, we recommend discussing with us first via an Issue.
+构建产物分 chunk（`index.mjs` + `monitor-<hash>.mjs`），部署时需全部拷贝到扩展目录并删除旧 hash 残留文件。
 
-## License
+## 🙏 归属与致谢
 
-This project is licensed under the **MIT License**. See [LICENSE](./LICENSE.md) for details.
+- **[larksuite/openclaw-lark](https://github.com/larksuite/openclaw-lark)**（MIT，© Lark/飞书开放平台团队）— 本项目的基座，通道能力全部承自官方代码
+- **[@Mirr0ch1](https://github.com/Mirr0ch1)** — OpenClaw 2.0 SDK 适配（原工作见 [Mirr0ch1/openclaw-lark-2](https://github.com/Mirr0ch1/openclaw-lark-2)），本项目的适配提交移植自其成果
+- **[@techysy](https://github.com/techysy) [hermes-fry-cards](https://github.com/techysy/hermes-fry-cards)** — 虾条/薯条流式卡片的样式与交互设计源头
+
+## 🔒 安全提示
+
+承袭官方插件的安全模型：OpenClaw AI 自动化存在模型幻觉、不可预测执行与提示注入风险；授权飞书权限后 Agent 将在授权范围内以你的身份操作。建议将机器人作为**私聊助手**使用，勿随意加入群聊，勿放宽默认安全策略。使用即表示理解并自担相关风险。
+
+## 📄 许可证
+
+[MIT](LICENSE) —— 沿用官方 openclaw-lark 的许可。
