@@ -564,13 +564,10 @@ function buildCompleteCard(params: {
     const stateEmoji = isError ? '❌' : isAborted ? '⏹️' : '';
 
     const rawModel = (footerMetrics?.model ?? '').trim();
-    const modelShort = rawModel.includes('/')
-      ? `⇲${rawModel.split('/').pop()}`
-      : rawModel;
 
     const parts: string[] = ['🍤'];
     if (stateEmoji) parts.push(stateEmoji);
-    if (modelShort) parts.push(modelShort);
+    if (rawModel) parts.push(rawModel);
     parts.push(`💭${hasReasoning ? 1 : 0}`, `🔧${toolCount}`);
 
     const inT = typeof footerMetrics?.inputTokens === 'number' ? footerMetrics.inputTokens : undefined;
