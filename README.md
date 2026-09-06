@@ -98,11 +98,26 @@ openclaw gateway restart
 | `display.show_context` | 上下文显示 | `true` |
 | `display.context_display_mode` | `text` / `bar` / `text_bar` | `text_bar` |
 | `display.truncate_model_name` | `openai/gpt-5.4` → `⇲gpt-5.4` | `true` |
+| `display.unified_panel_min_duration` | 统一面板耗时门槛（秒），回复 ≥ 此值必出面板 | `5` |
+| `streaming.stale_timeout_sec` | 无更新自动封卡超时（秒） | `900` |
 | `display.unified_panel_min_duration` | 面板耗时门槛（秒） | `5` |
 | `display.cancel_text_on_card` | 接管后取消官方文本 | `true` |
 | `display.loading_icon_img_key` | 自定义 loading 图标 | 内置 |
 
 </details>
+
+## 🎯 统一面板
+
+完成卡底部自动渲染的折叠面板（无独立开关，受 `show_tool_use` 与耗时门槛控制）：
+
+| 项 | 行为 |
+|----|------|
+| 标题 | `🍤 ⇲模型 · 💭N · 🔧N · 🎫↑in↓out · 📊used/total [████▓░] x% · ⏱️耗时`（`context_display_mode` 控制 📊 段样式，数据缺失段自动省略） |
+| 展开内容 | 思考过程（来自回复文本中的 `<thinking>` 等标签）+ 工具调用步骤（图标/状态/耗时/脱敏参数） |
+| 显示条件 | 回复耗时 ≥ `unified_panel_min_duration`（默认 5 秒），**或**存在思考/工具过程；`show_tool_use: false` 时整体关闭 |
+| 边框颜色 | 绿 = 完成 · 红 = 出错 · 黄 = 停止 |
+
+> 想每条回复都带面板：`unified_panel_min_duration: 0`。指标来自 `llm_output` 钩子（模型/token）与 `agent_end`（耗时）——**必须配置 `hooks.allowConversationAccess: true`**，否则这几段静默缺失。
 
 ## 🩺 故障排查
 
