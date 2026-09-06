@@ -186,11 +186,11 @@ export function compactNumber(value: number): string {
   const abs = Math.abs(value);
   if (abs >= 1_000_000) {
     const m = value / 1_000_000;
-    return m >= 100 ? `${Math.round(m)}M` : `${m.toFixed(1)}M`;
+    return m >= 100 ? `${Math.round(m)}m` : `${m.toFixed(1)}m`;
   }
   if (abs >= 1_000) {
     const k = value / 1_000;
-    return k >= 100 ? `${Math.round(k)}K` : `${k.toFixed(1)}K`;
+    return k >= 100 ? `${Math.round(k)}k` : `${k.toFixed(1)}k`;
   }
   return String(value);
 }
@@ -291,6 +291,23 @@ export function resolveModelAlias(entry: ModelAliasEntry | undefined, now = new 
     return rule.name;
   }
   return entry.name;
+}
+
+function buildFooter(zhText: string, enText: string, isError?: boolean): CardElement[] {
+  let zh = zhText;
+  let en = enText;
+  if (isError) {
+    zh = `<font color='red'>${zh}</font>`;
+    en = `<font color='red'>${en}</font>`;
+  }
+  return [
+    {
+      tag: 'markdown',
+      content: en,
+      i18n_content: { zh_cn: zh, en_us: en },
+      text_size: 'notation',
+    },
+  ];
 }
 
 export function formatFooterRuntimeSegments(params: {
@@ -569,6 +586,7 @@ function buildCompleteCard(params: {
     toolUseSteps,
     showToolUse = true,
     isAborted,
+    footer,
     footerMetrics,
     panel,
   } = params;
@@ -662,6 +680,28 @@ function buildCompleteCard(params: {
       padding: '8px 8px 8px 8px',
       elements: children,
     });
+  }
+
+  // 官方 footer 行（channels.feishu.footer.* 开启时渲染；与统一面板共存，默认全关）
+  const fp = formatFooterRuntimeSegments({
+    footer,
+    metrics: footerMetrics,
+    elapsedMs,
+    isError,
+    isAborted,
+  });
+  const footerZhLines: string[] = [];
+  const footerEnLines: string[] = [];
+  if (fp.primaryZh.length > 0) {
+    footerZhLines.push(fp.primaryZh.join(' · '));
+    footerEnLines.push(fp.primaryEn.join(' · '));
+  }
+  if (fp.detailZh.length > 0) {
+    footerZhLines.push(fp.detailZh.join(' · '));
+    footerEnLines.push(fp.detailEn.join(' · '));
+  }
+  if (footerZhLines.length > 0) {
+    elements.push(...buildFooter(footerZhLines.join(String.fromCharCode(10)), footerEnLines.join(String.fromCharCode(10)), isError));
   }
 
 // Use the answer text as the feed preview summary.

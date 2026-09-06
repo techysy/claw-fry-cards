@@ -90,7 +90,7 @@ describe('resolveToolUseDisplayConfig', () => {
     expect(config.showToolResultDetails).toBe(false);
   });
 
-  it('defaults to off when no inline, session, or config value is present', () => {
+  it('defaults to on when no inline, session, or config value is present (claw-fry: 工具面板默认开启)', () => {
     const storePath = createStorePath('hard-off');
 
     const config = resolveToolUseDisplayConfig({
@@ -101,8 +101,8 @@ describe('resolveToolUseDisplayConfig', () => {
       body: 'run tests',
     });
 
-    expect(config.mode).toBe('off');
-    expect(config.showToolUse).toBe(false);
+    expect(config.mode).toBe('on');
+    expect(config.showToolUse).toBe(true);
   });
 
   it.skip('falls back to the default-agent session key for non-default agents', () => {
