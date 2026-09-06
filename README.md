@@ -128,11 +128,9 @@ npm run build     # tsdown → dist/index.mjs
 
 已在真实 OpenClaw 2026.9.1 + 飞书环境全链路验证（建卡 → 工具进度 → 接管 → 统一面板）。
 
-## 🙏 归属与致谢
+## 🙏 归属
 
-- 卡片样式、状态机、节流调度移植自 **[hermes-fry-cards](https://github.com/techysy/hermes-fry-cards)**（MIT，同作者）——该项目源自 [hermes-lark-streaming](https://github.com/Cheerwhy/hermes-lark-streaming)（Cheerwhy，MIT）
-- 流式 loading 图标与官方 [openclaw-lark](https://github.com/larksuite/openclaw-lark) 通道通用
-- 姊妹项目 **[openclaw-lark-cards](https://github.com/techysy/openclaw-lark-cards)** — 官方通道的 2.0 适配 fork（完整通道级体验）
+移植自 [hermes-fry-cards](https://github.com/techysy/hermes-fry-cards)（源自 [hermes-lark-streaming](https://github.com/Cheerwhy/hermes-lark-streaming)，MIT）· 姊妹项目 [openclaw-lark-cards](https://github.com/techysy/openclaw-lark-cards)
 
 ## 📄 许可证
 
