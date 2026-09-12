@@ -140,18 +140,7 @@ const pluginConfigSchema = buildPluginConfigSchema(
         advanced: true,
         help: 'DeepSeek 等按峰谷计费的模型（可添加多条）：峰段显示峰时名称，谷段（闲时）显示谷时名称；与 modelAliases 可共存，同 key 手写优先',
       },
-      'panel.peakValley.match': {
-        label: '匹配模型',
-        advanced: true,
-        help: '大小写不敏感子串，如 "flash" 命中所有带 flash 的模型',
-      },
-      'panel.peakValley.peakName': { label: '峰时显示', advanced: true, help: '峰段（计费高峰窗口）内显示的名称，如 梁文锋⚡️' },
-      'panel.peakValley.valleyName': { label: '谷时显示', advanced: true, help: '谷段（闲时/优惠窗口）显示的名称，如 梁文谷⚡️' },
-      'panel.peakValley.schedule': {
-        label: '峰段窗口',
-        advanced: true,
-        help: 'deepseek / workday-918 / everyday-day / always-peak / custom',
-      },
+
     },
   },
 );
@@ -170,6 +159,31 @@ if (maProps?.additionalProperties && typeof maProps.additionalProperties === 'ob
       (b) => typeof b === 'object' && b !== null && (b as { type?: string }).type === 'object',
     );
     if (objectBranch) maProps.additionalProperties = objectBranch;
+  }
+}
+
+// peakValley 同理：数组|record 联合在 UI 上没有折叠能力（数组走条目编辑器），
+// 收敛为 record 形态（key = 匹配模型）后与 modelAliases 同构，宿主表单才给折叠处理。
+const panelUiProps = (
+  pluginConfigSchema.jsonSchema as {
+    properties?: { panel?: { properties?: Record<string, unknown> } };
+  }
+).properties?.panel?.properties;
+const peakValleyUi = panelUiProps?.peakValley as
+  | {
+      anyOf?: Array<{ type?: string; items?: unknown; additionalProperties?: unknown }>;
+      description?: string;
+    }
+  | undefined;
+if (peakValleyUi && Array.isArray(peakValleyUi.anyOf)) {
+  const recordBranch = peakValleyUi.anyOf.find(
+    (b) => typeof b === 'object' && b !== null && (b as { type?: string }).type === 'object',
+  );
+  if (recordBranch) {
+    panelUiProps!.peakValley = {
+      ...(recordBranch as Record<string, unknown>),
+      description: peakValleyUi.description,
+    };
   }
 }
 

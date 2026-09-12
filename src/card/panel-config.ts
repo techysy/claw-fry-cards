@@ -96,8 +96,13 @@ function readPanelSettings(raw: unknown): UnifiedPanelSettings | undefined {
   if (p.modelAliases && typeof p.modelAliases === 'object') {
     out.modelAliases = p.modelAliases as Record<string, ModelAliasEntry>;
   }
-  if (p.peakValley && Array.isArray(p.peakValley)) {
+  if (Array.isArray(p.peakValley)) {
     out.peakValley = p.peakValley as PeakValleyConfig[];
+  } else if (p.peakValley && typeof p.peakValley === 'object') {
+    // record 形态（Control UI 编辑器产出）：key 即 match，展开归一为数组
+    out.peakValley = Object.entries(p.peakValley as Record<string, Omit<PeakValleyConfig, 'match'>>).map(
+      ([match, v]) => ({ ...v, match }),
+    );
   }
   return Object.keys(out).length > 0 ? out : undefined;
 }

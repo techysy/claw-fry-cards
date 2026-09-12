@@ -7,146 +7,183 @@
     "./skills"
   ],
   "configSchema": {
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    "type": "object",
-    "properties": {
-      "panel": {
-        "type": "object",
-        "properties": {
-          "unifiedPanelMinDuration": {
-            "type": "number",
-            "description": "统一面板显示的耗时门槛（秒）：回复 ≥ 此值或有思考/工具过程时显示，0 = 每条必出（默认 5）"
-          },
-          "contextDisplayMode": {
-            "type": "string",
-            "enum": [
-              "text",
-              "bar",
-              "text_bar"
-            ],
-            "description": "上下文段样式：text（129.3k/1.0m (13%)）/ bar（[██▓░░░░░] 13%）/ text_bar（129.3k/1.0m [██▓░░░░░] 13%）；默认 text"
-          },
-          "expanded": {
-            "type": "boolean",
-            "description": "面板默认展开（默认折叠）"
-          },
-          "truncateModelName": {
-            "type": "boolean",
-            "description": "截断模型名显示：mimo/mimo-v2.5 → ⇲mimo-v2.5（默认 true；modelAliases 别名命中时优先显示别名）"
-          },
-          "modelAliases": {
-            "type": "object",
-            "propertyNames": {
-              "type": "string"
+    "schema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "panel": {
+          "type": "object",
+          "properties": {
+            "unifiedPanelMinDuration": {
+              "type": "number",
+              "description": "统一面板显示的耗时门槛（秒）：回复 ≥ 此值或有思考/工具过程时显示，0 = 每条必出（默认 5）"
             },
-            "additionalProperties": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "object",
-                  "properties": {
-                    "name": {
-                      "type": "string"
-                    },
-                    "timeAliases": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "days": {
-                            "anyOf": [
-                              {
-                                "type": "string"
-                              },
-                              {
-                                "type": "array",
-                                "items": {
-                                  "type": "integer",
-                                  "minimum": 0,
-                                  "maximum": 6
-                                }
-                              }
-                            ],
-                            "description": "生效星期：数组形式 [1,2,3,4,5]（0=周日，可多选）或区间字符串 \"1-5\"/\"0,6\"；省略 = 每天"
-                          },
-                          "start": {
-                            "type": "string",
-                            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
-                            "description": "开始时间 HH:MM（北京时间），支持跨午夜（如 22:00-02:00）"
-                          },
-                          "end": {
-                            "type": "string",
-                            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
-                            "description": "结束时间 HH:MM（北京时间）"
-                          },
-                          "name": {
-                            "type": "string",
-                            "description": "该时段显示的别名"
-                          }
-                        },
-                        "required": [
-                          "name"
-                        ]
-                      }
-                    }
-                  },
-                  "required": [
-                    "name"
-                  ]
-                }
-              ]
+            "contextDisplayMode": {
+              "type": "string",
+              "enum": [
+                "text",
+                "bar",
+                "text_bar"
+              ],
+              "description": "上下文段样式：text（129.3k/1.0m (13%)）/ bar（[██▓░░░░░] 13%）/ text_bar（129.3k/1.0m [██▓░░░░░] 13%）；默认 text"
             },
-            "description": "模型显示别名：key 对完整模型名做大小写不敏感子串匹配（如 \"mimo\" 命中 mimo/mimo-v2.5）；值为名称字符串，或含时段规则的对象 { name, timeAliases: [{ days: [1,2,3,4,5], start: \"09:00\", end: \"18:00\", name }] }（北京时间，days 数组 0=周日，支持跨午夜）"
-          },
-          "modelAliasesEnabled": {
-            "type": "boolean",
-            "description": "别名功能总开关（默认 true）：false 时忽略 modelAliases，全部回落截断/完整名显示，配置本身保留"
-          },
-          "peakValley": {
-            "type": "array",
-            "items": {
+            "expanded": {
+              "type": "boolean",
+              "description": "面板默认展开（默认折叠）"
+            },
+            "truncateModelName": {
+              "type": "boolean",
+              "description": "截断模型名显示：mimo/mimo-v2.5 → ⇲mimo-v2.5（默认 true；modelAliases 别名命中时优先显示别名）"
+            },
+            "modelAliases": {
               "type": "object",
-              "properties": {
-                "match": {
-                  "type": "string",
-                  "description": "匹配哪些模型（大小写不敏感子串，如 \"flash\" 命中所有带 flash 的模型）"
-                },
-                "peakName": {
-                  "type": "string",
-                  "description": "峰段（计费高峰窗口）显示的名称，如 梁文锋⚡️"
-                },
-                "valleyName": {
-                  "type": "string",
-                  "description": "谷段（闲时/优惠窗口）显示的名称，如 梁文谷⚡️"
-                },
-                "schedule": {
-                  "type": "string",
-                  "enum": [
-                    "deepseek",
-                    "workday-918",
-                    "everyday-day",
-                    "always-peak",
-                    "custom"
-                  ],
-                  "description": "峰段窗口预置：deepseek = 工作日 09:00-12:00 & 14:00-18:00；workday-918 = 工作日 09:00-18:00；everyday-day = 每天 08:00-22:00；always-peak = 恒为峰段；custom = 改用 modelAliases.timeAliases 自定义"
-                }
+              "propertyNames": {
+                "type": "string"
               },
-              "required": [
-                "match",
-                "peakName",
-                "valleyName",
-                "schedule"
-              ]
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "timeAliases": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "days": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 6
+                                  }
+                                }
+                              ],
+                              "description": "生效星期：数组形式 [1,2,3,4,5]（0=周日，可多选）或区间字符串 \"1-5\"/\"0,6\"；省略 = 每天"
+                            },
+                            "start": {
+                              "type": "string",
+                              "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+                              "description": "开始时间 HH:MM（北京时间），支持跨午夜（如 22:00-02:00）"
+                            },
+                            "end": {
+                              "type": "string",
+                              "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+                              "description": "结束时间 HH:MM（北京时间）"
+                            },
+                            "name": {
+                              "type": "string",
+                              "description": "该时段显示的别名"
+                            }
+                          },
+                          "required": [
+                            "name"
+                          ]
+                        }
+                      }
+                    },
+                    "required": [
+                      "name"
+                    ]
+                  }
+                ]
+              },
+              "description": "模型显示别名：key 对完整模型名做大小写不敏感子串匹配（如 \"mimo\" 命中 mimo/mimo-v2.5）；值为名称字符串，或含时段规则的对象 { name, timeAliases: [{ days: [1,2,3,4,5], start: \"09:00\", end: \"18:00\", name }] }（北京时间，days 数组 0=周日，支持跨午夜）"
             },
-            "description": "峰谷价标识列表（DeepSeek 等按峰谷计费的模型，可添加多条）：峰段显示 peakName，谷段（闲时）显示 valleyName；与 modelAliases 可共存，同 key 手写优先"
-          }
-        },
-        "description": "统一面板设置（完成态底部折叠面板）"
-      }
+            "modelAliasesEnabled": {
+              "type": "boolean",
+              "description": "别名功能总开关（默认 true）：false 时忽略 modelAliases，全部回落截断/完整名显示，配置本身保留"
+            },
+            "peakValley": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "match": {
+                    "type": "string",
+                    "description": "匹配哪些模型（大小写不敏感子串，如 \"flash\" 命中所有带 flash 的模型）"
+                  },
+                  "peakName": {
+                    "type": "string",
+                    "description": "峰段（计费高峰窗口）显示的名称，如 梁文锋⚡️"
+                  },
+                  "valleyName": {
+                    "type": "string",
+                    "description": "谷段（闲时/优惠窗口）显示的名称，如 梁文谷⚡️"
+                  },
+                  "schedule": {
+                    "type": "string",
+                    "enum": [
+                      "deepseek",
+                      "workday-918",
+                      "everyday-day",
+                      "always-peak",
+                      "custom"
+                    ],
+                    "description": "峰段窗口预置：deepseek = 工作日 09:00-12:00 & 14:00-18:00；workday-918 = 工作日 09:00-18:00；everyday-day = 每天 08:00-22:00；always-peak = 恒为峰段；custom = 改用 modelAliases.timeAliases 自定义"
+                  }
+                },
+                "required": [
+                  "match",
+                  "peakName",
+                  "valleyName",
+                  "schedule"
+                ]
+              },
+              "description": "峰谷价标识列表（DeepSeek 等按峰谷计费的模型，可添加多条）：峰段显示 peakName，谷段（闲时）显示 valleyName；与 modelAliases 可共存，同 key 手写优先"
+            }
+          },
+          "description": "统一面板设置（完成态底部折叠面板）"
+        }
+      },
+      "description": "claw-fry-cards 插件自有配置"
     },
-    "description": "claw-fry-cards 插件自有配置"
+    "uiHints": {
+      "panel": {
+        "label": "统一面板设置",
+        "help": "完成态底部折叠面板的行为"
+      },
+      "panel.unifiedPanelMinDuration": {
+        "label": "面板耗时门槛（秒）",
+        "help": "回复 ≥ 此值或有思考/工具过程时显示面板，0 = 每条必出（默认 5）"
+      },
+      "panel.contextDisplayMode": {
+        "label": "上下文段样式",
+        "help": "text = 368.6k/1.0m (37%)；bar = [██▓░░░░░] 37%；text_bar = 两者组合。默认 text"
+      },
+      "panel.expanded": {
+        "label": "默认展开",
+        "help": "开启后面板默认展开而非折叠（默认折叠）"
+      },
+      "panel.truncateModelName": {
+        "label": "截断模型名",
+        "help": "mimo/mimo-v2.5 → ⇲mimo-v2.5；modelAliases 别名命中时优先显示别名（默认开）"
+      },
+      "panel.modelAliases": {
+        "label": "模型别名",
+        "help": "key 对完整模型名做大小写不敏感子串匹配（\"mimo\" 命中 mimo/mimo-v2.5）；值为 { name, timeAliases: [{ days: [1,2,3,4,5], start: \"09:00\", end: \"18:00\", name }] }（北京时间，0=周日，支持跨午夜）"
+      },
+      "panel.modelAliasesEnabled": {
+        "label": "别名开关",
+        "help": "false 时忽略 modelAliases，全部回落截断/完整名显示，配置本身保留（默认开）"
+      },
+      "panel.peakValley": {
+        "label": "峰谷价标识",
+        "advanced": true,
+        "help": "DeepSeek 等按峰谷计费的模型（可添加多条）：峰段显示峰时名称，谷段（闲时）显示谷时名称；与 modelAliases 可共存，同 key 手写优先"
+      }
+    }
   },
   "contracts": {
     "tools": [
