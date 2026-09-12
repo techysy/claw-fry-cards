@@ -27,6 +27,9 @@
           "expanded": {
             "type": "boolean"
           },
+          "truncateModelName": {
+            "type": "boolean"
+          },
           "modelAliases": {
             "type": "object",
             "propertyNames": {

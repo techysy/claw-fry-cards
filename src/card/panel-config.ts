@@ -19,6 +19,7 @@ export interface UnifiedPanelSettings {
   contextDisplayMode?: 'text' | 'bar' | 'text_bar';
   expanded?: boolean;
   modelAliases?: Record<string, ModelAliasEntry>;
+  truncateModelName?: boolean;
 }
 
 const PLUGIN_ID = 'claw-fry-cards';
@@ -32,6 +33,7 @@ function readPanelSettings(raw: unknown): UnifiedPanelSettings | undefined {
     contextDisplayMode?: unknown;
     expanded?: unknown;
     modelAliases?: unknown;
+    truncateModelName?: unknown;
   };
   const out: UnifiedPanelSettings = {};
   if (typeof p.unifiedPanelMinDuration === 'number') {
@@ -45,6 +47,7 @@ function readPanelSettings(raw: unknown): UnifiedPanelSettings | undefined {
     out.contextDisplayMode = p.contextDisplayMode;
   }
   if (typeof p.expanded === 'boolean') out.expanded = p.expanded;
+  if (typeof p.truncateModelName === 'boolean') out.truncateModelName = p.truncateModelName;
   if (p.modelAliases && typeof p.modelAliases === 'object') {
     out.modelAliases = p.modelAliases as Record<string, ModelAliasEntry>;
   }

@@ -297,6 +297,36 @@ export function resolveModelAlias(entry: ModelAliasEntry | undefined, now = new 
   return entry.name;
 }
 
+/**
+ * 模型名截断（hermes-fry-cards 同款）：or/lc/LongCat-2.0 → ⇲LongCat-2.0（取最后一段）。
+ * 无斜杠的名字截断无意义，原样返回。
+ */
+export function truncateModelId(modelId: string): string {
+  const last = modelId.split('/').pop();
+  if (!last || last === modelId) return modelId;
+  return `⇲${last}`;
+}
+
+/**
+ * 面板模型名解析（hermes-fry-cards 同款语义）：
+ * 1. 别名 key 对完整模型名做大小写不敏感子串匹配，插入序第一条命中即返回（支持时段人设对象）；
+ * 2. 未命中且 truncateModelName !== false 时回落 ⇲ 截断。
+ */
+export function resolvePanelModelName(
+  table: Record<string, ModelAliasEntry>,
+  modelId: string,
+  opts: { truncateModelName?: boolean } = {},
+): string {
+  const lowered = modelId.toLowerCase();
+  for (const [key, entry] of Object.entries(table)) {
+    if (key && lowered.includes(key.toLowerCase())) {
+      return resolveModelAlias(entry) ?? modelId;
+    }
+  }
+  if (opts.truncateModelName === false) return modelId;
+  return truncateModelId(modelId);
+}
+
 function buildFooter(zhText: string, enText: string, isError?: boolean): CardElement[] {
   let zh = zhText;
   let en = enText;
@@ -429,6 +459,7 @@ export function buildCardContent(
     panel?: {
       unifiedPanelMinDurationMs?: number;
       modelAliases?: Record<string, ModelAliasEntry>;
+      truncateModelName?: boolean;
       contextDisplayMode?: ContextDisplayMode;
       expanded?: boolean;
     };
@@ -560,6 +591,7 @@ function buildCompleteCard(params: {
     contextDisplayMode?: ContextDisplayMode;
     expanded?: boolean;
     modelAliases?: Record<string, ModelAliasEntry>;
+    truncateModelName?: boolean;
   };
   elapsedMs?: number;
   isError?: boolean;
@@ -614,10 +646,11 @@ function buildCompleteCard(params: {
     const borderColor = isError ? 'red' : isAborted ? 'yellow' : 'green';
 
     const rawModel = (footerMetrics?.model ?? '').trim();
-    // 模型显示别名：完整 id 或裸名命中均替换（如 "deepseek-v4-flash" → "梁文谷⚡️"）
+    // 模型显示：别名（子串匹配，含时段人设）优先；未命中回落 ⇲ 截断（truncateModelName !== false）
     const aliasTable = panel?.modelAliases ?? {};
-    const modelName =
-      resolveModelAlias(aliasTable[rawModel] ?? aliasTable[rawModel.split('/').pop() ?? '']) ?? rawModel;
+    const modelName = resolvePanelModelName(aliasTable, rawModel, {
+      truncateModelName: panel?.truncateModelName,
+    });
 
     const parts: string[] = ['🍤'];
     if (modelName) parts.push(modelName);

@@ -315,6 +315,7 @@ export const PluginConfigSchema = z.object({
       unifiedPanelMinDuration: z.number().optional(),
       contextDisplayMode: z.enum(['text', 'bar', 'text_bar']).optional(),
       expanded: z.boolean().optional(),
+      truncateModelName: z.boolean().optional(),
       modelAliases: z.record(z.string(), ModelAliasValueSchema).optional(),
     })
     .optional(),
