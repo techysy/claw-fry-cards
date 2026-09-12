@@ -166,7 +166,7 @@ openclaw gateway restart
 | 边框颜色 | 绿 = 完成 · 红 = 出错 · 黄 = 停止 |
 | 展开状态 | 默认折叠，点击展开 |
 
-**面板设置**（推荐写在插件自有配置 `plugins.entries.claw-fry-cards.config.panel`——随插件版本化，不受宿主 schema 演化影响；旧位置 `channels.feishu.panel` 仍兼容读取。Control UI 配置页可视化编辑，字段说明为中文）：
+**面板设置**：在 **Control UI → 设置 → Claw Fry Cards → 配置页** 可视化编辑（全中文字段说明），存储于插件自有配置 `plugins.entries.claw-fry-cards.config.panel`——随插件版本化，不受宿主 schema 演化影响（旧位置 `channels.feishu.panel` 仍兼容读取）：
 
 ```json
 "panel": {
@@ -189,33 +189,31 @@ openclaw gateway restart
 
 ### ⏱️ 按时间切换显示名（峰谷价 / 时段人设）
 
-面板模型名支持按时间窗自动切换显示——典型用途是 DeepSeek 的**峰谷计费标识**（峰段梁文锋⚡️ / 谷段梁文谷⚡️，一眼看出当前计费档位），也适用于任何时段人设。两种写法：
+面板模型名支持按时间窗自动切换显示——典型用途是 DeepSeek 的**峰谷价标识**（峰段梁文锋⚡️ / 谷段梁文谷⚡️，一眼看出当前计费档位），也适用于任何时段人设。
 
-**方式一：`peakValley` 峰谷价标识（推荐，两行搞定）**——内置峰段时间表，不用手写时间规则。key 为匹配模型（大小写不敏感子串，如 `deepseek` 命中所有带 deepseek 的模型）：
+**配置入口：Control UI → 设置 → Claw Fry Cards → 配置页**，全部可视化编辑，无需手写 JSON：
+
+| 想要 | 在配置页操作 |
+|------|--------------|
+| 峰谷价标识（推荐，两行搞定） | 展开 **Peak Valley** → 添加条目 → 键填匹配模型（如 `deepseek`）→ 值里填峰时显示 / 谷时显示 → 时间表下拉选择 |
+| 模型别名（含时段规则） | 展开 **Model Aliases** → 添加条目 → 键填匹配模型子串（如 `mimo`）→ 值里填名称，需要时段切换就加时段规则（星期逐项勾选、起止时间） |
+| 纯别名（不按时段） | 同上，值只填名称字符串 |
+
+- **匹配**：键对完整模型名做大小写不敏感子串匹配，按插入顺序第一条命中即生效（`mimo` 命中 `mimo/mimo-v2.5`）
+- **时间表**（峰谷价专用预置）：`deepseek`（工作日 9:00–12:00 & 14:00–18:00 峰段）/ `workday-918` / `everyday-day` / `always-peak` / `custom`
+- 时段规则里 `days` 星期逐项选择（`0`=周日），`start`/`end` 为北京时间 HH:MM，支持跨午夜；规则都不命中时回落默认名称（即"其他时间"）
+- 两种写法可共存：peakValley 运行时展开为等价时段规则，同键时 Model Aliases 手写条目优先；别名命中优先于 ⇲ 截断；**Model Aliases Enabled** 开关可整体关闭别名
+
+<details>
+<summary>对应的 openclaw.json 配置（直改配置文件时参考）</summary>
 
 ```json
 "panel": {
   "peakValley": {
     "deepseek": { "peakName": "梁文锋⚡️", "valleyName": "梁文谷⚡️", "schedule": "deepseek" },
     "gemini":   { "peakName": "Gemini☀️",  "valleyName": "Gemini🌙",  "schedule": "workday-918" }
-  }
-}
-```
-
-| schedule | 峰段窗口（peakName 生效区间，其余时间显示 valleyName） |
-|----------|----------|
-| `deepseek` | 工作日（一~五）09:00–12:00 & 14:00–18:00 |
-| `workday-918` | 工作日 09:00–18:00 连续 |
-| `everyday-day` | 每天 08:00–22:00 |
-| `always-peak` | 恒为峰段 |
-| `custom` | 自定义（改用方式二手写时段规则）|
-
-Control UI 配置页里本字段默认收起（高级折叠区）。
-
-**方式二：`modelAliases` + `timeAliases`（高级，任意星期/时段组合）**——完全自定义的时间规则，还能附带纯别名：
-
-```json
-"modelAliases": {
+  },
+  "modelAliases": {
     "deepseek": {
       "name": "梁文谷⚡️",
       "timeAliases": [
@@ -225,14 +223,10 @@ Control UI 配置页里本字段默认收起（高级折叠区）。
     },
     "mimo": "小虾米"
   }
+}
 ```
 
-- **匹配**：key 对完整模型名做大小写不敏感子串匹配，按插入顺序第一条命中即生效（`"mimo"` 命中 `mimo/mimo-v2.5`）
-- `days`：生效星期（`0`=周日），推荐**数组** `[1,2,3,4,5]`（每项可枚举），字符串 `"1-5"`、`"0,6"` 兼容；省略 = 每天
-- `start`/`end`：生效时段 HH:MM（北京时间 UTC+8），支持跨午夜（如 `"22:00"`-`"02:00"`）
-- 命中第一条规则用其 `name`；都不命中用顶层 `name`（即"其他时间"的兜底）；静态写法 `"模型id": "名字"` 仍兼容
-
-**两种写法关系**：`peakValley` 在运行时展开为等价的 timeAliases 规则，与 `modelAliases` 可共存；同 key 时手写别名优先。别名命中优先于 `truncateModelName` 截断；`modelAliasesEnabled: false` 可整体关闭别名（回落截断，配置保留）。
+</details>
 
 > 指标来源是 agent transcript SQLite（`~/.openclaw/agents/<agent>/agent/openclaw-agent.sqlite`），模型名/token/上下文窗口由最近一轮 usage 事件解析。老版本宿主无此库时统一面板自动省略指标段（详见 [docs/compat-test-report.md](docs/compat-test-report.md)）。
 
