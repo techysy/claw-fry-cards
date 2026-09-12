@@ -107,40 +107,59 @@ export { isMessageExpired } from './src/messaging/inbound/dedup';
 // Plugin definition
 // ---------------------------------------------------------------------------
 
+// 插件配置 schema：uiHints 提供中文名称/帮助（带 hints 的字段渲染为全宽堆叠布局）
+const pluginConfigSchema = buildPluginConfigSchema(
+  PluginConfigSchema as unknown as Parameters<typeof buildPluginConfigSchema>[0],
+  {
+    uiHints: {
+      panel: { label: '统一面板设置', help: '完成态底部折叠面板的行为' },
+      'panel.unifiedPanelMinDuration': {
+        label: '面板耗时门槛（秒）',
+        help: '回复 ≥ 此值或有思考/工具过程时显示面板，0 = 每条必出（默认 5）',
+      },
+      'panel.contextDisplayMode': {
+        label: '上下文段样式',
+        help: 'text = 368.6k/1.0m (37%)；bar = [██▓░░░░░] 37%；text_bar = 两者组合。默认 text',
+      },
+      'panel.expanded': { label: '默认展开', help: '开启后面板默认展开而非折叠（默认折叠）' },
+      'panel.truncateModelName': {
+        label: '截断模型名',
+        help: 'mimo/mimo-v2.5 → ⇲mimo-v2.5；modelAliases 别名命中时优先显示别名（默认开）',
+      },
+      'panel.modelAliases': {
+        label: '模型别名',
+        help: 'key 对完整模型名做大小写不敏感子串匹配（"mimo" 命中 mimo/mimo-v2.5）；值为 { name, timeAliases: [{ days: [1,2,3,4,5], start: "09:00", end: "18:00", name }] }（北京时间，0=周日，支持跨午夜）',
+      },
+      'panel.modelAliasesEnabled': {
+        label: '别名开关',
+        help: 'false 时忽略 modelAliases，全部回落截断/完整名显示，配置本身保留（默认开）',
+      },
+    },
+  },
+);
+
+// Control UI 的集合值编辑器对 anyOf 联合类型只会渲染窄小的 JSON 文本框，
+// 纯 object schema 才有全宽结构化编辑器——UI 呈现收敛为对象形态。
+// 运行时 safeParse 仍走 zod 联合类型，手写字符串别名（"mimo": "小虾米"）不受影响。
+const modelAliasesUiSchema = pluginConfigSchema.jsonSchema as {
+  properties?: { panel?: { properties?: { modelAliases?: { additionalProperties?: unknown } } } };
+};
+const maProps = modelAliasesUiSchema.properties?.panel?.properties?.modelAliases;
+if (maProps?.additionalProperties && typeof maProps.additionalProperties === 'object') {
+  const anyOf = (maProps.additionalProperties as { anyOf?: unknown[] }).anyOf;
+  if (Array.isArray(anyOf)) {
+    const objectBranch = anyOf.find(
+      (b) => typeof b === 'object' && b !== null && (b as { type?: string }).type === 'object',
+    );
+    if (objectBranch) maProps.additionalProperties = objectBranch;
+  }
+}
+
 const plugin = {
   id: 'claw-fry-cards',
   name: 'Feishu',
   description: 'Lark/Feishu channel plugin with im/doc/wiki/drive/task/calendar tools',
-  configSchema: buildPluginConfigSchema(
-    PluginConfigSchema as unknown as Parameters<typeof buildPluginConfigSchema>[0],
-    {
-      // uiHints：Control UI 配置表单的中文名称/帮助；带 hints 的字段渲染为全宽堆叠布局
-      uiHints: {
-        panel: { label: '统一面板设置', help: '完成态底部折叠面板的行为' },
-        'panel.unifiedPanelMinDuration': {
-          label: '面板耗时门槛（秒）',
-          help: '回复 ≥ 此值或有思考/工具过程时显示面板，0 = 每条必出（默认 5）',
-        },
-        'panel.contextDisplayMode': {
-          label: '上下文段样式',
-          help: 'text = 368.6k/1.0m (37%)；bar = [██▓░░░░░] 37%；text_bar = 两者组合。默认 text',
-        },
-        'panel.expanded': { label: '默认展开', help: '开启后面板默认展开而非折叠（默认折叠）' },
-        'panel.truncateModelName': {
-          label: '截断模型名',
-          help: 'mimo/mimo-v2.5 → ⇲mimo-v2.5；modelAliases 别名命中时优先显示别名（默认开）',
-        },
-        'panel.modelAliases': {
-          label: '模型别名',
-          help: 'key 对完整模型名做大小写不敏感子串匹配（"mimo" 命中 mimo/mimo-v2.5）；值为名称字符串，或 { name, timeAliases: [{ days: [1,2,3,4,5], start: "09:00", end: "18:00", name }] }（北京时间，0=周日，支持跨午夜）',
-        },
-        'panel.modelAliasesEnabled': {
-          label: '别名开关',
-          help: 'false 时忽略 modelAliases，全部回落截断/完整名显示，配置本身保留（默认开）',
-        },
-      },
-    },
-  ),
+  configSchema: pluginConfigSchema,
   register(api: OpenClawPluginApi): void {
     LarkClient.setRuntime(api.runtime);
     api.registerChannel({ plugin: feishuPlugin });
