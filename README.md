@@ -187,9 +187,11 @@ openclaw gateway restart
 | `modelAliasesEnabled` | 别名功能总开关；`false` 时忽略 `modelAliases` 整体回落截断，配置本身保留 | `true` |
 | `peakValley` | 峰谷价标识（record，key=匹配模型），见下节 | 空 |
 
-### ⏱️ 峰谷价标识（DeepSeek 峰谷计费区间）
+### ⏱️ 按时间切换显示名（峰谷价 / 时段人设）
 
-DeepSeek 等按峰谷计费的模型：**峰段显示峰时名称，谷段（闲时）显示谷时名称**，一眼看出当前计费档位。key 为匹配模型（大小写不敏感子串，如 `deepseek` 命中所有带 deepseek 的模型），可添加多条：
+面板模型名支持按时间窗自动切换显示——典型用途是 DeepSeek 的**峰谷计费标识**（峰段梁文锋⚡️ / 谷段梁文谷⚡️，一眼看出当前计费档位），也适用于任何时段人设。两种写法：
+
+**方式一：`peakValley` 峰谷价标识（推荐，两行搞定）**——内置峰段时间表，不用手写时间规则。key 为匹配模型（大小写不敏感子串，如 `deepseek` 命中所有带 deepseek 的模型）：
 
 ```json
 "panel": {
@@ -200,19 +202,17 @@ DeepSeek 等按峰谷计费的模型：**峰段显示峰时名称，谷段（闲
 }
 ```
 
-| schedule | 峰段窗口 |
+| schedule | 峰段窗口（peakName 生效区间，其余时间显示 valleyName） |
 |----------|----------|
 | `deepseek` | 工作日（一~五）09:00–12:00 & 14:00–18:00 |
 | `workday-918` | 工作日 09:00–18:00 连续 |
 | `everyday-day` | 每天 08:00–22:00 |
 | `always-peak` | 恒为峰段 |
-| `custom` | 自定义（改用下面的 `modelAliases.timeAliases`）|
+| `custom` | 自定义（改用方式二手写时段规则）|
 
-> 与 `modelAliases` 可共存；同 key 时手写别名优先。Control UI 配置页里本字段默认收起（高级折叠区）。
+Control UI 配置页里本字段默认收起（高级折叠区）。
 
-### 🏷️ 模型别名（含时段规则）
-
-面板里的模型名可按模型映射为友好名，并支持**按时间自动切换**。key 对完整模型名做**大小写不敏感子串匹配**（`"mimo"` 命中 `mimo/mimo-v2.5`），写在 `panel.modelAliases` 里：
+**方式二：`modelAliases` + `timeAliases`（高级，任意星期/时段组合）**——完全自定义的时间规则，还能附带纯别名：
 
 ```json
 "modelAliases": {
@@ -231,7 +231,8 @@ DeepSeek 等按峰谷计费的模型：**峰段显示峰时名称，谷段（闲
 - `days`：生效星期（`0`=周日），推荐**数组** `[1,2,3,4,5]`（每项可枚举），字符串 `"1-5"`、`"0,6"` 兼容；省略 = 每天
 - `start`/`end`：生效时段 HH:MM（北京时间 UTC+8），支持跨午夜（如 `"22:00"`-`"02:00"`）
 - 命中第一条规则用其 `name`；都不命中用顶层 `name`（即"其他时间"的兜底）；静态写法 `"模型id": "名字"` 仍兼容
-- 别名命中优先于 `truncateModelName` 截断；`modelAliasesEnabled: false` 可整体关闭别名（回落截断，配置保留）
+
+**两种写法关系**：`peakValley` 在运行时展开为等价的 timeAliases 规则，与 `modelAliases` 可共存；同 key 时手写别名优先。别名命中优先于 `truncateModelName` 截断；`modelAliasesEnabled: false` 可整体关闭别名（回落截断，配置保留）。
 
 > 指标来源是 agent transcript SQLite（`~/.openclaw/agents/<agent>/agent/openclaw-agent.sqlite`），模型名/token/上下文窗口由最近一轮 usage 事件解析。老版本宿主无此库时统一面板自动省略指标段（详见 [docs/compat-test-report.md](docs/compat-test-report.md)）。
 
