@@ -1,4 +1,4 @@
-# 🍤 openclaw-lark-cards
+# 🍤 claw-lark-cards
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![OpenClaw](https://img.shields.io/badge/OpenClaw-%E2%89%A52026.8.1-2463eb)](https://openclaw.ai)
