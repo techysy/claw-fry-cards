@@ -10,6 +10,8 @@
 
 ![卡片效果](assets/card-demo.png)
 
+![Control UI 配置页](assets/settings-panel.png)
+
 **这是什么**：一个**飞书通道插件**（替代官方 `@larksuite/openclaw-lark` / 内置 `@openclaw/feishu`），负责 OpenClaw Agent 的飞书消息收发，并用 CardKit v2.0 流式卡片呈现每一轮回复。
 
 **为什么存在**：官方通道插件停更于 2026-07-16，未适配 OpenClaw 2.0（SDK 导出重构、会话存储迁移 SQLite），在新版网关上无法加载。本项目完成了 2.0 适配，并顺手把流式卡片体验升级到 fry-cards（[🍟 hermes-fry-cards](https://github.com/techysy/hermes-fry-cards)）同款风格。
@@ -61,6 +63,8 @@ openclaw plugins uninstall openclaw-lark --force   # 或按其实际目录名卸
 | ✍️ **打字机输出** | 答案逐字上屏（基于 CardKit streaming_mode 客户端动画） |
 | 🎯 **统一面板** | 完成态底部单一折叠面板，标题一行带全指标：`🍤 ⇲模型 · 💭N · 🔧N · 上下文 (x%) · 🎫 输出 · ⏱️耗时` |
 | 🎨 **状态边框** | 面板边框颜色随结果变化：绿=完成 · 红=出错 · 黄=停止；展开可见思考过程与工具步骤明细 |
+| ⏱️ **峰谷价标识** | DeepSeek 等按峰谷计费的模型按时间窗自动切换显示名（内置峰段预置，配置页可视化编辑，可多条） |
+| 🏷️ **模型别名** | 大小写不敏感子串匹配 + 时段人设（星期数组化），模型名默认 ⇲ 截断 |
 | 📊 **会话指标** | 模型名、token 用量、上下文窗口进度（实时读取 agent transcript SQLite） |
 
 ### OpenClaw 2.0 适配（Mirr0ch1 的适配工作 + 本项目整合）
@@ -129,7 +133,7 @@ openclaw gateway restart
           "panel": {
             "unifiedPanelMinDuration": 5,
             "contextDisplayMode": "text",
-            "expanded": false,
+            "peakValley": { "deepseek": { "peakName": "梁文锋⚡️", "valleyName": "梁文谷⚡️", "schedule": "deepseek" } },
             "modelAliases": { "mimo/mimo-v2.5": "小虾米" }
           }
         }

@@ -1,5 +1,33 @@
 # Changelog
 
+## 2.0.4 (2026-09-13)
+
+面板模型名显示与峰谷价标识版本（本地 Docker + 飞书真机全链路实测）。
+
+- ⇲ **模型名截断**（`truncateModelName`，默认开）：mimo/mimo-v2.5 → ⇲mimo-v2.5
+- 🏷️ **模型别名升级**：key 大小写不敏感子串匹配（"mimo" 命中 mimo/mimo-v2.5）、`modelAliasesEnabled` 独立开关、`days` 星期数组化（`[1,2,3,4,5]`）并修复存量 bug（区间正则丢 `\d` 导致 `"1-5"` 从未生效）
+- ⏱️ **峰谷价标识 `peakValley`**：DeepSeek 等峰谷计费模型按时间窗切换显示名（峰段 peakName / 谷段 valleyName），内置峰段预置（deepseek / workday-918 / everyday-day / always-peak / custom），record 多条可配，Control UI 可视化编辑、默认收起
+- 🎯 **面板标题对齐 zcode-feishu-bridge**：段序 模型·💭·🔧·上下文·🎫·⏱️；上下文 used 改用最后一轮 inputTokens；🎫 改为会话累计输出 tokens；`contextDisplayMode` 默认 text
+- 📝 **配置声明完善**：全字段中文 describe + uiHints（Control UI 中文标签/全宽布局/收起层级）；峰谷价时段规则 days 支持 0-6 枚举选择
+- 🔧 修复：插件图标改 base64 data URI（CDN 不可达时 Control UI 字母兜底）；CI 修复（prettier 锁死 3.8.1 + pnpm-lock 同步）
+- 🧪 56 文件 / 471 tests（新增 model-display / panel-config 用例），tsc strict，本地 Docker + 飞书真机全链路验证（截图见 README）
+
+## 2.0.3 (2026-09-12)
+
+统一面板设置迁入插件自有配置（随插件版本化，不再受宿主 channels.feishu schema 演化影响）。
+
+- ✨ 面板设置新位置：`plugins.entries.claw-fry-cards.config.panel`（unifiedPanelMinDuration / contextDisplayMode / expanded / modelAliases）；插件 configSchema 由空声明改为完整 JSON Schema（openclaw.plugin.json + 入口 `buildPluginConfigSchema`）
+- 🛡️ 旧位置 `channels.feishu.panel` 仍兼容读取，插件配置优先
+- 🔧 builder 面板 modelAliases 类型放宽为 `ModelAliasEntry`（兼容时段人设对象形态）
+- 🧪 新增 panel-config 单测
+
+## 2.0.2 (2026-09-12)
+
+修复 OpenClaw ≥2026.9.4 宿主上卡片永不生效的问题（本地 Docker 部署实测发现）。
+
+- 🐛 **卡片引擎流式判定适配新 schema**：2026.9.4 起宿主把 `channels.feishu.streaming` 从布尔迁移为对象（`{ mode: "off" | "partial" }`）并废弃 `replyMode`，旧判定 `streaming === true` 恒为 false，全部回复退化为纯文本。现兼容布尔（旧宿主）与对象（新宿主）两种形态，`replyMode` 仍向后兼容
+- 🧪 新增 reply-mode 单测（两代宿主 schema 形态）
+
 ## 2.0.1 (2026-09-12)
 
 2.0.0 发布审查后的修正版（元数据与文档层面，无引擎代码变更）。
