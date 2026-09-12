@@ -17,6 +17,22 @@ import { FEISHU_CARD_TABLE_LIMIT, findMarkdownTablesOutsideCodeBlocks } from './
 
 type ReplyModeValue = 'auto' | 'static' | 'streaming';
 
+/**
+ * streaming 配置的两种形态：
+ * - 布尔（OpenClaw ≤2026.9.1 宿主）：true 总开关
+ * - 对象（OpenClaw ≥2026.9.4 宿主）：`{ mode: "off" | "partial" }`，宿主 schema 已禁止布尔
+ */
+type StreamingSetting = boolean | { mode?: string } | undefined;
+
+/**
+ * 流式是否开启：布尔 true 或对象 mode !== "off"（未设 mode 视为开启）。
+ */
+export function isStreamingEnabled(value: StreamingSetting): boolean {
+  if (value === true) return true;
+  if (value !== null && typeof value === 'object') return value.mode !== 'off';
+  return false;
+}
+
 // ---------------------------------------------------------------------------
 // resolveReplyMode
 // ---------------------------------------------------------------------------
@@ -32,8 +48,8 @@ export function resolveReplyMode(params: {
 }): ReplyModeValue {
   const { feishuCfg, chatType } = params;
 
-  // streaming 布尔总开关：仅 true 时允许流式，未设置或 false 一律 static
-  if (feishuCfg?.streaming !== true) return 'static';
+  // streaming 总开关：兼容布尔（旧宿主）与对象（2026.9.4+ 宿主）两种形态
+  if (!isStreamingEnabled(feishuCfg?.streaming)) return 'static';
 
   const replyMode = feishuCfg?.replyMode;
   if (!replyMode) return 'auto';
@@ -52,18 +68,18 @@ export function resolveReplyMode(params: {
 /**
  * Expand "auto" mode to a concrete mode based on streaming flag and chat type.
  *
- * When streaming === true: group → static, direct → streaming (legacy behavior).
- * When streaming is unset: always static (new default).
+ * When streaming enabled: group → static, direct → streaming (legacy behavior).
+ * When streaming disabled/unset: always static (new default).
  */
 export function expandAutoMode(params: {
   mode: ReplyModeValue;
-  streaming: boolean | undefined;
+  streaming: StreamingSetting;
   chatType?: 'p2p' | 'group';
 }): 'static' | 'streaming' {
   const { mode, streaming, chatType } = params;
   if (mode !== 'auto') return mode;
 
-  return streaming === true ? (chatType === 'group' ? 'static' : 'streaming') : 'static';
+  return isStreamingEnabled(streaming) ? (chatType === 'group' ? 'static' : 'streaming') : 'static';
 }
 
 // ---------------------------------------------------------------------------

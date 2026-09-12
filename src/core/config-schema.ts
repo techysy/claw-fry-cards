@@ -220,7 +220,9 @@ export const FeishuAccountConfigSchema = z.object({
   mediaMaxMb: z.number().optional(),
   heartbeat: HeartbeatSchema,
   replyMode: ReplyModeSchema,
-  streaming: z.boolean().optional(),
+  streaming: z
+    .union([z.boolean(), z.object({ mode: z.string().optional() }).loose()])
+    .optional(),
   blockStreaming: z.boolean().optional(),
   toolUseDisplay: z
     .object({
