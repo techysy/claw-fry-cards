@@ -135,19 +135,19 @@ const pluginConfigSchema = buildPluginConfigSchema(
         label: '别名开关',
         help: 'false 时忽略 modelAliases，全部回落截断/完整名显示，配置本身保留（默认开）',
       },
-      'panel.timePersona': {
-        label: '闲时忙时人设',
-        help: '比手写别名更简单的预置方式：填模型匹配 + 忙时/闲时名称，再从下拉里选时间表（workday = 工作日 9-12 & 14-18）；与 modelAliases 可共存，同 key 手写优先',
+      'panel.peakValley': {
+        label: '峰谷价标识',
+        help: 'DeepSeek 等按峰谷计费的模型（可添加多条）：峰段显示峰时名称，谷段（闲时）显示谷时名称；与 modelAliases 可共存，同 key 手写优先',
       },
-      'panel.timePersona.match': {
+      'panel.peakValley.match': {
         label: '匹配模型',
         help: '大小写不敏感子串，如 "flash" 命中所有带 flash 的模型',
       },
-      'panel.timePersona.busyName': { label: '忙时名称', help: '时间表窗口内显示的名称' },
-      'panel.timePersona.idleName': { label: '闲时名称', help: '非忙时（晚上/周末/午休）显示的名称' },
-      'panel.timePersona.schedule': {
-        label: '时间表',
-        help: 'workday / workday-918 / everyday-day / always-busy / custom',
+      'panel.peakValley.peakName': { label: '峰时显示', help: '峰段（计费高峰窗口）内显示的名称，如 梁文锋⚡️' },
+      'panel.peakValley.valleyName': { label: '谷时显示', help: '谷段（闲时/优惠窗口）显示的名称，如 梁文谷⚡️' },
+      'panel.peakValley.schedule': {
+        label: '峰段窗口',
+        help: 'deepseek / workday-918 / everyday-day / always-peak / custom',
       },
     },
   },

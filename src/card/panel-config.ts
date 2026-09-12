@@ -21,27 +21,27 @@ export interface UnifiedPanelSettings {
   modelAliases?: Record<string, ModelAliasEntry>;
   modelAliasesEnabled?: boolean;
   truncateModelName?: boolean;
-  timePersona?: TimePersonaConfig;
+  peakValley?: PeakValleyConfig[];
 }
 
-/** 闲时忙时人设：比手写 timeAliases 更简单的预置方式 */
-export interface TimePersonaConfig {
+/** 峰谷价标识条目：峰段（计费高峰窗口）显示 peakName，谷段（闲时/优惠）显示 valleyName */
+export interface PeakValleyConfig {
   /** 匹配哪些模型（大小写不敏感子串，同别名 key 语义） */
   match: string;
-  /** 忙时显示 */
-  busyName: string;
-  /** 闲时显示（非忙时兜底） */
-  idleName: string;
-  /** 预置时间表；custom 表示改用 modelAliases.timeAliases 自定义规则 */
-  schedule: 'workday' | 'workday-918' | 'everyday-day' | 'always-busy' | 'custom';
+  /** 峰段（计费高峰窗口）显示 */
+  peakName: string;
+  /** 谷段（闲时/优惠窗口）显示（非峰段兜底） */
+  valleyName: string;
+  /** 峰段窗口预置；custom 表示改用 modelAliases.timeAliases 自定义规则 */
+  schedule: 'deepseek' | 'workday-918' | 'everyday-day' | 'always-peak' | 'custom';
 }
 
-/** 预置时间表（忙时窗口，北京时间） */
-const SCHEDULE_WINDOWS: Record<
-  Exclude<TimePersonaConfig['schedule'], 'custom' | 'always-busy'>,
+/** 峰段窗口预置（北京时间） */
+const PEAK_WINDOWS: Record<
+  Exclude<PeakValleyConfig['schedule'], 'custom' | 'always-peak'>,
   Array<{ days?: number[]; start: string; end: string }>
 > = {
-  workday: [
+  deepseek: [
     { days: [1, 2, 3, 4, 5], start: '09:00', end: '12:00' },
     { days: [1, 2, 3, 4, 5], start: '14:00', end: '18:00' },
   ],
@@ -50,17 +50,17 @@ const SCHEDULE_WINDOWS: Record<
 };
 
 /** 把 timePersona 展开为等价的别名条目（busyName=忙时规则，idleName=顶层兜底） */
-export function expandTimePersona(tp: TimePersonaConfig | undefined): ModelAliasEntry | undefined {
-  if (!tp || typeof tp !== 'object') return undefined;
-  if (typeof tp.match !== 'string' || !tp.match) return undefined;
-  if (typeof tp.busyName !== 'string' || !tp.busyName) return undefined;
-  if (tp.schedule === 'custom') return undefined;
-  if (tp.schedule === 'always-busy') return { name: tp.busyName };
-  const windows = SCHEDULE_WINDOWS[tp.schedule];
+export function expandPeakValley(pv: PeakValleyConfig | undefined): ModelAliasEntry | undefined {
+  if (!pv || typeof pv !== 'object') return undefined;
+  if (typeof pv.match !== 'string' || !pv.match) return undefined;
+  if (typeof pv.peakName !== 'string' || !pv.peakName) return undefined;
+  if (pv.schedule === 'custom') return undefined;
+  if (pv.schedule === 'always-peak') return { name: pv.peakName };
+  const windows = PEAK_WINDOWS[pv.schedule];
   if (!windows) return undefined;
   return {
-    name: typeof tp.idleName === 'string' && tp.idleName ? tp.idleName : tp.busyName,
-    timeAliases: windows.map((w) => ({ ...w, name: tp.busyName })),
+    name: typeof pv.valleyName === 'string' && pv.valleyName ? pv.valleyName : pv.peakName,
+    timeAliases: windows.map((w) => ({ ...w, name: pv.peakName })),
   };
 }
 
@@ -77,7 +77,7 @@ function readPanelSettings(raw: unknown): UnifiedPanelSettings | undefined {
     modelAliases?: unknown;
     modelAliasesEnabled?: unknown;
     truncateModelName?: unknown;
-    timePersona?: unknown;
+    peakValley?: unknown;
   };
   const out: UnifiedPanelSettings = {};
   if (typeof p.unifiedPanelMinDuration === 'number') {
@@ -96,8 +96,8 @@ function readPanelSettings(raw: unknown): UnifiedPanelSettings | undefined {
   if (p.modelAliases && typeof p.modelAliases === 'object') {
     out.modelAliases = p.modelAliases as Record<string, ModelAliasEntry>;
   }
-  if (p.timePersona && typeof p.timePersona === 'object') {
-    out.timePersona = p.timePersona as TimePersonaConfig;
+  if (p.peakValley && Array.isArray(p.peakValley)) {
+    out.peakValley = p.peakValley as PeakValleyConfig[];
   }
   return Object.keys(out).length > 0 ? out : undefined;
 }

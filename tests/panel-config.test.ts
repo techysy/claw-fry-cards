@@ -10,7 +10,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { expandTimePersona, resolvePanelSettings } from '../src/card/panel-config';
+import { expandPeakValley, resolvePanelSettings } from '../src/card/panel-config';
 
 describe('resolvePanelSettings', () => {
   it('reads plugin-owned panel config', () => {
@@ -78,46 +78,43 @@ describe('resolvePanelSettings', () => {
   });
 });
 
-describe('expandTimePersona', () => {
-  const base = { match: 'flash', busyName: '梁文锋⚡️', idleName: '梁文谷⚡️' } as const;
+describe('expandPeakValley', () => {
+  const base = { match: 'flash', peakName: '梁文锋⚡️', valleyName: '梁文谷⚡️' } as const;
 
-  it('expands workday into the two DeepSeek billing windows', () => {
-    expect(expandTimePersona({ ...base, schedule: 'workday' })).toEqual({
-      name: '梁文谷⚡️',
-      timeAliases: [
-        { days: [1, 2, 3, 4, 5], start: '09:00', end: '12:00', name: '梁文锋⚡️' },
-        { days: [1, 2, 3, 4, 5], start: '14:00', end: '18:00', name: '梁文锋⚡️' },
-      ],
-    });
+  it('expands deepseek into the two peak billing windows', () => {
+    expect((expandPeakValley({ ...base, schedule: 'deepseek' }) as { timeAliases?: unknown[] }).timeAliases).toEqual([
+      { days: [1, 2, 3, 4, 5], start: '09:00', end: '12:00', name: '梁文锋⚡️' },
+      { days: [1, 2, 3, 4, 5], start: '14:00', end: '18:00', name: '梁文锋⚡️' },
+    ]);
   });
 
-  it('expands workday-918 / everyday-day / always-busy', () => {
-    expect((expandTimePersona({ ...base, schedule: 'workday-918' }) as { timeAliases?: unknown[] }).timeAliases).toEqual([
+  it('expands workday-918 / everyday-day / always-peak', () => {
+    expect((expandPeakValley({ ...base, schedule: 'workday-918' }) as { timeAliases?: unknown[] }).timeAliases).toEqual([
       { days: [1, 2, 3, 4, 5], start: '09:00', end: '18:00', name: '梁文锋⚡️' },
     ]);
-    expect((expandTimePersona({ ...base, schedule: 'everyday-day' }) as { timeAliases?: unknown[] }).timeAliases).toEqual([
+    expect((expandPeakValley({ ...base, schedule: 'everyday-day' }) as { timeAliases?: unknown[] }).timeAliases).toEqual([
       { start: '08:00', end: '22:00', name: '梁文锋⚡️' },
     ]);
-    expect(expandTimePersona({ ...base, schedule: 'always-busy' })).toEqual({ name: '梁文锋⚡️' } as never);
+    expect(expandPeakValley({ ...base, schedule: 'always-peak' })).toEqual({ name: '梁文锋⚡️' });
   });
 
   it('returns undefined for custom schedule (use modelAliases instead)', () => {
-    expect(expandTimePersona({ ...base, schedule: 'custom' })).toBeUndefined();
+    expect(expandPeakValley({ ...base, schedule: 'custom' })).toBeUndefined();
   });
 
-  it('falls back to busyName when idleName is missing', () => {
-    const entry = expandTimePersona({
+  it('falls back to valleyName when missing', () => {
+    const entry = expandPeakValley({
       match: 'flash',
-      busyName: '忙',
-      idleName: '',
-      schedule: 'workday',
+      peakName: '峰',
+      valleyName: '',
+      schedule: 'deepseek',
     }) as { name?: string };
-    expect(entry.name).toBe('忙');
+    expect(entry.name).toBe('峰');
   });
 
   it('returns undefined for invalid shapes', () => {
-    expect(expandTimePersona(undefined)).toBeUndefined();
-    expect(expandTimePersona({ match: '', busyName: 'x', idleName: 'y', schedule: 'workday' })).toBeUndefined();
-    expect(expandTimePersona({ match: 'flash', busyName: '', idleName: 'y', schedule: 'workday' })).toBeUndefined();
+    expect(expandPeakValley(undefined)).toBeUndefined();
+    expect(expandPeakValley({ match: '', peakName: 'x', valleyName: 'y', schedule: 'deepseek' })).toBeUndefined();
+    expect(expandPeakValley({ match: 'flash', peakName: '', valleyName: 'y', schedule: 'deepseek' })).toBeUndefined();
   });
 });
