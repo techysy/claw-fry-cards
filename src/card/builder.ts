@@ -429,8 +429,13 @@ export function formatFooterRuntimeSegments(params: {
   }
 
   if (footer?.context && metrics) {
-    const freshTotal = metrics.totalTokensFresh === false ? undefined : metrics.totalTokens;
-    const total = typeof freshTotal === 'number' ? Math.max(0, freshTotal) : undefined;
+    const used =
+      typeof metrics.inputTokens === 'number' && metrics.inputTokens > 0
+        ? metrics.inputTokens
+        : typeof metrics.totalTokens === 'number' && metrics.totalTokensFresh !== false
+          ? metrics.totalTokens
+          : undefined;
+    const total = typeof used === 'number' ? Math.max(0, used) : undefined;
     const ctx = typeof metrics.contextTokens === 'number' ? Math.max(0, metrics.contextTokens) : undefined;
     if (total != null && ctx != null) {
       const totalLabel = compactNumber(total);
@@ -639,7 +644,7 @@ function buildCompleteCard(params: {
   const elapsed = elapsedMs ?? 0;
   const panelMinMs = panel?.unifiedPanelMinDurationMs ?? 5000;
   const panelExpanded = panel?.expanded ?? false;
-  const ctxMode: ContextDisplayMode = panel?.contextDisplayMode ?? 'text_bar';
+  const ctxMode: ContextDisplayMode = panel?.contextDisplayMode ?? 'text';
   const showUnifiedPanel = showToolUse && (elapsed >= panelMinMs || hasReasoning || toolCount > 0);
 
   if (showUnifiedPanel) {
@@ -656,27 +661,29 @@ function buildCompleteCard(params: {
     if (modelName) parts.push(modelName);
     parts.push(`💭${hasReasoning ? 1 : 0}`, `🔧${toolCount}`);
 
-    const inT = typeof footerMetrics?.inputTokens === 'number' ? footerMetrics.inputTokens : undefined;
-    const outT = typeof footerMetrics?.outputTokens === 'number' ? footerMetrics.outputTokens : undefined;
-    if (inT != null && outT != null) {
-      parts.push(`🎫↑${compactNumber(inT)}↓${compactNumber(outT)}`);
-    }
-    // 📊 上下文：used = 会话实际用量(totalTokens)，total = 模型上下文窗口(contextTokens)
+    // 上下文：used = 最后一轮 inputTokens（≈当前上下文，zcode-feishu-bridge 同款），
+    // total = 模型上下文窗口（contextTokens）
     const ctxWindow =
       typeof footerMetrics?.contextTokens === 'number' && footerMetrics.contextTokens > 0
         ? footerMetrics.contextTokens
         : undefined;
-    const ctxUsed =
-      footerMetrics?.totalTokensFresh === false
-        ? undefined
-        : typeof footerMetrics?.totalTokens === 'number' && footerMetrics.totalTokens > 0
-          ? footerMetrics.totalTokens
-          : undefined;
-    if (ctxWindow != null && ctxUsed != null) {
-      const ctxSeg = formatContextSegment(ctxUsed, ctxWindow, ctxMode);
+    const ctxUsedIn =
+      typeof footerMetrics?.inputTokens === 'number' && footerMetrics.inputTokens > 0
+        ? footerMetrics.inputTokens
+        : undefined;
+    if (ctxWindow != null && ctxUsedIn != null) {
+      const ctxSeg = formatContextSegment(ctxUsedIn, ctxWindow, ctxMode);
       if (ctxSeg) parts.push(ctxSeg);
     }
-    if (elapsed > 0) parts.push(`⏱️${formatElapsed(elapsed)}`);
+    // 🎫 输出 token：会话累计（outputTokensTotal），无累计时回落单轮 outputTokens
+    const outShown =
+      typeof footerMetrics?.outputTokensTotal === 'number'
+        ? footerMetrics.outputTokensTotal
+        : typeof footerMetrics?.outputTokens === 'number'
+          ? footerMetrics.outputTokens
+          : undefined;
+    if (outShown != null && outShown > 0) parts.push(`🎫 ${compactNumber(outShown)}`);
+    if (elapsed > 0) parts.push(`⏱️ ${formatElapsed(elapsed)}`);
 
     const children: CardElement[] = [];
     if (hasReasoning) {

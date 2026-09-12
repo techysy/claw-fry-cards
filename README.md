@@ -59,7 +59,7 @@ openclaw plugins uninstall openclaw-lark --force   # 或按其实际目录名卸
 |------|------|
 | ⚡ **派发即建卡** | 消息到达 1 秒内出现"处理中"卡片，生成期间不再是空白等待 |
 | ✍️ **打字机输出** | 答案逐字上屏（基于 CardKit streaming_mode 客户端动画） |
-| 🎯 **统一面板** | 完成态底部单一折叠面板，标题一行带全指标：`🍤 ⇲模型 · 💭N · 🔧N · 🎫↑in↓out · 📊上下文 x% · ⏱️耗时` |
+| 🎯 **统一面板** | 完成态底部单一折叠面板，标题一行带全指标：`🍤 ⇲模型 · 💭N · 🔧N · 上下文 (x%) · 🎫 输出 · ⏱️耗时` |
 | 🎨 **状态边框** | 面板边框颜色随结果变化：绿=完成 · 红=出错 · 黄=停止；展开可见思考过程与工具步骤明细 |
 | 📊 **会话指标** | 模型名、token 用量、上下文窗口进度（实时读取 agent transcript SQLite） |
 
@@ -128,7 +128,7 @@ openclaw gateway restart
         "config": {
           "panel": {
             "unifiedPanelMinDuration": 5,
-            "contextDisplayMode": "text_bar",
+            "contextDisplayMode": "text",
             "expanded": false,
             "modelAliases": { "mimo/mimo-v2.5": "小虾米" }
           }
@@ -155,7 +155,7 @@ openclaw gateway restart
 
 | 项 | 行为 |
 |----|------|
-| 标题 | `🍤 ⇲模型 · 💭N · 🔧N · 🎫↑in↓out · 📊used/total x% · ⏱️耗时`（数据缺失的段自动省略） |
+| 标题 | `🍤 ⇲模型 · 💭N · 🔧N · 368.6k/1.0m (37%) · 🎫 1.5k · ⏱️ 13.3s`（与 zcode-feishu-bridge 同款顺序；数据缺失的段自动省略） |
 | 展开内容 | 思考过程（灰字标注）+ 工具调用步骤（图标/状态/耗时）；两者皆无时显示"暂无思考与工具调用过程" |
 | 显示条件 | 回复耗时 ≥ 5 秒，**或**存在思考/工具过程 |
 | 边框颜色 | 绿 = 完成 · 红 = 出错 · 黄 = 停止 |
@@ -166,7 +166,7 @@ openclaw gateway restart
 ```json
 "panel": {
   "unifiedPanelMinDuration": 5,
-  "contextDisplayMode": "text_bar",
+  "contextDisplayMode": "text",
   "expanded": false
 }
 ```
@@ -174,7 +174,7 @@ openclaw gateway restart
 | 配置项 | 说明 | 默认 |
 |--------|------|------|
 | `unifiedPanelMinDuration` | 面板显示的耗时门槛（秒）；回复 ≥ 此值或有思考/工具时显示，`0` = 每条必出 | `5` |
-| `contextDisplayMode` | 📊 上下文段样式：`text`（`129.3k/1.0m (13%)`）/ `bar`（`[██▓░░░░░] 13%`）/ `text_bar`（fry 同款 `129.3k/1.0m [██▓░░░░░] 13%`） | `text_bar` |
+| `contextDisplayMode` | 📊 上下文段样式（上下文 used = 最后一轮 inputTokens；🎫 = 会话累计输出）：`text`（`129.3k/1.0m (13%)`）/ `bar`（`[██▓░░░░░] 13%`）/ `text_bar`（`129.3k/1.0m [██▓░░░░░] 13%`） | `text` |
 | `expanded` | 面板默认展开 | `false` |
 
 ### 🏷️ 模型别名（含时段人设）

@@ -160,6 +160,8 @@ export interface FeishuReplyDispatcherResult {
 export interface FooterSessionMetrics {
   inputTokens?: number;
   outputTokens?: number;
+  /** 会话累计输出 tokens（跨轮求和），面板 🎫 段显示用；缺省时回落单轮 outputTokens */
+  outputTokensTotal?: number;
   cacheRead?: number;
   cacheWrite?: number;
   totalTokens?: number;

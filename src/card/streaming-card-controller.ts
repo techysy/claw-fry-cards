@@ -164,35 +164,52 @@ export class StreamingCardController {
           .get(sessionKey) as { session_id: string } | undefined;
         if (!window) return undefined;
 
-        const row = db
+        const rows = db
           .prepare(
-            "SELECT event_json FROM transcript_events WHERE session_id = ? AND event_json LIKE '%usage%' ORDER BY rowid DESC LIMIT 1",
+            "SELECT event_json FROM transcript_events WHERE session_id = ? AND event_json LIKE '%usage%' ORDER BY rowid DESC LIMIT 500",
           )
-          .get(window.session_id) as { event_json: string } | undefined;
-        if (!row) return undefined;
+          .all(window.session_id) as Array<{ event_json: string } | undefined>;
+        if (!rows.length) return undefined;
 
-        const ev = JSON.parse(row.event_json) as { message?: { model?: unknown; provider?: unknown; usage?: unknown } };
-        const msg = ev?.message ?? {};
-        const u = msg.usage as
-          | { input?: unknown; output?: unknown; cacheRead?: unknown; cacheWrite?: unknown; totalTokens?: unknown }
-          | undefined;
-        if (!u) return undefined;
-
-        const metrics: FooterSessionMetrics = {
-          inputTokens: typeof u.input === 'number' ? u.input : undefined,
-          outputTokens: typeof u.output === 'number' ? u.output : undefined,
-          cacheRead: typeof u.cacheRead === 'number' ? u.cacheRead : undefined,
-          cacheWrite: typeof u.cacheWrite === 'number' ? u.cacheWrite : undefined,
-          totalTokens: typeof u.totalTokens === 'number' ? u.totalTokens : undefined,
-          model: typeof msg.model === 'string' ? msg.model : undefined,
-          provider: typeof msg.provider === 'string' ? msg.provider : undefined,
-        };
+        // 最新一条 usage 事件给出本轮 input/模型/窗口；其余事件累加 outputTokens
+        // （面板 🎫 段显示会话累计输出，zcode-feishu-bridge 同款语义）。
+        let metrics: FooterSessionMetrics | undefined;
+        let outputTotal = 0;
+        let sawOutput = false;
+        for (const row of rows) {
+          if (!row?.event_json) continue;
+          let ev: { message?: { model?: unknown; provider?: unknown; usage?: unknown } };
+          try {
+            ev = JSON.parse(row.event_json) as typeof ev;
+          } catch {
+            continue;
+          }
+          const msg = ev?.message ?? {};
+          const u = msg.usage as
+            | { input?: unknown; output?: unknown; cacheRead?: unknown; cacheWrite?: unknown; totalTokens?: unknown }
+            | undefined;
+          if (!u) continue;
+          if (!metrics) {
+            metrics = {
+              inputTokens: typeof u.input === 'number' ? u.input : undefined,
+              outputTokens: typeof u.output === 'number' ? u.output : undefined,
+              cacheRead: typeof u.cacheRead === 'number' ? u.cacheRead : undefined,
+              cacheWrite: typeof u.cacheWrite === 'number' ? u.cacheWrite : undefined,
+              totalTokens: typeof u.totalTokens === 'number' ? u.totalTokens : undefined,
+              model: typeof msg.model === 'string' ? msg.model : undefined,
+              provider: typeof msg.provider === 'string' ? msg.provider : undefined,
+            };
+          }
+          if (typeof u.output === 'number' && u.output > 0) {
+            outputTotal += u.output;
+            sawOutput = true;
+          }
+        }
+        if (!metrics) return undefined;
+        if (sawOutput) metrics.outputTokensTotal = outputTotal;
 
         // Best-effort context window from the model catalog in cfg.
-        const ctxWindow = this.resolveContextWindow(
-          typeof msg.provider === 'string' ? msg.provider : undefined,
-          typeof msg.model === 'string' ? msg.model : undefined,
-        );
+        const ctxWindow = this.resolveContextWindow(metrics.provider, metrics.model);
         if (ctxWindow != null) metrics.contextTokens = ctxWindow;
 
         log.debug('footer metrics lookup: found usage from agent transcript sqlite', {

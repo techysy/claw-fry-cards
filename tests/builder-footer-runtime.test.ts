@@ -54,9 +54,9 @@ describe('formatFooterRuntimeSegments', () => {
     expect(result.primaryZh).toEqual(['已完成', '耗时 12.3s', 'claude-opus-4-6']);
     expect(result.primaryEn).toEqual(['Completed', 'Elapsed 12.3s', 'claude-opus-4-6']);
 
-    // Detail line: tokens, cache, context
-    expect(result.detailZh).toEqual(['↑ 1.2k ↓ 3.5k', '缓存 800/200 (36%)', '上下文 4.5k/128k (4%)']);
-    expect(result.detailEn).toEqual(['↑ 1.2k ↓ 3.5k', 'Cache 800/200 (36%)', 'Context 4.5k/128k (4%)']);
+    // Detail line: tokens, cache, context（上下文口径 = 最后一轮 inputTokens）
+    expect(result.detailZh).toEqual(['↑ 1.2k ↓ 3.5k', '缓存 800/200 (36%)', '上下文 1.2k/128k (1%)']);
+    expect(result.detailEn).toEqual(['↑ 1.2k ↓ 3.5k', 'Cache 800/200 (36%)', 'Context 1.2k/128k (1%)']);
   });
 
   it('respects missing metrics and status variants', () => {
@@ -75,8 +75,8 @@ describe('formatFooterRuntimeSegments', () => {
 
     expect(stopped.primaryZh).toEqual(['已停止']);
     expect(stopped.primaryEn).toEqual(['Stopped']);
-    expect(stopped.detailZh).toEqual(['↑ 100 ↓ 50']);
-    expect(stopped.detailEn).toEqual(['↑ 100 ↓ 50']);
+    expect(stopped.detailZh).toEqual(['↑ 100 ↓ 50', '上下文 100/4.1k (2%)']);
+    expect(stopped.detailEn).toEqual(['↑ 100 ↓ 50', 'Context 100/4.1k (2%)']);
 
     const errored = formatFooterRuntimeSegments({
       footer: { status: true, elapsed: true },
