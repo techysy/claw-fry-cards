@@ -1,7 +1,7 @@
 {
   "name": "claw-lark-cards",
   "version": "2026.9.12",
-  "description": "🍤 claw-lark-cards — OpenClaw 飞书通道插件（2.0 适配 · 虾条式流式卡片：派发即建卡 · 打字机 · 统一指标面板）",
+  "description": "🦐 claw-lark-cards — OpenClaw 飞书通道插件（2.0 适配 · 虾条式流式卡片：派发即建卡 · 打字机 · 统一指标面板）",
   "type": "module",
   "exports": {
     ".": {
