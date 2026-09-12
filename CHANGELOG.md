@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.0.1 (2026-09-12)
+
+2.0.0 发布审查后的修正版（元数据与文档层面，无引擎代码变更）。
+
+- 🔖 `openclaw.plugin.json` 显示名 `OpenClaw Lark Cards` → `Claw Fry Cards`（2.0.0 漏改项，插件列表可见）
+- 📝 Issue 模板更名：bug_report 插件版本字段 openclaw-lark → claw-fry-cards；config.yml 的 Ideas / Q&A 链接从官方 larksuite/openclaw-lark discussions 改指本仓库（已启用 Discussions）
+- 📦 package.json 补 `repository` 字段（npm 包主页源码链接）
+- 🧪 兼容性测试 harness 入库（`docs/compat-test-harness.mjs`），报告附录改为引用仓库内路径
+- 🧹 测试临时目录前缀 openclaw-lark-tool-use → claw-fry-cards-tool-use
+
 ## 2.0.0 (2026-09-12)
 
 **主线转向通道插件形态** — 前身 [claw-lark-cards](https://github.com/techysy/claw-lark-cards)（官方 openclaw-lark 的 2.0 适配 fork）合并入本仓库并更名，claw-lark-cards 仓库同步废弃。1.0 伴侣插件形态保留于 `v1.0.0` 标签，按需降级使用。

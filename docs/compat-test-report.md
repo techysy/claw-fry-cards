@@ -47,10 +47,12 @@
 
 ## 📎 附录：沙箱复现
 
+测试 harness 已入库：[`docs/compat-test-harness.mjs`](compat-test-harness.mjs)（递归 Proxy mock，记录插件触碰的完整 API 面）。
+
 ```bash
 mkdir sandbox && cd sandbox && npm init -y
 npm install openclaw@2026.5.12 zod image-size @sinclair/typebox@0.34.49 @larksuiteoapi/node-sdk
 # 插件 dist 放入 sandbox/plugin-lark/dist 后：
-node harness.mjs <sandbox>/plugin-lark/dist/index.mjs withcfg
-# harness：import 插件入口 → register(递归 Proxy mock) → 输出 API 面与结果
+node docs/compat-test-harness.mjs <sandbox>/plugin-lark/dist/index.mjs withcfg
+# 输出：import 阶段解析结果 → register 阶段 → 触碰的 API 面 → PASS
 ```

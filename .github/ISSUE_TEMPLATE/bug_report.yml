@@ -41,9 +41,9 @@ body:
       required: true
 
   - type: input
-    id: openclaw-lark-version
+    id: claw-fry-cards-version
     attributes:
-      label: openclaw-lark (this plugin) Version / openclaw-lark（本插件）版本
+      label: claw-fry-cards (this plugin) Version / claw-fry-cards（本插件）版本
     validations:
       required: true
 

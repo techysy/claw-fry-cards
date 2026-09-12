@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { resolveToolUseDisplayConfig } from '../src/card/tool-use-config';
 
 function createStorePath(testName: string): string {
-  const dir = join(tmpdir(), `openclaw-lark-tool-use-${process.pid}`);
+  const dir = join(tmpdir(), `claw-fry-cards-tool-use-${process.pid}`);
   mkdirSync(dir, { recursive: true });
   const path = join(dir, `${testName}.json`);
   writeFileSync(path, '{}');
@@ -13,7 +13,7 @@ function createStorePath(testName: string): string {
 }
 
 afterEach(() => {
-  rmSync(join(tmpdir(), `openclaw-lark-tool-use-${process.pid}`), { recursive: true, force: true });
+  rmSync(join(tmpdir(), `claw-fry-cards-tool-use-${process.pid}`), { recursive: true, force: true });
 });
 
 describe('resolveToolUseDisplayConfig', () => {
