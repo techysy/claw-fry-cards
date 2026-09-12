@@ -9,9 +9,10 @@
  */
 
 import type { OpenClawPluginApi } from 'openclaw/plugin-sdk/core';
-import { emptyPluginConfigSchema } from 'openclaw/plugin-sdk/core';
+import { buildPluginConfigSchema } from 'openclaw/plugin-sdk/core';
 import { feishuPlugin } from './src/channel/plugin';
 import { LarkClient } from './src/core/lark-client';
+import { PluginConfigSchema } from './src/core/config-schema';
 import { registerOapiTools } from './src/tools/oapi/index';
 import { registerFeishuMcpDocTools } from './src/tools/mcp/doc/index';
 import { registerFeishuOAuthTool } from './src/tools/oauth';
@@ -37,6 +38,11 @@ const log = larkLogger('plugin');
 // ---------------------------------------------------------------------------
 
 export { monitorFeishuProvider } from './src/channel/monitor';
+export {
+  PluginConfigSchema,
+  PLUGIN_CONFIG_JSON_SCHEMA,
+  type PluginConfig,
+} from './src/core/config-schema';
 export { sendMessageFeishu, sendCardFeishu, updateCardFeishu, editMessageFeishu } from './src/messaging/outbound/send';
 export { getMessageFeishu } from './src/messaging/outbound/fetch';
 export {
@@ -105,7 +111,9 @@ const plugin = {
   id: 'claw-fry-cards',
   name: 'Feishu',
   description: 'Lark/Feishu channel plugin with im/doc/wiki/drive/task/calendar tools',
-  configSchema: emptyPluginConfigSchema(),
+  configSchema: buildPluginConfigSchema(
+    PluginConfigSchema as unknown as Parameters<typeof buildPluginConfigSchema>[0],
+  ),
   register(api: OpenClawPluginApi): void {
     LarkClient.setRuntime(api.runtime);
     api.registerChannel({ plugin: feishuPlugin });

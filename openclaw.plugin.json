@@ -7,9 +7,76 @@
     "./skills"
   ],
   "configSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
     "type": "object",
-    "additionalProperties": false,
-    "properties": {}
+    "properties": {
+      "panel": {
+        "type": "object",
+        "properties": {
+          "unifiedPanelMinDuration": {
+            "type": "number"
+          },
+          "contextDisplayMode": {
+            "type": "string",
+            "enum": [
+              "text",
+              "bar",
+              "text_bar"
+            ]
+          },
+          "expanded": {
+            "type": "boolean"
+          },
+          "modelAliases": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "timeAliases": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "days": {
+                            "type": "string"
+                          },
+                          "start": {
+                            "type": "string"
+                          },
+                          "end": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "name"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
   },
   "contracts": {
     "tools": [

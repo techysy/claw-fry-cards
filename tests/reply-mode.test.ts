@@ -10,7 +10,11 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { expandAutoMode, isStreamingEnabled, resolveReplyMode } from '../src/card/reply-mode';
+import { resolveReplyMode } from '../src/card/reply-mode';
+import { expandAutoMode, isStreamingEnabled } from '../src/card/reply-mode';
+import type { FeishuConfig } from '../src/core/types';
+
+const feishuCfg = (partial: object) => partial as FeishuConfig;
 
 describe('isStreamingEnabled', () => {
   it('accepts legacy boolean true / false / unset', () => {
@@ -29,31 +33,37 @@ describe('isStreamingEnabled', () => {
 describe('resolveReplyMode with object-form streaming', () => {
   it('returns auto when streaming object enables streaming (no replyMode on 9.4 hosts)', () => {
     expect(
-      resolveReplyMode({ feishuCfg: { streaming: { mode: 'partial' } }, chatType: 'p2p' }),
+      resolveReplyMode({ feishuCfg: feishuCfg({ streaming: { mode: 'partial' } }), chatType: 'p2p' }),
     ).toBe('auto');
   });
 
   it('returns static when streaming object mode is off', () => {
     expect(
-      resolveReplyMode({ feishuCfg: { streaming: { mode: 'off' } }, chatType: 'p2p' }),
+      resolveReplyMode({ feishuCfg: feishuCfg({ streaming: { mode: 'off' } }), chatType: 'p2p' }),
     ).toBe('static');
   });
 
   it('keeps legacy boolean gate working', () => {
-    expect(resolveReplyMode({ feishuCfg: { streaming: true }, chatType: 'p2p' })).toBe('auto');
-    expect(resolveReplyMode({ feishuCfg: { streaming: false }, chatType: 'p2p' })).toBe('static');
+    expect(resolveReplyMode({ feishuCfg: feishuCfg({ streaming: true }), chatType: 'p2p' })).toBe('auto');
+    expect(resolveReplyMode({ feishuCfg: feishuCfg({ streaming: false }), chatType: 'p2p' })).toBe('static');
   });
 
   it('keeps legacy replyMode scene resolution when present (old hosts)', () => {
     expect(
       resolveReplyMode({
-        feishuCfg: { streaming: true, replyMode: { default: 'streaming', group: 'static' } },
+        feishuCfg: feishuCfg({
+          streaming: true,
+          replyMode: { default: 'streaming', group: 'static' },
+        }),
         chatType: 'p2p',
       }),
     ).toBe('streaming');
     expect(
       resolveReplyMode({
-        feishuCfg: { streaming: true, replyMode: { default: 'streaming', group: 'static' } },
+        feishuCfg: feishuCfg({
+          streaming: true,
+          replyMode: { default: 'streaming', group: 'static' },
+        }),
         chatType: 'group',
       }),
     ).toBe('static');

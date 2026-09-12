@@ -428,7 +428,7 @@ export function buildCardContent(
   data: {
     panel?: {
       unifiedPanelMinDurationMs?: number;
-      modelAliases?: Record<string, string>;
+      modelAliases?: Record<string, ModelAliasEntry>;
       contextDisplayMode?: ContextDisplayMode;
       expanded?: boolean;
     };
@@ -559,7 +559,7 @@ function buildCompleteCard(params: {
     unifiedPanelMinDurationMs?: number;
     contextDisplayMode?: ContextDisplayMode;
     expanded?: boolean;
-    modelAliases?: Record<string, string>;
+    modelAliases?: Record<string, ModelAliasEntry>;
   };
   elapsedMs?: number;
   isError?: boolean;

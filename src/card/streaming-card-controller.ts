@@ -21,6 +21,7 @@ import { extractLarkApiCode } from '../core/api-error';
 import { larkLogger } from '../core/lark-logger';
 import { LarkClient } from '../core/lark-client';
 import { registerShutdownHook } from '../core/shutdown-hooks';
+import { resolvePanelSettings, type UnifiedPanelSettings } from './panel-config';
 import { sendCardFeishu, updateCardFeishu } from '../messaging/outbound/send';
 import {
   STREAMING_ELEMENT_ID,
@@ -133,35 +134,8 @@ export class StreamingCardController {
     return Date.now() - this.dispatchStartTime;
   }
 
-  private resolvePanelConfig():
-    | {
-        unifiedPanelMinDurationMs?: number;
-        contextDisplayMode?: 'text' | 'bar' | 'text_bar';
-        expanded?: boolean;
-        modelAliases?: Record<string, string>;
-      }
-    | undefined {
-    const feishuCfgAll = this.deps.cfg?.channels?.feishu as unknown;
-    log.info('probe: runtime feishu cfg', { feishuCfg: JSON.stringify(feishuCfgAll ?? null) });
-    const feishuCfg = this.deps.cfg?.channels?.feishu as
-      | {
-          panel?: {
-            unifiedPanelMinDuration?: number;
-            contextDisplayMode?: 'text' | 'bar' | 'text_bar';
-            expanded?: boolean;
-            modelAliases?: Record<string, string>;
-          };
-        }
-      | undefined;
-    const p = feishuCfg?.panel;
-    if (!p) return undefined;
-    return {
-      unifiedPanelMinDurationMs:
-        typeof p.unifiedPanelMinDuration === 'number' ? p.unifiedPanelMinDuration * 1000 : undefined,
-      contextDisplayMode: p.contextDisplayMode,
-      expanded: p.expanded,
-      modelAliases: p.modelAliases,
-    };
+  private resolvePanelConfig(): UnifiedPanelSettings | undefined {
+    return resolvePanelSettings(this.deps.cfg);
   }
 
   private needsFooterMetrics(): boolean {

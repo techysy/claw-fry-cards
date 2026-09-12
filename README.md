@@ -123,7 +123,17 @@ openclaw gateway restart
   },
   "plugins": {
     "entries": {
-      "claw-fry-cards": { "enabled": true }
+      "claw-fry-cards": {
+        "enabled": true,
+        "config": {
+          "panel": {
+            "unifiedPanelMinDuration": 5,
+            "contextDisplayMode": "text_bar",
+            "expanded": false,
+            "modelAliases": { "mimo/mimo-v2.5": "小虾米" }
+          }
+        }
+      }
     }
   }
 }
@@ -151,7 +161,7 @@ openclaw gateway restart
 | 边框颜色 | 绿 = 完成 · 红 = 出错 · 黄 = 停止 |
 | 展开状态 | 默认折叠，点击展开 |
 
-**面板设置**（`channels.feishu.panel`，全部可选）：
+**面板设置**（推荐写在插件自有配置 `plugins.entries.claw-fry-cards.config.panel`——随插件版本化，不受宿主 schema 演化影响；旧位置 `channels.feishu.panel` 仍兼容读取）：
 
 ```json
 "panel": {
@@ -169,11 +179,10 @@ openclaw gateway restart
 
 ### 🏷️ 模型别名（含时段人设）
 
-面板里的模型名可按模型映射为友好名，并支持**按时间自动切换**（如 DeepSeek 高峰/空闲计费时段的人设）：
+面板里的模型名可按模型映射为友好名，并支持**按时间自动切换**（如 DeepSeek 高峰/空闲计费时段的人设）。写在上面 `panel.modelAliases` 里：
 
 ```json
-"panel": {
-  "modelAliases": {
+"modelAliases": {
     "deepseek-v4-flash": {
       "name": "梁文谷⚡️",
       "timeAliases": [
@@ -182,7 +191,6 @@ openclaw gateway restart
       ]
     }
   }
-}
 ```
 
 - `days`：生效星期（`0`=周日），支持区间与枚举（`"1-5"`、`"0,6"`、`"1-5,0"`），省略 = 每天

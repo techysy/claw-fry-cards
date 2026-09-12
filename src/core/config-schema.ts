@@ -283,3 +283,47 @@ export const FEISHU_CONFIG_JSON_SCHEMA: Record<string, unknown> = toJSONSchema(F
   io: 'input',
   unrepresentable: 'any',
 });
+
+// ---------------------------------------------------------------------------
+// Plugin-level config (`plugins.entries.claw-fry-cards.config`)
+// ---------------------------------------------------------------------------
+
+const ModelAliasValueSchema = z.union([
+  z.string(),
+  z.object({
+    name: z.string(),
+    timeAliases: z
+      .array(
+        z.object({
+          days: z.string().optional(),
+          start: z.string().optional(),
+          end: z.string().optional(),
+          name: z.string(),
+        }),
+      )
+      .optional(),
+  }),
+]);
+
+/**
+ * 插件自有配置（随插件版本化，不受宿主 channels.feishu schema 演化影响）。
+ * 面板设置优先读这里；`channels.feishu.panel` 作为旧位置回退。
+ */
+export const PluginConfigSchema = z.object({
+  panel: z
+    .object({
+      unifiedPanelMinDuration: z.number().optional(),
+      contextDisplayMode: z.enum(['text', 'bar', 'text_bar']).optional(),
+      expanded: z.boolean().optional(),
+      modelAliases: z.record(z.string(), ModelAliasValueSchema).optional(),
+    })
+    .optional(),
+});
+
+export type PluginConfig = z.infer<typeof PluginConfigSchema>;
+
+export const PLUGIN_CONFIG_JSON_SCHEMA: Record<string, unknown> = toJSONSchema(PluginConfigSchema, {
+  target: 'draft-07',
+  io: 'input',
+  unrepresentable: 'any',
+});
