@@ -177,6 +177,31 @@ openclaw gateway restart
 | `contextDisplayMode` | 📊 上下文段样式（上下文 used = 最后一轮 inputTokens；🎫 = 会话累计输出）：`text`（`129.3k/1.0m (13%)`）/ `bar`（`[██▓░░░░░] 13%`）/ `text_bar`（`129.3k/1.0m [██▓░░░░░] 13%`） | `text` |
 | `expanded` | 面板默认展开 | `false` |
 
+### ⏱️ 闲时忙时人设（预置时间表）
+
+比手写别名更简单的方式——填模型匹配和两个名称，时间表下拉选择：
+
+```json
+"panel": {
+  "timePersona": {
+    "match": "flash",
+    "busyName": "梁文锋⚡️",
+    "idleName": "梁文谷⚡️",
+    "schedule": "workday"
+  }
+}
+```
+
+| schedule | 含义 |
+|----------|------|
+| `workday` | 工作日（一~五）09:00–12:00 & 14:00–18:00（DeepSeek 峰谷计费同款）|
+| `workday-918` | 工作日 09:00–18:00 连续 |
+| `everyday-day` | 每天 08:00–22:00 |
+| `always-busy` | 恒为忙时 |
+| `custom` | 自定义（改用上面的 `modelAliases.timeAliases`）|
+
+> 与 `modelAliases` 可共存；同 key 时手写别名优先。
+
 ### 🏷️ 模型别名（含时段人设）
 
 面板里的模型名可按模型映射为友好名，并支持**按时间自动切换**（如 DeepSeek 高峰/空闲计费时段的人设）。写在上面 `panel.modelAliases` 里：

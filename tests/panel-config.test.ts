@@ -10,7 +10,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { resolvePanelSettings } from '../src/card/panel-config';
+import { expandTimePersona, resolvePanelSettings } from '../src/card/panel-config';
 
 describe('resolvePanelSettings', () => {
   it('reads plugin-owned panel config', () => {
@@ -75,5 +75,49 @@ describe('resolvePanelSettings', () => {
         channels: { feishu: { panel: { contextDisplayMode: 'rainbow' } } },
       }),
     ).toBeUndefined();
+  });
+});
+
+describe('expandTimePersona', () => {
+  const base = { match: 'flash', busyName: '梁文锋⚡️', idleName: '梁文谷⚡️' } as const;
+
+  it('expands workday into the two DeepSeek billing windows', () => {
+    expect(expandTimePersona({ ...base, schedule: 'workday' })).toEqual({
+      name: '梁文谷⚡️',
+      timeAliases: [
+        { days: [1, 2, 3, 4, 5], start: '09:00', end: '12:00', name: '梁文锋⚡️' },
+        { days: [1, 2, 3, 4, 5], start: '14:00', end: '18:00', name: '梁文锋⚡️' },
+      ],
+    });
+  });
+
+  it('expands workday-918 / everyday-day / always-busy', () => {
+    expect((expandTimePersona({ ...base, schedule: 'workday-918' }) as { timeAliases?: unknown[] }).timeAliases).toEqual([
+      { days: [1, 2, 3, 4, 5], start: '09:00', end: '18:00', name: '梁文锋⚡️' },
+    ]);
+    expect((expandTimePersona({ ...base, schedule: 'everyday-day' }) as { timeAliases?: unknown[] }).timeAliases).toEqual([
+      { start: '08:00', end: '22:00', name: '梁文锋⚡️' },
+    ]);
+    expect(expandTimePersona({ ...base, schedule: 'always-busy' })).toEqual({ name: '梁文锋⚡️' } as never);
+  });
+
+  it('returns undefined for custom schedule (use modelAliases instead)', () => {
+    expect(expandTimePersona({ ...base, schedule: 'custom' })).toBeUndefined();
+  });
+
+  it('falls back to busyName when idleName is missing', () => {
+    const entry = expandTimePersona({
+      match: 'flash',
+      busyName: '忙',
+      idleName: '',
+      schedule: 'workday',
+    }) as { name?: string };
+    expect(entry.name).toBe('忙');
+  });
+
+  it('returns undefined for invalid shapes', () => {
+    expect(expandTimePersona(undefined)).toBeUndefined();
+    expect(expandTimePersona({ match: '', busyName: 'x', idleName: 'y', schedule: 'workday' })).toBeUndefined();
+    expect(expandTimePersona({ match: 'flash', busyName: '', idleName: 'y', schedule: 'workday' })).toBeUndefined();
   });
 });

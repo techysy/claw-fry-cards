@@ -21,6 +21,47 @@ export interface UnifiedPanelSettings {
   modelAliases?: Record<string, ModelAliasEntry>;
   modelAliasesEnabled?: boolean;
   truncateModelName?: boolean;
+  timePersona?: TimePersonaConfig;
+}
+
+/** 闲时忙时人设：比手写 timeAliases 更简单的预置方式 */
+export interface TimePersonaConfig {
+  /** 匹配哪些模型（大小写不敏感子串，同别名 key 语义） */
+  match: string;
+  /** 忙时显示 */
+  busyName: string;
+  /** 闲时显示（非忙时兜底） */
+  idleName: string;
+  /** 预置时间表；custom 表示改用 modelAliases.timeAliases 自定义规则 */
+  schedule: 'workday' | 'workday-918' | 'everyday-day' | 'always-busy' | 'custom';
+}
+
+/** 预置时间表（忙时窗口，北京时间） */
+const SCHEDULE_WINDOWS: Record<
+  Exclude<TimePersonaConfig['schedule'], 'custom' | 'always-busy'>,
+  Array<{ days?: number[]; start: string; end: string }>
+> = {
+  workday: [
+    { days: [1, 2, 3, 4, 5], start: '09:00', end: '12:00' },
+    { days: [1, 2, 3, 4, 5], start: '14:00', end: '18:00' },
+  ],
+  'workday-918': [{ days: [1, 2, 3, 4, 5], start: '09:00', end: '18:00' }],
+  'everyday-day': [{ start: '08:00', end: '22:00' }],
+};
+
+/** 把 timePersona 展开为等价的别名条目（busyName=忙时规则，idleName=顶层兜底） */
+export function expandTimePersona(tp: TimePersonaConfig | undefined): ModelAliasEntry | undefined {
+  if (!tp || typeof tp !== 'object') return undefined;
+  if (typeof tp.match !== 'string' || !tp.match) return undefined;
+  if (typeof tp.busyName !== 'string' || !tp.busyName) return undefined;
+  if (tp.schedule === 'custom') return undefined;
+  if (tp.schedule === 'always-busy') return { name: tp.busyName };
+  const windows = SCHEDULE_WINDOWS[tp.schedule];
+  if (!windows) return undefined;
+  return {
+    name: typeof tp.idleName === 'string' && tp.idleName ? tp.idleName : tp.busyName,
+    timeAliases: windows.map((w) => ({ ...w, name: tp.busyName })),
+  };
 }
 
 const PLUGIN_ID = 'claw-fry-cards';
@@ -36,6 +77,7 @@ function readPanelSettings(raw: unknown): UnifiedPanelSettings | undefined {
     modelAliases?: unknown;
     modelAliasesEnabled?: unknown;
     truncateModelName?: unknown;
+    timePersona?: unknown;
   };
   const out: UnifiedPanelSettings = {};
   if (typeof p.unifiedPanelMinDuration === 'number') {
@@ -53,6 +95,9 @@ function readPanelSettings(raw: unknown): UnifiedPanelSettings | undefined {
   if (typeof p.modelAliasesEnabled === 'boolean') out.modelAliasesEnabled = p.modelAliasesEnabled;
   if (p.modelAliases && typeof p.modelAliases === 'object') {
     out.modelAliases = p.modelAliases as Record<string, ModelAliasEntry>;
+  }
+  if (p.timePersona && typeof p.timePersona === 'object') {
+    out.timePersona = p.timePersona as TimePersonaConfig;
   }
   return Object.keys(out).length > 0 ? out : undefined;
 }

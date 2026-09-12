@@ -135,6 +135,20 @@ const pluginConfigSchema = buildPluginConfigSchema(
         label: '别名开关',
         help: 'false 时忽略 modelAliases，全部回落截断/完整名显示，配置本身保留（默认开）',
       },
+      'panel.timePersona': {
+        label: '闲时忙时人设',
+        help: '比手写别名更简单的预置方式：填模型匹配 + 忙时/闲时名称，再从下拉里选时间表（workday = 工作日 9-12 & 14-18）；与 modelAliases 可共存，同 key 手写优先',
+      },
+      'panel.timePersona.match': {
+        label: '匹配模型',
+        help: '大小写不敏感子串，如 "flash" 命中所有带 flash 的模型',
+      },
+      'panel.timePersona.busyName': { label: '忙时名称', help: '时间表窗口内显示的名称' },
+      'panel.timePersona.idleName': { label: '闲时名称', help: '非忙时（晚上/周末/午休）显示的名称' },
+      'panel.timePersona.schedule': {
+        label: '时间表',
+        help: 'workday / workday-918 / everyday-day / always-busy / custom',
+      },
     },
   },
 );

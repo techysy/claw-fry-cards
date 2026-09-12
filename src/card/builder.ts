@@ -8,6 +8,7 @@
  * different agent response states (thinking, streaming, complete, confirm).
  */
 
+import { expandTimePersona, type TimePersonaConfig } from './panel-config';
 import { optimizeMarkdownStyle } from './markdown-style';
 import type { FooterSessionMetrics } from './reply-dispatcher-types';
 import { EMPTY_TOOL_USE_PLACEHOLDER, type ToolUseDisplayStep } from './tool-use-display';
@@ -469,6 +470,7 @@ export function buildCardContent(
       modelAliases?: Record<string, ModelAliasEntry>;
       modelAliasesEnabled?: boolean;
       truncateModelName?: boolean;
+      timePersona?: TimePersonaConfig;
       contextDisplayMode?: ContextDisplayMode;
       expanded?: boolean;
     };
@@ -602,6 +604,7 @@ function buildCompleteCard(params: {
     modelAliases?: Record<string, ModelAliasEntry>;
     modelAliasesEnabled?: boolean;
     truncateModelName?: boolean;
+    timePersona?: TimePersonaConfig;
   };
   elapsedMs?: number;
   isError?: boolean;
@@ -657,7 +660,13 @@ function buildCompleteCard(params: {
 
     const rawModel = (footerMetrics?.model ?? '').trim();
     // 模型显示：别名（子串匹配，含时段人设）优先；未命中回落 ⇲ 截断（truncateModelName !== false）
-    const aliasTable = panel?.modelAliases ?? {};
+    // timePersona（闲时忙时预置）先展开进表，手写 modelAliases 同 key 时覆盖
+    const aliasTable: Record<string, ModelAliasEntry> = {};
+    const personaEntry = expandTimePersona(panel?.timePersona);
+    if (personaEntry && panel?.timePersona?.match) {
+      aliasTable[panel.timePersona.match] = personaEntry;
+    }
+    Object.assign(aliasTable, panel?.modelAliases ?? {});
     const modelName = resolvePanelModelName(aliasTable, rawModel, {
       truncateModelName: panel?.truncateModelName,
       modelAliasesEnabled: panel?.modelAliasesEnabled,

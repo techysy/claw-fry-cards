@@ -356,6 +356,21 @@ export const PluginConfigSchema = z.object({
           '别名功能总开关（默认 true）：false 时忽略 modelAliases，全部回落截断/完整名显示，配置本身保留',
         )
         .optional(),
+      timePersona: z
+        .object({
+          match: z.string().describe('匹配哪些模型（大小写不敏感子串，如 "flash" 命中所有带 flash 的模型）'),
+          busyName: z.string().describe('忙时显示的名称'),
+          idleName: z.string().describe('闲时显示的名称（非忙时兜底）'),
+          schedule: z
+            .enum(['workday', 'workday-918', 'everyday-day', 'always-busy', 'custom'])
+            .describe(
+              '预置时间表：workday = 工作日 09:00-12:00 & 14:00-18:00；workday-918 = 工作日 09:00-18:00；everyday-day = 每天 08:00-22:00；always-busy = 恒为忙时；custom = 改用 modelAliases.timeAliases 自定义',
+            ),
+        })
+        .describe(
+          '闲时忙时人设（比手写 timeAliases 更简单）：填模型匹配 + 两个名称 + 选一个预置时间表即可；与 modelAliases 可共存，同 key 时手写优先',
+        )
+        .optional(),
     })
     .describe('统一面板设置（完成态底部折叠面板）')
     .optional(),
