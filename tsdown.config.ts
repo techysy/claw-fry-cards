@@ -1,12 +1,17 @@
-import { defineConfig } from "tsdown";
+import { defineConfig } from 'tsdown';
 
 export default defineConfig({
-  entry: ["src/index.ts"],
-  format: "esm",
-  fixedExtension: true,
-  hash: false,
+  entry: {
+    index: 'index.ts',
+    'secret-contract-api': 'secret-contract-api.ts',
+  },
+  format: 'esm',
+  target: 'node22',
+  platform: 'node',
+  clean: true,
+  outDir: 'dist',
   dts: true,
-  platform: "node",
-  target: "node22",
-  external: ["openclaw", "openclaw/*"],
+  deps: {
+    neverBundle: [/^openclaw(\/.*)?$/, /^@larksuiteoapi\//, /^@sinclair\//, 'image-size', 'zod', /^node:/],
+  },
 });

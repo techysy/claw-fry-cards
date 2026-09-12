@@ -1,58 +1,67 @@
-# 🍤 claw-fry-cards — 虾条卡片
+# 🦐 claw-lark-cards
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![OpenClaw](https://img.shields.io/badge/OpenClaw-%E2%89%A52026.2.26-2463eb)](https://docs.openclaw.ai)
+[![OpenClaw](https://img.shields.io/badge/OpenClaw-%E2%89%A52026.8.1-2463eb)](https://openclaw.ai)
 [![Node](https://img.shields.io/badge/Node-%E2%89%A522-blue)](https://nodejs.org/)
 
-> OpenClaw 飞书流式卡片**伴侣插件** — fry-cards 风格的 CardKit v2.0 卡片：统一指标面板 · 实时工具进度 · 打字机收尾。
+> OpenClaw 飞书/Lark 通道插件 — 在官方 [@larksuite/openclaw-lark](https://github.com/larksuite/openclaw-lark) 基础上适配 OpenClaw 2.0 SDK，并带来 fry 风格的虾条式流式卡片体验。
 
 ![卡片效果](assets/card-demo.png)
 
-**这是什么**：[🍟 hermes-fry-cards](https://github.com/techysy/hermes-fry-cards)（Hermes 薯条卡片）的 OpenClaw 移植版。它**不负责消息收发**——飞书通道仍由官方插件承担，本插件通过 OpenClaw 公开钩子观测每轮对话，用自建 CardKit 卡片**接管回复展示**。
+**这是什么**：一个**飞书通道插件**（替代官方 `@larksuite/openclaw-lark` / 内置 `@openclaw/feishu`），负责 OpenClaw Agent 的飞书消息收发，并用 CardKit v2.0 流式卡片呈现每一轮回复。
 
-## 🧭 两个项目怎么选
-
-| | 🍤 claw-fry-cards（本仓库） | 🦐 [claw-lark-cards](https://github.com/techysy/claw-lark-cards) |
-|---|---|---|
-| 形态 | **伴侣插件**，官方通道继续收发 | **通道插件**（官方 fork + 2.0 适配），替换官方通道 |
-| 卡片接管 | 钩子观测 + 自建卡片 | 通道内置流式引擎 |
-| 打字机 | 完成后分片输出 | 关流式前灌全文，客户端逐字动画 |
-| 思考展示 | 仅回复文本中的 `<thinking>` 标签 | 原生 reasoning（模型支持时） |
-| 适合 | 想继续用官方通道、轻量增强 | 想要完整 fry 体验、不介意换通道 |
-
-> 二选一，**不要同时启用**（两套卡片会打架）。OpenClaw 2026.9.x 上推荐 claw-lark-cards。
+**为什么存在**：官方通道插件停更于 2026-07-16，未适配 OpenClaw 2.0（SDK 导出重构、会话存储迁移 SQLite），在新版网关上无法加载。本项目完成了 2.0 适配，并顺手把流式卡片体验升级到 fry-cards（[🍟 hermes-fry-cards](https://github.com/techysy/hermes-fry-cards) / [🍤 claw-fry-cards](https://github.com/techysy/claw-fry-cards)）同款风格。
 
 ---
 
 ## ✨ 特性
 
+### 通道能力（承自官方，2.0 全量适配）
+
+| 类别 | 能力 |
+|------|------|
+| 💬 消息 | 群聊/单聊收发、话题回复、消息搜索、图片/文件下载 |
+| 📄 文档 | 云文档创建/更新/读取 |
+| 📊 多维表格 | 数据表/字段/记录 CRUD、批量操作、高级筛选、视图 |
+| 📈 电子表格 | 创建、编辑、查看 |
+| 📅 日历 | 日程 CRUD、参会人、忙闲查询 |
+| ✅ 任务 | 任务/清单/子任务/评论管理 |
+
+### 🍤 虾条式流式卡片（本项目增强）
+
 | 能力 | 说明 |
 |------|------|
-| ⚡ **即时建卡** | `message_received` 触发，蓝色"处理中"卡（工具面板 + loading）立刻出现 |
-| 🔧 **工具面板** | `before/after_tool_call` 驱动：图标映射、Running/Succeeded/Failed、耗时、脱敏参数预览 |
-| 🎯 **统一面板** | 完成态底部折叠面板：`🍤 ⇲模型 · 💭N · 🔧N · 🎫↑↓ · 📊上下文进度条 · ⏱️耗时`，边框随状态（绿/红/黄） |
-| ✍️ **打字机收尾** | `message_sending` / `reply_payload_sending` 双钩子接管，答案分片写入后取消官方文本投递（防重复） |
-| 🛡️ **全链路回落** | 建卡/封卡失败、卡片超时（15 分钟）、交互组件消息 → 自动回落官方通道文本，消息永不丢失 |
-| 🧠 **思考剥离** | `<thinking>` / `<antthinking>` / `Reasoning:` 标签自动解析进统一面板 |
-| 🌐 **中英双语** | 卡片文案跟随飞书客户端语言 |
-| 🔒 **安全脱敏** | 工具命令中的密钥（token/api_key/Authorization/--flag）与路径自动脱敏后才上卡 |
+| ⚡ **派发即建卡** | 消息到达 1 秒内出现"处理中"卡片，生成期间不再是空白等待 |
+| ✍️ **打字机输出** | 答案逐字上屏（基于 CardKit streaming_mode 客户端动画） |
+| 🎯 **统一面板** | 完成态底部单一折叠面板，标题一行带全指标：`🍤 ⇲模型 · 💭N · 🔧N · 🎫↑in↓out · 📊上下文 x% · ⏱️耗时` |
+| 🎨 **状态边框** | 面板边框颜色随结果变化：绿=完成 · 红=出错 · 黄=停止；展开可见思考过程与工具步骤明细 |
+| 📊 **会话指标** | 模型名、token 用量、上下文窗口进度（实时读取 agent transcript SQLite） |
 
-> ⚠️ 架构边界：OpenClaw 公开钩子不提供 token 级流式增量，模型的 API reasoning（如 mimo/GLM 的 `reasoning_content`）对伴侣插件不可见——需要原生思考流请用 claw-lark-cards。
+### OpenClaw 2.0 适配（Mirr0ch1 的适配工作 + 本项目整合）
+
+- SDK 导入路径迁移（`openclaw/plugin-sdk` → `plugin-sdk/core` 等 100+ 处）
+- 类型迁移（`ClawdbotConfig` → `OpenClawConfig`）、运行时配置 API 对齐
+- 会话指标从 legacy sessions.json 迁移到 agent transcript SQLite
+- 保留官方 TypeScript 源码与构建管线，产出标准 ESM（`dist/index.mjs`）
 
 ---
 
 ## 📦 安装
 
-**要求**：OpenClaw ≥ 2026.2.26 · Node.js ≥ 22 · 官方飞书通道可用（`@larksuite/openclaw-lark` 或内置 `@openclaw/feishu`）
+**要求**：OpenClaw ≥ 2026.8.1（`openclaw -v` 检查）· Node.js ≥ 22
 
 ```bash
-git clone https://github.com/techysy/claw-fry-cards.git
-cd claw-fry-cards
-npm install
-npm run build
+# 从源码构建安装
+git clone https://github.com/techysy/claw-lark-cards.git
+cd claw-lark-cards
+npm install --legacy-peer-deps
+npm run build        # 产物在 dist/
+
 openclaw plugins install . --force --accept-capabilities
 openclaw gateway restart
 ```
+
+> ⚠️ 若之前用过官方通道，先卸载并清理残留：`openclaw plugins uninstall feishu --force`（注意该命令会删除 `channels.feishu` 配置，请备份后恢复），并移除 `plugins.entries.feishu` 条目，否则网关收敛机制会把旧通道装回来。
 
 ## ⚙️ 配置
 
@@ -60,95 +69,113 @@ openclaw gateway restart
 
 ```json
 {
+  "channels": {
+    "feishu": {
+      "enabled": true,
+      "domain": "feishu",
+      "connectionMode": "websocket",
+      "appId": "cli_xxxxxxxx",
+      "appSecret": "xxxxxxxx",
+      "dmPolicy": "open",
+      "allowFrom": ["*"],
+      "groupPolicy": "open",
+      "groupAllowFrom": ["*"],
+      "requireMention": true,
+      "streaming": true,
+      "replyMode": { "default": "streaming", "group": "streaming" }
+    }
+  },
   "plugins": {
     "entries": {
-      "claw-fry-cards": {
-        "enabled": true,
-        "hooks": { "allowConversationAccess": true },
-        "config": {
-          "feishu": { "brand": "feishu", "app_id": "cli_xxx", "app_secret": "xxx" },
-          "display": {
-            "show_tool_use": true,
-            "context_display_mode": "text_bar",
-            "unified_panel_min_duration": 5
-          }
-        }
-      }
+      "openclaw-lark": { "enabled": true }
     }
   }
 }
 ```
 
-- **`hooks.allowConversationAccess: true` 必须配置**——`llm_output` / `agent_end` 属于会话级钩子，缺它会被网关静默拦截（面板缺模型/上下文数据的常见原因）
-- 凭据与官方飞书通道**共用同一个飞书应用**即可；`brand: "lark"` 走国际版
-- `unified_panel_min_duration`：统一面板的耗时门槛（秒），回复 ≥ 此值必出面板；设 0 则每条都出
+**流式卡片三层开关**（缺一不可，排障按此顺序检查）：
 
-<details>
-<summary>全部配置项</summary>
+| 层 | 配置 | 说明 |
+|----|------|------|
+| ① 总开关 | `streaming: true` | 没有它 `replyMode` 不会被读取，恒为纯文本 |
+| ② 模式 | `replyMode: "streaming"` 或 `{default, group, direct}` | 场景选择；auto 时私聊流式/群聊静态 |
+| ③ 工具展示 | 默认开启 | `toolUseDisplay` 不配置即启用（原版默认关闭，本项目已改） |
 
-| 配置项 | 说明 | 默认 |
-|--------|------|------|
-| `feishu.brand` | `feishu` / `lark` | `feishu` |
-| `chats.allowlist` / `blocklist` | 会话白/黑名单（chat_id） | 空=全部 |
-| `streaming.header_enabled` | 顶部状态栏 | `false` |
-| `streaming.footer_enabled` | 底部元数据栏 | `false` |
-| `streaming.width_mode` | `default` / `compact` / `fill` | `default` |
-| `streaming.flush_interval_ms` | 打字机分片间隔 | `100` |
-| `streaming.typewriter_max_ms` | 打字机最长耗时 | `3000` |
-| `streaming.stale_timeout_sec` | 无更新自动封卡超时 | `900` |
-| `display.show_tool_use` | 工具面板 | `true` |
-| `display.show_context` | 上下文显示 | `true` |
-| `display.context_display_mode` | `text` / `bar` / `text_bar` | `text_bar` |
-| `display.truncate_model_name` | `openai/gpt-5.4` → `⇲gpt-5.4` | `true` |
-| `display.unified_panel_min_duration` | 统一面板耗时门槛（秒），回复 ≥ 此值必出面板 | `5` |
-| `streaming.stale_timeout_sec` | 无更新自动封卡超时（秒） | `900` |
-| `display.unified_panel_min_duration` | 面板耗时门槛（秒） | `5` |
-| `display.cancel_text_on_card` | 接管后取消官方文本 | `true` |
-| `display.loading_icon_img_key` | 自定义 loading 图标 | 内置 |
+飞书应用需开通：`im:message`（收发消息）+ `cardkit:card`（卡片读写）。连接模式推荐 `websocket`（无需公网回调地址）。
 
-</details>
+### 🎯 统一面板（完成态底部折叠面板）
 
-## 🎯 统一面板
-
-完成卡底部自动渲染的折叠面板（无独立开关，受 `show_tool_use` 与耗时门槛控制）：
+完成卡自动渲染，无需配置。行为如下：
 
 | 项 | 行为 |
 |----|------|
-| 标题 | `🍤 ⇲模型 · 💭N · 🔧N · 🎫↑in↓out · 📊used/total [████▓░] x% · ⏱️耗时`（`context_display_mode` 控制 📊 段样式，数据缺失段自动省略） |
-| 展开内容 | 思考过程（来自回复文本中的 `<thinking>` 等标签）+ 工具调用步骤（图标/状态/耗时/脱敏参数） |
-| 显示条件 | 回复耗时 ≥ `unified_panel_min_duration`（默认 5 秒），**或**存在思考/工具过程；`show_tool_use: false` 时整体关闭 |
+| 标题 | `🍤 ⇲模型 · 💭N · 🔧N · 🎫↑in↓out · 📊used/total x% · ⏱️耗时`（数据缺失的段自动省略） |
+| 展开内容 | 思考过程（灰字标注）+ 工具调用步骤（图标/状态/耗时）；两者皆无时显示"暂无思考与工具调用过程" |
+| 显示条件 | 回复耗时 ≥ 5 秒，**或**存在思考/工具过程 |
 | 边框颜色 | 绿 = 完成 · 红 = 出错 · 黄 = 停止 |
+| 展开状态 | 默认折叠，点击展开 |
 
-> 想每条回复都带面板：`unified_panel_min_duration: 0`。指标来自 `llm_output` 钩子（模型/token）与 `agent_end`（耗时）——**必须配置 `hooks.allowConversationAccess: true`**，否则这几段静默缺失。
+**面板设置**（`channels.feishu.panel`，全部可选）：
 
-## 🩺 故障排查
+```json
+"panel": {
+  "unifiedPanelMinDuration": 5,
+  "contextDisplayMode": "text_bar",
+  "expanded": false
+}
+```
 
-| 现象 | 原因 | 解决 |
-|------|------|------|
-| 一直纯文本，没有卡片 | 凭据缺失或插件未启用 | 日志搜 `config missing feishu` |
-| 有卡片但面板缺模型/上下文 | `allowConversationAccess` 未配置 | 补上该配置并重启网关 |
-| 日志 `typed hook "llm_output" blocked` | 同上 | 同上 |
-| 安装报 `world-writable path` | Windows/Docker 挂载目录权限 777 | 拷到本地目录再安装 |
-| 安装报 `requires capability consent` | 未接受能力声明 | 加 `--accept-capabilities` |
-| 回复出现两条（卡片+文本） | 封卡失败回落 | 日志搜 `card_seal_failed` |
+| 配置项 | 说明 | 默认 |
+|--------|------|------|
+| `unifiedPanelMinDuration` | 面板显示的耗时门槛（秒）；回复 ≥ 此值或有思考/工具时显示，`0` = 每条必出 | `5` |
+| `contextDisplayMode` | 📊 上下文段样式：`text`（`129.3k/1.0m (13%)`）/ `bar`（`[██▓░░░░░] 13%`）/ `text_bar`（fry 同款 `129.3k/1.0m [██▓░░░░░] 13%`） | `text_bar` |
+| `expanded` | 面板默认展开 | `false` |
 
-日志统一带 🍤 前缀：`docker logs <网关容器> | grep 🍤`。
+### 🏷️ 模型别名（含时段人设）
+
+面板里的模型名可按模型映射为友好名，并支持**按时间自动切换**（如 DeepSeek 高峰/空闲计费时段的人设）：
+
+```json
+"panel": {
+  "modelAliases": {
+    "deepseek-v4-flash": {
+      "name": "梁文谷⚡️",
+      "timeAliases": [
+        { "days": "1-5", "start": "09:00", "end": "12:00", "name": "梁文锋⚡️" },
+        { "days": "1-5", "start": "14:00", "end": "18:00", "name": "梁文锋⚡️" }
+      ]
+    }
+  }
+}
+```
+
+- `days`：生效星期（`0`=周日），支持区间与枚举（`"1-5"`、`"0,6"`、`"1-5,0"`），省略 = 每天
+- `start`/`end`：生效时段 HH:MM（北京时间 UTC+8），支持跨午夜（如 `"22:00"-"02:00"`）
+- 命中第一条规则用其 `name`；都不命中用默认 `name`；静态写法 `"模型id": "名字"` 仍兼容
+- 模型 id 写完整名（`deepseek-v4-flash`）或去掉 provider 的裸名均可
+
+> 指标来源是 agent transcript SQLite（`~/.openclaw/agents/<agent>/agent/openclaw-agent.sqlite`），模型名/token/上下文窗口由最近一轮 usage 事件解析。
+
+---
 
 ## 🧪 开发
 
 ```bash
-npm install
-npm test          # vitest — 86 tests
-npm run typecheck # tsc --noEmit (strict)
-npm run build     # tsdown → dist/index.mjs
+npm install --legacy-peer-deps
+npm run build       # tsdown → dist/
+npm test            # vitest
 ```
 
-已在真实 OpenClaw 2026.9.1 + 飞书环境全链路验证（建卡 → 工具进度 → 接管 → 统一面板）。
+构建产物分 chunk（`index.mjs` + `monitor-<hash>.mjs`），部署时需全部拷贝到扩展目录并删除旧 hash 残留文件。
 
 ## 🙏 归属
 
-移植自 [hermes-fry-cards](https://github.com/techysy/hermes-fry-cards)（源自 [hermes-lark-streaming](https://github.com/Cheerwhy/hermes-lark-streaming)，MIT）· 姊妹项目 [claw-lark-cards](https://github.com/techysy/claw-lark-cards)
+基于 [larksuite/openclaw-lark](https://github.com/larksuite/openclaw-lark)（MIT）· 2.0 适配：[@Mirr0ch1](https://github.com/Mirr0ch1) · 卡片样式：[hermes-fry-cards](https://github.com/techysy/hermes-fry-cards)
+
+## 🔒 安全提示
+
+承袭官方插件的安全模型：OpenClaw AI 自动化存在模型幻觉、不可预测执行与提示注入风险；授权飞书权限后 Agent 将在授权范围内以你的身份操作。建议将机器人作为**私聊助手**使用，勿随意加入群聊，勿放宽默认安全策略。使用即表示理解并自担相关风险。
 
 ## 📄 许可证
 
-[MIT](LICENSE)
+[MIT](LICENSE) —— 沿用官方 openclaw-lark 的许可。

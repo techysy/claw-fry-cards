@@ -1,15 +1,8 @@
 {
-  "name": "claw-fry-cards",
-  "version": "2026.9.1",
-  "description": "🍤 claw-fry-cards — OpenClaw 飞书流式卡片插件（CardKit v2.0 实时工具进度 · 统一面板 · 打字机收尾）",
+  "name": "claw-lark-cards",
+  "version": "2026.9.12",
+  "description": "🦐 claw-lark-cards — OpenClaw 飞书通道插件（2.0 适配 · 虾条式流式卡片：派发即建卡 · 打字机 · 统一指标面板）",
   "type": "module",
-  "main": "./dist/index.mjs",
-  "types": "./dist/index.d.mts",
-  "openclaw": {
-    "extensions": [
-      "./dist/index.mjs"
-    ]
-  },
   "exports": {
     ".": {
       "import": {
@@ -18,31 +11,44 @@
       }
     }
   },
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "bin": {
+    "openclaw-lark": "bin/openclaw-lark.js"
+  },
   "files": [
+    "bin/",
     "dist/",
-    "openclaw.plugin.json"
+    "skills/",
+    "secret-contract-api.js",
+    "openclaw.plugin.json",
+    "README.md",
+    "LICENSE"
   ],
+  "packageManager": "pnpm@10.32.1",
   "engines": {
     "node": ">=22"
   },
   "scripts": {
     "build": "tsdown",
+    "release": "node scripts/release.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
+    "lint": "eslint src/ index.ts secret-contract-api.ts",
+    "lint:fix": "eslint src/ index.ts secret-contract-api.ts --fix",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src tests"
+    "format": "prettier --write src/**/*.ts",
+    "format:check": "prettier --check src/**/*.ts"
   },
-  "keywords": [
-    "openclaw",
-    "feishu",
-    "lark",
-    "cardkit",
-    "streaming-card",
-    "xiatiao"
-  ],
-  "license": "MIT",
+  "dependencies": {
+    "@larksuiteoapi/node-sdk": "^1.64.0",
+    "@sinclair/typebox": "0.34.49",
+    "image-size": "^2.0.2",
+    "undici-types": "^8.1.0",
+    "zod": "^4.3.6"
+  },
   "peerDependencies": {
-    "openclaw": ">=2026.2.26"
+    "openclaw": ">=2026.5.4"
   },
   "peerDependenciesMeta": {
     "openclaw": {
@@ -50,9 +56,26 @@
     }
   },
   "devDependencies": {
-    "@types/node": "^22.10.0",
-    "tsdown": "^0.12.0",
-    "typescript": "^5.7.0",
-    "vitest": "^3.0.0"
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^25.2.3",
+    "@types/qrcode": "^1.5.5",
+    "eslint": "^9.39.3",
+    "eslint-plugin-import-x": "^4.16.2",
+    "eslint-plugin-n": "^17.24.0",
+    "execa": "^9.6.0",
+    "fs-extra": "^11.3.2",
+    "globals": "^16.2.0",
+    "minimist": "^1.2.8",
+    "openclaw": "^2026.8.1",
+    "prettier": "^3.8.1",
+    "tsdown": "^0.21.4",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.32.1",
+    "vitest": "^4.1.1"
+  },
+  "openclaw": {
+    "extensions": [
+      "./dist/index.mjs"
+    ]
   }
 }

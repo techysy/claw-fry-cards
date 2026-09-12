@@ -1,83 +1,65 @@
 {
-  "id": "claw-fry-cards",
-  "activation": {
-    "onStartup": true
-  },
-  "name": "Claw Fry Cards",
-  "description": "🍤 虾条卡片 — OpenClaw 飞书流式卡片（CardKit v2.0 实时工具进度、统一面板、打字机收尾）。作为官方飞书通道的伴侣插件运行。",
+  "id": "openclaw-lark",
+  "channels": [
+    "feishu"
+  ],
+  "skills": [
+    "./skills"
+  ],
   "configSchema": {
     "type": "object",
     "additionalProperties": false,
-    "$defs": {
-      "secretRef": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "source": { "type": "string", "enum": ["env", "file", "exec", "store"] },
-          "provider": { "type": "string" },
-          "id": { "type": "string" }
-        },
-        "required": ["source", "provider", "id"]
-      },
-      "secretInput": {
-        "anyOf": [
-          { "type": "string", "minLength": 1 },
-          { "$ref": "#/$defs/secretRef" }
-        ]
-      }
-    },
-    "properties": {
-      "feishu": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "brand": { "type": "string", "enum": ["feishu", "lark"], "default": "feishu" },
-          "app_id": { "type": "string" },
-          "app_secret": { "anyOf": [{ "type": "string" }, { "$ref": "#/$defs/secretRef" }] }
-        }
-      },
-      "chats": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "allowlist": { "type": "array", "items": { "type": "string" } },
-          "blocklist": { "type": "array", "items": { "type": "string" } }
-        }
-      },
-      "streaming": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "header_enabled": { "type": "boolean", "default": false },
-          "footer_enabled": { "type": "boolean", "default": false },
-          "footer_fields": {
-            "type": "array",
-            "items": { "type": "array", "items": { "type": "string" } }
-          },
-          "width_mode": { "type": "string", "enum": ["default", "compact", "fill"], "default": "default" },
-          "body_text_size": { "type": "string", "enum": ["normal_v2", "normal"], "default": "normal_v2" },
-          "flush_interval_ms": { "type": "number", "default": 100 },
-          "typewriter_max_ms": { "type": "number", "default": 3000 },
-          "stale_timeout_sec": { "type": "number", "default": 900 }
-        }
-      },
-      "display": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "show_tool_use": { "type": "boolean", "default": true },
-          "show_context": { "type": "boolean", "default": true },
-          "context_display_mode": {
-            "type": "string",
-            "enum": ["text", "bar", "text_bar"],
-            "default": "text_bar"
-          },
-          "truncate_model_name": { "type": "boolean", "default": true },
-          "unified_panel_min_duration": { "type": "number", "default": 5 },
-          "cancel_text_on_card": { "type": "boolean", "default": true },
-          "loading_icon_img_key": { "type": "string" }
-        }
+    "properties": {}
+  },
+  "contracts": {
+    "tools": [
+      "feishu_bitable_app",
+      "feishu_bitable_app_table",
+      "feishu_bitable_app_table_field",
+      "feishu_bitable_app_table_record",
+      "feishu_bitable_app_table_view",
+      "feishu_calendar_calendar",
+      "feishu_calendar_event",
+      "feishu_calendar_event_attendee",
+      "feishu_calendar_freebusy",
+      "feishu_chat",
+      "feishu_chat_members",
+      "feishu_create_doc",
+      "feishu_doc_comments",
+      "feishu_doc_media",
+      "feishu_drive_file",
+      "feishu_fetch_doc",
+      "feishu_get_user",
+      "feishu_im_bot_image",
+      "feishu_im_user_fetch_resource",
+      "feishu_im_user_get_messages",
+      "feishu_im_user_get_thread_messages",
+      "feishu_im_user_message",
+      "feishu_im_user_search_messages",
+      "feishu_oauth",
+      "feishu_oauth_batch_auth",
+      "feishu_search_doc_wiki",
+      "feishu_search_user",
+      "feishu_sheet",
+      "feishu_task_comment",
+      "feishu_task_subtask",
+      "feishu_task_task",
+      "feishu_task_agent",
+      "feishu_task_attachment",
+      "feishu_task_tasklist",
+      "feishu_update_doc",
+      "feishu_wiki_space",
+      "feishu_wiki_space_node",
+      "feishu_task_section",
+      "feishu_ask_user_question"
+    ]
+  },
+  "channelConfigs": {
+    "feishu": {
+      "schema": {
+        "type": "object"
       }
     }
-  }
+  },
+  "name": "OpenClaw Lark Cards"
 }
