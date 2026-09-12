@@ -50,8 +50,8 @@
 
 ```bash
 # 从源码构建安装
-git clone https://github.com/techysy/openclaw-lark-cards.git
-cd openclaw-lark-cards
+git clone https://github.com/techysy/claw-lark-cards.git
+cd claw-lark-cards
 npm install --legacy-peer-deps
 npm run build        # 产物在 dist/
 
