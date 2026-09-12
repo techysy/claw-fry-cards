@@ -60,13 +60,13 @@ export function getPlatform(): string {
 /**
  * 生成 User-Agent 字符串
  *
- * @returns User-Agent 字符串，格式：`openclaw-lark/{version}/{platform}`
+ * @returns User-Agent 字符串，格式：`claw-fry-cards/{version}/{platform}`
  *
  * @example
  * ```typescript
- * getUserAgent() // => "openclaw-lark/2026.2.28.5/mac"
+ * getUserAgent() // => "claw-fry-cards/2.0.0/mac"
  * ```
  */
 export function getUserAgent(): string {
-  return `openclaw-lark/${getPluginVersion()}/${getPlatform()}`;
+  return `claw-fry-cards/${getPluginVersion()}/${getPlatform()}`;
 }

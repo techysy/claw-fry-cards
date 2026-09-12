@@ -1,7 +1,7 @@
-# 🦐 claw-lark-cards
+# 🍤 claw-fry-cards — 虾条卡片
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![OpenClaw](https://img.shields.io/badge/OpenClaw-%E2%89%A52026.8.1-2463eb)](https://openclaw.ai)
+[![OpenClaw](https://img.shields.io/badge/OpenClaw-%E2%89%A52026.5.12-2463eb)](https://openclaw.ai)
 [![Node](https://img.shields.io/badge/Node-%E2%89%A522-blue)](https://nodejs.org/)
 
 > OpenClaw 飞书/Lark 通道插件 — 在官方 [@larksuite/openclaw-lark](https://github.com/larksuite/openclaw-lark) 基础上适配 OpenClaw 2.0 SDK，并带来 fry 风格的虾条式流式卡片体验。
@@ -10,7 +10,31 @@
 
 **这是什么**：一个**飞书通道插件**（替代官方 `@larksuite/openclaw-lark` / 内置 `@openclaw/feishu`），负责 OpenClaw Agent 的飞书消息收发，并用 CardKit v2.0 流式卡片呈现每一轮回复。
 
-**为什么存在**：官方通道插件停更于 2026-07-16，未适配 OpenClaw 2.0（SDK 导出重构、会话存储迁移 SQLite），在新版网关上无法加载。本项目完成了 2.0 适配，并顺手把流式卡片体验升级到 fry-cards（[🍟 hermes-fry-cards](https://github.com/techysy/hermes-fry-cards) / [🍤 claw-fry-cards](https://github.com/techysy/claw-fry-cards)）同款风格。
+**为什么存在**：官方通道插件停更于 2026-07-16，未适配 OpenClaw 2.0（SDK 导出重构、会话存储迁移 SQLite），在新版网关上无法加载。本项目完成了 2.0 适配，并顺手把流式卡片体验升级到 fry-cards（[🍟 hermes-fry-cards](https://github.com/techysy/hermes-fry-cards)）同款风格。
+
+## 🧭 版本说明（1.0 → 2.0）
+
+| 版本 | 形态 | 获取方式 |
+|------|------|----------|
+| **2.0**（本主线） | **通道插件**：官方通道 2.0 适配，卡片引擎内置，替换官方通道 | main 分支 / `v2.0.0` 标签 |
+| **1.0**（伴侣插件） | 钩子观测自建卡片，官方通道继续收发，不替换通道 | `git checkout v1.0.0`（降级使用） |
+
+> 1.0 与 2.0 架构不同，**不要同时启用**（两套卡片会打架）。
+> 2.0 前身 [claw-lark-cards](https://github.com/techysy/claw-lark-cards) 已合并入本仓库并废弃，后续仅在本仓库维护。
+
+### 从 claw-lark-cards 升级
+
+```bash
+openclaw plugins uninstall openclaw-lark --force   # 或按其实际目录名卸载
+# 再从本仓库构建安装（见下文 安装）
+```
+
+配置迁移：插件 id 已从 `openclaw-lark` 更名为 `claw-fry-cards`，`channels.feishu` 配置不变，仅需把
+`plugins.entries.openclaw-lark` 改为 `plugins.entries.claw-fry-cards`。
+
+### 从 1.0 伴侣插件升级
+
+2.0 是通道插件，会**替换官方通道**。先卸载官方飞书通道（`openclaw plugins uninstall feishu --force`，注意该命令会删除 `channels.feishu` 配置，请备份后恢复），再安装本插件；1.0 的 `hooks.allowConversationAccess` 配置在 2.0 下不再需要。
 
 ---
 
@@ -48,12 +72,12 @@
 
 ## 📦 安装
 
-**要求**：OpenClaw ≥ 2026.8.1（`openclaw -v` 检查）· Node.js ≥ 22
+**要求**：OpenClaw ≥ 2026.5.12（实测加载下限，见 [docs/compat-test-report.md](docs/compat-test-report.md)；推荐 2026.8.1+，统一面板指标需 2.0 会话存储）· Node.js ≥ 22
 
 ```bash
 # 从源码构建安装
-git clone https://github.com/techysy/claw-lark-cards.git
-cd claw-lark-cards
+git clone https://github.com/techysy/claw-fry-cards.git
+cd claw-fry-cards
 npm install --legacy-peer-deps
 npm run build        # 产物在 dist/
 
@@ -87,7 +111,7 @@ openclaw gateway restart
   },
   "plugins": {
     "entries": {
-      "openclaw-lark": { "enabled": true }
+      "claw-fry-cards": { "enabled": true }
     }
   }
 }
@@ -154,7 +178,7 @@ openclaw gateway restart
 - 命中第一条规则用其 `name`；都不命中用默认 `name`；静态写法 `"模型id": "名字"` 仍兼容
 - 模型 id 写完整名（`deepseek-v4-flash`）或去掉 provider 的裸名均可
 
-> 指标来源是 agent transcript SQLite（`~/.openclaw/agents/<agent>/agent/openclaw-agent.sqlite`），模型名/token/上下文窗口由最近一轮 usage 事件解析。
+> 指标来源是 agent transcript SQLite（`~/.openclaw/agents/<agent>/agent/openclaw-agent.sqlite`），模型名/token/上下文窗口由最近一轮 usage 事件解析。老版本宿主无此库时统一面板自动省略指标段（详见 [docs/compat-test-report.md](docs/compat-test-report.md)）。
 
 ---
 
@@ -164,13 +188,14 @@ openclaw gateway restart
 npm install --legacy-peer-deps
 npm run build       # tsdown → dist/
 npm test            # vitest
+npm run typecheck   # tsc --noEmit
 ```
 
 构建产物分 chunk（`index.mjs` + `monitor-<hash>.mjs`），部署时需全部拷贝到扩展目录并删除旧 hash 残留文件。
 
 ## 🙏 归属
 
-基于 [larksuite/openclaw-lark](https://github.com/larksuite/openclaw-lark)（MIT）· 2.0 适配：[@Mirr0ch1](https://github.com/Mirr0ch1) · 卡片样式：[hermes-fry-cards](https://github.com/techysy/hermes-fry-cards)
+基于 [larksuite/openclaw-lark](https://github.com/larksuite/openclaw-lark)（MIT）· 2.0 适配：[@Mirr0ch1](https://github.com/Mirr0ch1) · 卡片样式：[hermes-fry-cards](https://github.com/techysy/hermes-fry-cards) · 1.0 伴侣插件形态保留于 `v1.0.0` 标签
 
 ## 🔒 安全提示
 

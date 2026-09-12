@@ -1,8 +1,19 @@
 # Changelog
 
-## 2026.9.1 (2026-09-06)
+## 2.0.0 (2026-09-12)
 
-首个版本 — fry-cards 卡片样式的 OpenClaw 移植版（版本号对齐 OpenClaw 日期式风格，适配 OpenClaw 2026.9.1）。
+**主线转向通道插件形态** — 前身 [claw-lark-cards](https://github.com/techysy/claw-lark-cards)（官方 openclaw-lark 的 2.0 适配 fork）合并入本仓库并更名，claw-lark-cards 仓库同步废弃。1.0 伴侣插件形态保留于 `v1.0.0` 标签，按需降级使用。
+
+- 🦐→🍤 形态升级：由"钩子伴侣插件"转为**通道插件**——官方通道 2.0 全量适配（SDK 导出路径迁移 100+ 处、`OpenClawConfig` 类型迁移、会话存储迁移 agent transcript SQLite），替换官方 `@larksuite/openclaw-lark`
+- 🍤 卡片引擎内置：派发即建卡、CardKit streaming_mode 打字机、原生 reasoning 展示（1.0 仅支持回复文本中的 `<thinking>` 标签）、统一指标面板、状态边框
+- 🧰 继承官方全部工具契约（im / doc / wiki / drive / bitable / sheet / calendar / task / oauth 等 38 项）与 skills
+- 🔖 插件标识更名：`openclaw-lark` → `claw-fry-cards`；用户配置 `plugins.entries.openclaw-lark` 改为 `plugins.entries.claw-fry-cards`（`channels.feishu` 不变）
+- 🧪 实测兼容下限 OpenClaw **2026.5.12**（低于前身 README 宣称的 2026.8.1，见 `docs/compat-test-report.md`）；老版本宿主统一面板自动省略指标段
+- 🗑️ 移除 1.0 伴侣插件代码（`src/cardkit` / `src/streaming` / `controller.ts` 等），仅在 `v1.0.0` 标签中保留
+
+## 1.0.0 (2026-09-06)
+
+首个版本（原版本号 2026.9.1，日期式风格）— fry-cards 卡片样式的 OpenClaw 移植版。
 
 - 🍤 OpenClaw 伴侣插件：官方飞书通道（`@larksuite/openclaw-lark`）继续负责消息收发，本插件通过公开钩子接管回复展示
 - 🎴 CardKit v2.0 流式占位卡（`streaming_mode` + loading 图标 + 工具面板），`message_received` 触发创建
