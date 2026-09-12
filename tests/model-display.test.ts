@@ -10,7 +10,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { resolvePanelModelName, truncateModelId } from '../src/card/builder';
+import { resolveModelAlias, resolvePanelModelName, truncateModelId } from '../src/card/builder';
 
 describe('truncateModelId', () => {
   it('keeps the last path segment with ⇲ prefix', () => {
@@ -55,5 +55,37 @@ describe('resolvePanelModelName', () => {
 
   it('no match and no slash → unchanged even with truncation on', () => {
     expect(resolvePanelModelName({}, 'kimi-k3')).toBe('kimi-k3');
+  });
+
+  it('modelAliasesEnabled=false ignores aliases entirely', () => {
+    expect(
+      resolvePanelModelName({ mimo: '小虾米' }, 'mimo/mimo-v2.5', { modelAliasesEnabled: false }),
+    ).toBe('⇲mimo-v2.5');
+  });
+});
+
+describe('resolveModelAlias days forms', () => {
+  // 2026-09-14T04:00Z = 北京时间周一 12:00
+  const mondayNoon = new Date('2026-09-14T04:00:00Z');
+
+  it('accepts array days [1] (selectable form)', () => {
+    const entry = { name: '默认', timeAliases: [{ days: [1], name: '工作日' }] };
+    expect(resolveModelAlias(entry, mondayNoon)).toBe('工作日');
+    expect(resolveModelAlias({ name: '默认', timeAliases: [{ days: [2], name: '周二' }] }, mondayNoon)).toBe('默认');
+  });
+
+  it('accepts legacy string range "1-5" (regression: regex had lost \\d)', () => {
+    const entry = { name: '默认', timeAliases: [{ days: '1-5', name: '工作日' }] };
+    expect(resolveModelAlias(entry, mondayNoon)).toBe('工作日');
+  });
+
+  it('respects time windows in array form', () => {
+    const entry = {
+      name: '默认',
+      timeAliases: [{ days: [1, 2, 3, 4, 5], start: '09:00', end: '18:00', name: '上班' }],
+    };
+    expect(resolveModelAlias(entry, mondayNoon)).toBe('上班');
+    const night = { name: '默认', timeAliases: [{ days: [1], start: '00:00', end: '08:00', name: '夜班' }] };
+    expect(resolveModelAlias(night, mondayNoon)).toBe('默认');
   });
 });

@@ -252,7 +252,7 @@ export type ModelAliasEntry =
   | string
   | {
       name?: string;
-      timeAliases?: Array<{ days?: string; start?: string; end?: string; name: string }>;
+      timeAliases?: Array<{ days?: string | number[]; start?: string; end?: string; name: string }>;
     };
 
 const CN_TZ_OFFSET_MS = 8 * 60 * 60 * 1000;
@@ -265,11 +265,12 @@ function inTimeRange(hhmm: string, start: string, end: string): boolean {
   return hhmm >= start || hhmm < end;
 }
 
-/** 星期是否命中规格："1-5"、"0,6"、"1-5,0"（0=周日）；省略 = 每天 */
-function dayMatches(day: number, spec: string | undefined): boolean {
-  if (!spec) return true;
+/** 星期是否命中规格：数组 [1,2,3]（0=周日，可多选）或字符串 "1-5"、"0,6"、"1-5,0"；省略 = 每天 */
+function dayMatches(day: number, spec: string | number[] | undefined): boolean {
+  if (spec == null) return true;
+  if (Array.isArray(spec)) return spec.includes(day);
   for (const part of spec.split(',')) {
-    const range = part.match(/^(d+)-(d+)$/);
+    const range = part.match(/^(\d+)-(\d+)$/);
     if (range) {
       const a = Number(range[1]);
       const z = Number(range[2]);
@@ -315,12 +316,14 @@ export function truncateModelId(modelId: string): string {
 export function resolvePanelModelName(
   table: Record<string, ModelAliasEntry>,
   modelId: string,
-  opts: { truncateModelName?: boolean } = {},
+  opts: { truncateModelName?: boolean; modelAliasesEnabled?: boolean } = {},
 ): string {
-  const lowered = modelId.toLowerCase();
-  for (const [key, entry] of Object.entries(table)) {
-    if (key && lowered.includes(key.toLowerCase())) {
-      return resolveModelAlias(entry) ?? modelId;
+  if (opts.modelAliasesEnabled !== false) {
+    const lowered = modelId.toLowerCase();
+    for (const [key, entry] of Object.entries(table)) {
+      if (key && lowered.includes(key.toLowerCase())) {
+        return resolveModelAlias(entry) ?? modelId;
+      }
     }
   }
   if (opts.truncateModelName === false) return modelId;
@@ -464,6 +467,7 @@ export function buildCardContent(
     panel?: {
       unifiedPanelMinDurationMs?: number;
       modelAliases?: Record<string, ModelAliasEntry>;
+      modelAliasesEnabled?: boolean;
       truncateModelName?: boolean;
       contextDisplayMode?: ContextDisplayMode;
       expanded?: boolean;
@@ -596,6 +600,7 @@ function buildCompleteCard(params: {
     contextDisplayMode?: ContextDisplayMode;
     expanded?: boolean;
     modelAliases?: Record<string, ModelAliasEntry>;
+    modelAliasesEnabled?: boolean;
     truncateModelName?: boolean;
   };
   elapsedMs?: number;
@@ -655,6 +660,7 @@ function buildCompleteCard(params: {
     const aliasTable = panel?.modelAliases ?? {};
     const modelName = resolvePanelModelName(aliasTable, rawModel, {
       truncateModelName: panel?.truncateModelName,
+      modelAliasesEnabled: panel?.modelAliasesEnabled,
     });
 
     const parts: string[] = ['🍤'];

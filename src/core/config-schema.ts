@@ -295,10 +295,23 @@ const ModelAliasValueSchema = z.union([
     timeAliases: z
       .array(
         z.object({
-          days: z.string().optional(),
-          start: z.string().optional(),
-          end: z.string().optional(),
-          name: z.string(),
+          days: z
+            .union([z.string(), z.array(z.number().int().min(0).max(6))])
+            .describe(
+              '生效星期：数组形式 [1,2,3,4,5]（0=周日，可多选）或区间字符串 "1-5"/"0,6"；省略 = 每天',
+            )
+            .optional(),
+          start: z
+            .string()
+            .regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'HH:MM 格式')
+            .describe('开始时间 HH:MM（北京时间），支持跨午夜（如 22:00-02:00）')
+            .optional(),
+          end: z
+            .string()
+            .regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'HH:MM 格式')
+            .describe('结束时间 HH:MM（北京时间）')
+            .optional(),
+          name: z.string().describe('该时段显示的别名'),
         }),
       )
       .optional(),
@@ -334,7 +347,13 @@ export const PluginConfigSchema = z.object({
       modelAliases: z
         .record(z.string(), ModelAliasValueSchema)
         .describe(
-          '模型显示别名：key 对完整模型名做大小写不敏感子串匹配（如 "mimo" 命中 mimo/mimo-v2.5）；值为名称字符串，或含时段规则的对象 { name, timeAliases: [{ days, start, end, name }] }（北京时间，days 支持 "1-5"/"0,6"，0=周日，支持跨午夜）',
+          '模型显示别名：key 对完整模型名做大小写不敏感子串匹配（如 "mimo" 命中 mimo/mimo-v2.5）；值为名称字符串，或含时段规则的对象 { name, timeAliases: [{ days: [1,2,3,4,5], start: "09:00", end: "18:00", name }] }（北京时间，days 数组 0=周日，支持跨午夜）',
+        )
+        .optional(),
+      modelAliasesEnabled: z
+        .boolean()
+        .describe(
+          '别名功能总开关（默认 true）：false 时忽略 modelAliases，全部回落截断/完整名显示，配置本身保留',
         )
         .optional(),
     })
