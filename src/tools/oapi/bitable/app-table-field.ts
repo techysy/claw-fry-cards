@@ -264,9 +264,9 @@ export function registerFeishuBitableAppTableFieldTool(api: OpenClawPluginApi): 
                 );
                 assertLarkOk(listRes);
 
-                const listData = listRes.data as
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  PaginatedData<{ field_id?: string; field_name?: string; type?: number; property?: any }> | undefined;
+                const listData = listRes.data as  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  | PaginatedData<{ field_id?: string; field_name?: string; type?: number; property?: any }>
+                  | undefined;
                 const currentField = listData?.items?.find((f) => f.field_id === p.field_id);
 
                 if (!currentField) {

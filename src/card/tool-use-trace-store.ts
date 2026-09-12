@@ -125,7 +125,8 @@ export function recordToolUseEnd(params: {
 
   const now = Date.now();
   const sanitizedParams = sanitizeTraceValue(toolParams, 0, { source: 'params' }) as
-    Record<string, unknown> | undefined;
+    | Record<string, unknown>
+    | undefined;
   const pendingIndex = findPendingStepIndex(state.steps, toolName, sanitizedParams, toolCallId);
 
   if (pendingIndex >= 0) {
