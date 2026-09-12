@@ -37,6 +37,7 @@ const log = larkLogger('plugin');
 // Re-exports for external consumers
 // ---------------------------------------------------------------------------
 
+export { resolveModelAlias, resolvePanelModelName, truncateModelId, type ModelAliasEntry } from './src/card/builder';
 export { monitorFeishuProvider } from './src/channel/monitor';
 export {
   PluginConfigSchema,
