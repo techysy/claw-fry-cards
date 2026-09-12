@@ -8,7 +8,7 @@
  * different agent response states (thinking, streaming, complete, confirm).
  */
 
-import { expandPeakValley, type PeakValleyConfig } from './panel-config';
+import { type PeakValleyConfig, expandPeakValley } from './panel-config';
 import { optimizeMarkdownStyle } from './markdown-style';
 import type { FooterSessionMetrics } from './reply-dispatcher-types';
 import { EMPTY_TOOL_USE_PLACEHOLDER, type ToolUseDisplayStep } from './tool-use-display';

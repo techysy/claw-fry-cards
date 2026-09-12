@@ -66,8 +66,6 @@ export function expandPeakValley(pv: PeakValleyConfig | undefined): ModelAliasEn
 
 const PLUGIN_ID = 'claw-fry-cards';
 
-const CONTEXT_DISPLAY_MODES = ['text', 'bar', 'text_bar'] as const;
-
 function readPanelSettings(raw: unknown): UnifiedPanelSettings | undefined {
   if (!raw || typeof raw !== 'object') return undefined;
   const p = raw as {
@@ -83,11 +81,7 @@ function readPanelSettings(raw: unknown): UnifiedPanelSettings | undefined {
   if (typeof p.unifiedPanelMinDuration === 'number') {
     out.unifiedPanelMinDurationMs = p.unifiedPanelMinDuration * 1000;
   }
-  if (
-    p.contextDisplayMode === 'text' ||
-    p.contextDisplayMode === 'bar' ||
-    p.contextDisplayMode === 'text_bar'
-  ) {
+  if (p.contextDisplayMode === 'text' || p.contextDisplayMode === 'bar' || p.contextDisplayMode === 'text_bar') {
     out.contextDisplayMode = p.contextDisplayMode;
   }
   if (typeof p.expanded === 'boolean') out.expanded = p.expanded;
@@ -109,8 +103,7 @@ function readPanelSettings(raw: unknown): UnifiedPanelSettings | undefined {
 
 function readPluginPanel(raw: unknown): unknown {
   if (!raw || typeof raw !== 'object') return undefined;
-  const entries = (raw as { plugins?: { entries?: Record<string, { config?: unknown }> } }).plugins
-    ?.entries;
+  const entries = (raw as { plugins?: { entries?: Record<string, { config?: unknown }> } }).plugins?.entries;
   const pluginEntry = entries?.[PLUGIN_ID];
   if (!pluginEntry || typeof pluginEntry !== 'object') return undefined;
   return (pluginEntry as { config?: { panel?: unknown } }).config?.panel;

@@ -7,7 +7,6 @@
  * Actions:
  * - upload: Upload task attachment (tenant identity)
  */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { OpenClawPluginApi } from 'openclaw/plugin-sdk/core';
 import { Type } from '@sinclair/typebox';

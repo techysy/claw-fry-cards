@@ -21,8 +21,8 @@ import { extractLarkApiCode } from '../core/api-error';
 import { larkLogger } from '../core/lark-logger';
 import { LarkClient } from '../core/lark-client';
 import { registerShutdownHook } from '../core/shutdown-hooks';
-import { resolvePanelSettings, type UnifiedPanelSettings } from './panel-config';
 import { sendCardFeishu, updateCardFeishu } from '../messaging/outbound/send';
+import { type UnifiedPanelSettings, resolvePanelSettings } from './panel-config';
 import {
   STREAMING_ELEMENT_ID,
   buildCardContent,

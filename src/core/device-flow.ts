@@ -41,8 +41,7 @@ export interface DeviceFlowTokenData {
 }
 
 export type DeviceFlowResult =
-  | { ok: true; token: DeviceFlowTokenData }
-  | { ok: false; error: DeviceFlowError; message: string };
+  { ok: true; token: DeviceFlowTokenData } | { ok: false; error: DeviceFlowError; message: string };
 
 export type DeviceFlowError = 'authorization_pending' | 'slow_down' | 'access_denied' | 'expired_token';
 

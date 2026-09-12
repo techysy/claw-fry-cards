@@ -220,9 +220,7 @@ export const FeishuAccountConfigSchema = z.object({
   mediaMaxMb: z.number().optional(),
   heartbeat: HeartbeatSchema,
   replyMode: ReplyModeSchema,
-  streaming: z
-    .union([z.boolean(), z.object({ mode: z.string().optional() }).loose()])
-    .optional(),
+  streaming: z.union([z.boolean(), z.object({ mode: z.string().optional() }).loose()]).optional(),
   blockStreaming: z.boolean().optional(),
   toolUseDisplay: z
     .object({
@@ -297,9 +295,7 @@ const ModelAliasValueSchema = z.union([
         z.object({
           days: z
             .union([z.string(), z.array(z.number().int().min(0).max(6))])
-            .describe(
-              '生效星期：数组形式 [1,2,3,4,5]（0=周日，可多选）或区间字符串 "1-5"/"0,6"；省略 = 每天',
-            )
+            .describe('生效星期：数组形式 [1,2,3,4,5]（0=周日，可多选）或区间字符串 "1-5"/"0,6"；省略 = 每天')
             .optional(),
           start: z
             .string()
@@ -322,61 +318,57 @@ const ModelAliasValueSchema = z.union([
  * 插件自有配置（随插件版本化，不受宿主 channels.feishu schema 演化影响）。
  * 面板设置优先读这里；`channels.feishu.panel` 作为旧位置回退。
  */
-export const PluginConfigSchema = z.object({
-  panel: z
-    .object({
-      unifiedPanelMinDuration: z
-        .number()
-        .describe(
-          '统一面板显示的耗时门槛（秒）：回复 ≥ 此值或有思考/工具过程时显示，0 = 每条必出（默认 5）',
-        )
-        .optional(),
-      contextDisplayMode: z
-        .enum(['text', 'bar', 'text_bar'])
-        .describe(
-          '上下文段样式：text（129.3k/1.0m (13%)）/ bar（[██▓░░░░░] 13%）/ text_bar（129.3k/1.0m [██▓░░░░░] 13%）；默认 text',
-        )
-        .optional(),
-      expanded: z.boolean().describe('面板默认展开（默认折叠）').optional(),
-      truncateModelName: z
-        .boolean()
-        .describe(
-          '截断模型名显示：mimo/mimo-v2.5 → ⇲mimo-v2.5（默认 true；modelAliases 别名命中时优先显示别名）',
-        )
-        .optional(),
-      modelAliases: z
-        .record(z.string(), ModelAliasValueSchema)
-        .describe(
-          '模型显示别名：key 对完整模型名做大小写不敏感子串匹配（如 "mimo" 命中 mimo/mimo-v2.5）；值为名称字符串，或含时段规则的对象 { name, timeAliases: [{ days: [1,2,3,4,5], start: "09:00", end: "18:00", name }] }（北京时间，days 数组 0=周日，支持跨午夜）',
-        )
-        .optional(),
-      modelAliasesEnabled: z
-        .boolean()
-        .describe(
-          '别名功能总开关（默认 true）：false 时忽略 modelAliases，全部回落截断/完整名显示，配置本身保留',
-        )
-        .optional(),
-      peakValley: z
-        .record(
-          z.string().describe('匹配哪些模型（大小写不敏感子串，如 "deepseek" 命中所有带 deepseek 的模型）'),
-          z.object({
-            peakName: z.string().describe('峰段（计费高峰窗口）显示的名称，如 梁文锋⚡️'),
-            valleyName: z.string().describe('谷段（闲时/优惠窗口）显示的名称，如 梁文谷⚡️'),
-            schedule: z
-              .enum(['deepseek', 'workday-918', 'everyday-day', 'always-peak', 'custom'])
-              .describe(
-                '峰段窗口预置：deepseek = 工作日 09:00-12:00 & 14:00-18:00；workday-918 = 工作日 09:00-18:00；everyday-day = 每天 08:00-22:00；always-peak = 恒为峰段；custom = 改用 modelAliases.timeAliases 自定义',
-              ),
-          }),
-        )
-        .describe(
-          '峰谷价标识列表（DeepSeek 等按峰谷计费的模型，可添加多条）：key 为匹配模型（子串），峰段显示 peakName，谷段（闲时）显示 valleyName；与 modelAliases 可共存，同 key 手写优先',
-        )
-        .optional(),
-    })
-    .describe('统一面板设置（完成态底部折叠面板）')
-    .optional(),
-}).describe('claw-fry-cards 插件自有配置');
+export const PluginConfigSchema = z
+  .object({
+    panel: z
+      .object({
+        unifiedPanelMinDuration: z
+          .number()
+          .describe('统一面板显示的耗时门槛（秒）：回复 ≥ 此值或有思考/工具过程时显示，0 = 每条必出（默认 5）')
+          .optional(),
+        contextDisplayMode: z
+          .enum(['text', 'bar', 'text_bar'])
+          .describe(
+            '上下文段样式：text（129.3k/1.0m (13%)）/ bar（[██▓░░░░░] 13%）/ text_bar（129.3k/1.0m [██▓░░░░░] 13%）；默认 text',
+          )
+          .optional(),
+        expanded: z.boolean().describe('面板默认展开（默认折叠）').optional(),
+        truncateModelName: z
+          .boolean()
+          .describe('截断模型名显示：mimo/mimo-v2.5 → ⇲mimo-v2.5（默认 true；modelAliases 别名命中时优先显示别名）')
+          .optional(),
+        modelAliases: z
+          .record(z.string(), ModelAliasValueSchema)
+          .describe(
+            '模型显示别名：key 对完整模型名做大小写不敏感子串匹配（如 "mimo" 命中 mimo/mimo-v2.5）；值为名称字符串，或含时段规则的对象 { name, timeAliases: [{ days: [1,2,3,4,5], start: "09:00", end: "18:00", name }] }（北京时间，days 数组 0=周日，支持跨午夜）',
+          )
+          .optional(),
+        modelAliasesEnabled: z
+          .boolean()
+          .describe('别名功能总开关（默认 true）：false 时忽略 modelAliases，全部回落截断/完整名显示，配置本身保留')
+          .optional(),
+        peakValley: z
+          .record(
+            z.string().describe('匹配哪些模型（大小写不敏感子串，如 "deepseek" 命中所有带 deepseek 的模型）'),
+            z.object({
+              peakName: z.string().describe('峰段（计费高峰窗口）显示的名称，如 梁文锋⚡️'),
+              valleyName: z.string().describe('谷段（闲时/优惠窗口）显示的名称，如 梁文谷⚡️'),
+              schedule: z
+                .enum(['deepseek', 'workday-918', 'everyday-day', 'always-peak', 'custom'])
+                .describe(
+                  '峰段窗口预置：deepseek = 工作日 09:00-12:00 & 14:00-18:00；workday-918 = 工作日 09:00-18:00；everyday-day = 每天 08:00-22:00；always-peak = 恒为峰段；custom = 改用 modelAliases.timeAliases 自定义',
+                ),
+            }),
+          )
+          .describe(
+            '峰谷价标识列表（DeepSeek 等按峰谷计费的模型，可添加多条）：key 为匹配模型（子串），峰段显示 peakName，谷段（闲时）显示 valleyName；与 modelAliases 可共存，同 key 手写优先',
+          )
+          .optional(),
+      })
+      .describe('统一面板设置（完成态底部折叠面板）')
+      .optional(),
+  })
+  .describe('claw-fry-cards 插件自有配置');
 
 export type PluginConfig = z.infer<typeof PluginConfigSchema>;
 
