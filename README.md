@@ -1,6 +1,7 @@
 # 🍤 claw-fry-cards — 虾条卡片
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Version](https://img.shields.io/github/v/tag/techysy/claw-fry-cards?label=Version&sort=semver&color=f97316)](https://github.com/techysy/claw-fry-cards/releases)
 [![OpenClaw](https://img.shields.io/badge/OpenClaw-%E2%89%A52026.5.12-2463eb)](https://openclaw.ai)
 [![Node](https://img.shields.io/badge/Node-%E2%89%A522-blue)](https://nodejs.org/)
 
