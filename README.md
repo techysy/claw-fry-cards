@@ -12,7 +12,7 @@
 
 ## 🧭 两个项目怎么选
 
-| | 🍤 claw-fry-cards（本仓库） | 🍤 [claw-lark-cards](https://github.com/techysy/claw-lark-cards) |
+| | 🍤 claw-fry-cards（本仓库） | 🦐 [claw-lark-cards](https://github.com/techysy/claw-lark-cards) |
 |---|---|---|
 | 形态 | **伴侣插件**，官方通道继续收发 | **通道插件**（官方 fork + 2.0 适配），替换官方通道 |
 | 卡片接管 | 钩子观测 + 自建卡片 | 通道内置流式引擎 |
