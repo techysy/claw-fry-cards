@@ -357,34 +357,20 @@ export const PluginConfigSchema = z.object({
         )
         .optional(),
       peakValley: z
-        .union([
-          z.array(
-            z.object({
-              match: z.string().describe('匹配哪些模型（大小写不敏感子串，如 "flash" 命中所有带 flash 的模型）'),
-              peakName: z.string().describe('峰段（计费高峰窗口）显示的名称，如 梁文锋⚡️'),
-              valleyName: z.string().describe('谷段（闲时/优惠窗口）显示的名称，如 梁文谷⚡️'),
-              schedule: z
-                .enum(['deepseek', 'workday-918', 'everyday-day', 'always-peak', 'custom'])
-                .describe(
-                  '峰段窗口预置：deepseek = 工作日 09:00-12:00 & 14:00-18:00；workday-918 = 工作日 09:00-18:00；everyday-day = 每天 08:00-22:00；always-peak = 恒为峰段；custom = 改用 modelAliases.timeAliases 自定义',
-                ),
-            }),
-          ),
-          z.record(
-            z.string(),
-            z.object({
-              peakName: z.string().describe('峰段（计费高峰窗口）显示的名称，如 梁文锋⚡️'),
-              valleyName: z.string().describe('谷段（闲时/优惠窗口）显示的名称，如 梁文谷⚡️'),
-              schedule: z
-                .enum(['deepseek', 'workday-918', 'everyday-day', 'always-peak', 'custom'])
-                .describe(
-                  '峰段窗口预置：deepseek = 工作日 09:00-12:00 & 14:00-18:00；workday-918 = 工作日 09:00-18:00；everyday-day = 每天 08:00-22:00；always-peak = 恒为峰段；custom = 改用 modelAliases.timeAliases 自定义',
-                ),
-            }),
-          ),
-        ])
+        .record(
+          z.string().describe('匹配哪些模型（大小写不敏感子串，如 "deepseek" 命中所有带 deepseek 的模型）'),
+          z.object({
+            peakName: z.string().describe('峰段（计费高峰窗口）显示的名称，如 梁文锋⚡️'),
+            valleyName: z.string().describe('谷段（闲时/优惠窗口）显示的名称，如 梁文谷⚡️'),
+            schedule: z
+              .enum(['deepseek', 'workday-918', 'everyday-day', 'always-peak', 'custom'])
+              .describe(
+                '峰段窗口预置：deepseek = 工作日 09:00-12:00 & 14:00-18:00；workday-918 = 工作日 09:00-18:00；everyday-day = 每天 08:00-22:00；always-peak = 恒为峰段；custom = 改用 modelAliases.timeAliases 自定义',
+              ),
+          }),
+        )
         .describe(
-          '峰谷价标识列表（DeepSeek 等按峰谷计费的模型，可添加多条）：峰段显示 peakName，谷段（闲时）显示 valleyName；数组形式 key 即 match，record 形式 key 为匹配模型；与 modelAliases 可共存，同 key 手写优先',
+          '峰谷价标识列表（DeepSeek 等按峰谷计费的模型，可添加多条）：key 为匹配模型（子串），峰段显示 peakName，谷段（闲时）显示 valleyName；与 modelAliases 可共存，同 key 手写优先',
         )
         .optional(),
     })
