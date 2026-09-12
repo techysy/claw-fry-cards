@@ -6,6 +6,8 @@
 
 > OpenClaw 飞书流式卡片**伴侣插件** — fry-cards 风格的 CardKit v2.0 卡片：统一指标面板 · 实时工具进度 · 打字机收尾。
 
+![卡片效果](assets/card-demo.png)
+
 **这是什么**：[🍟 hermes-fry-cards](https://github.com/techysy/hermes-fry-cards)（Hermes 薯条卡片）的 OpenClaw 移植版。它**不负责消息收发**——飞书通道仍由官方插件承担，本插件通过 OpenClaw 公开钩子观测每轮对话，用自建 CardKit 卡片**接管回复展示**。
 
 ## 🧭 两个项目怎么选
