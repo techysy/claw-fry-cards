@@ -2,6 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Version](https://img.shields.io/github/v/tag/techysy/claw-fry-cards?label=Version&sort=semver&color=f97316)](https://github.com/techysy/claw-fry-cards/releases)
+[![npm](https://img.shields.io/npm/v/claw-fry-cards?color=CB3837&logo=npm&logoColor=white)](https://www.npmjs.com/package/claw-fry-cards)
 [![OpenClaw](https://img.shields.io/badge/OpenClaw-%E2%89%A52026.5.12-2463eb)](https://openclaw.ai)
 [![Node](https://img.shields.io/badge/Node-%E2%89%A522-blue)](https://nodejs.org/)
 
@@ -75,8 +76,18 @@ openclaw plugins uninstall openclaw-lark --force   # 或按其实际目录名卸
 
 **要求**：OpenClaw ≥ 2026.5.12（实测加载下限，见 [docs/compat-test-report.md](docs/compat-test-report.md)；推荐 2026.8.1+，统一面板指标需 2.0 会话存储）· Node.js ≥ 22
 
+### 方式一：npm 安装（推荐）
+
 ```bash
-# 从源码构建安装
+openclaw plugins install claw-fry-cards --force --accept-capabilities
+openclaw gateway restart
+```
+
+升级 / 重装用同一命令（`--force` 覆盖）。
+
+### 方式二：从源码构建安装
+
+```bash
 git clone https://github.com/techysy/claw-fry-cards.git
 cd claw-fry-cards
 npm install --legacy-peer-deps
