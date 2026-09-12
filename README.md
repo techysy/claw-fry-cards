@@ -10,7 +10,7 @@
 
 ## 🧭 两个项目怎么选
 
-| | 🍤 claw-fry-cards（本仓库） | 🍤 [openclaw-lark-cards](https://github.com/techysy/openclaw-lark-cards) |
+| | 🍤 claw-fry-cards（本仓库） | 🍤 [claw-lark-cards](https://github.com/techysy/claw-lark-cards) |
 |---|---|---|
 | 形态 | **伴侣插件**，官方通道继续收发 | **通道插件**（官方 fork + 2.0 适配），替换官方通道 |
 | 卡片接管 | 钩子观测 + 自建卡片 | 通道内置流式引擎 |
@@ -18,7 +18,7 @@
 | 思考展示 | 仅回复文本中的 `<thinking>` 标签 | 原生 reasoning（模型支持时） |
 | 适合 | 想继续用官方通道、轻量增强 | 想要完整 fry 体验、不介意换通道 |
 
-> 二选一，**不要同时启用**（两套卡片会打架）。OpenClaw 2026.9.x 上推荐 openclaw-lark-cards。
+> 二选一，**不要同时启用**（两套卡片会打架）。OpenClaw 2026.9.x 上推荐 claw-lark-cards。
 
 ---
 
@@ -35,7 +35,7 @@
 | 🌐 **中英双语** | 卡片文案跟随飞书客户端语言 |
 | 🔒 **安全脱敏** | 工具命令中的密钥（token/api_key/Authorization/--flag）与路径自动脱敏后才上卡 |
 
-> ⚠️ 架构边界：OpenClaw 公开钩子不提供 token 级流式增量，模型的 API reasoning（如 mimo/GLM 的 `reasoning_content`）对伴侣插件不可见——需要原生思考流请用 openclaw-lark-cards。
+> ⚠️ 架构边界：OpenClaw 公开钩子不提供 token 级流式增量，模型的 API reasoning（如 mimo/GLM 的 `reasoning_content`）对伴侣插件不可见——需要原生思考流请用 claw-lark-cards。
 
 ---
 
@@ -145,7 +145,7 @@ npm run build     # tsdown → dist/index.mjs
 
 ## 🙏 归属
 
-移植自 [hermes-fry-cards](https://github.com/techysy/hermes-fry-cards)（源自 [hermes-lark-streaming](https://github.com/Cheerwhy/hermes-lark-streaming)，MIT）· 姊妹项目 [openclaw-lark-cards](https://github.com/techysy/openclaw-lark-cards)
+移植自 [hermes-fry-cards](https://github.com/techysy/hermes-fry-cards)（源自 [hermes-lark-streaming](https://github.com/Cheerwhy/hermes-lark-streaming)，MIT）· 姊妹项目 [claw-lark-cards](https://github.com/techysy/claw-lark-cards)
 
 ## 📄 许可证
 
