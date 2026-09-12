@@ -78,7 +78,7 @@ openclaw plugins uninstall openclaw-lark --force   # 或按其实际目录名卸
 
 ## 📦 安装
 
-**要求**：OpenClaw ≥ 2026.5.12（实测加载下限，见 [docs/compat-test-report.md](docs/compat-test-report.md)；推荐 2026.8.1+，统一面板指标需 2.0 会话存储）· Node.js ≥ 22
+**要求**：OpenClaw ≥ 2026.5.12（实测加载下限，见 [docs/compat-test-report.md](docs/compat-test-report.md)；推荐 **2026.9.4+**——本地 Docker + 飞书真机全链路验证版本）· Node.js ≥ 22
 
 ### 方式一：npm 安装（推荐）
 
@@ -121,8 +121,7 @@ openclaw gateway restart
       "groupPolicy": "open",
       "groupAllowFrom": ["*"],
       "requireMention": true,
-      "streaming": true,
-      "replyMode": { "default": "streaming", "group": "streaming" }
+      "streaming": { "mode": "partial" }
     }
   },
   "plugins": {
@@ -145,11 +144,13 @@ openclaw gateway restart
 
 **流式卡片三层开关**（缺一不可，排障按此顺序检查）：
 
-| 层 | 配置 | 说明 |
-|----|------|------|
-| ① 总开关 | `streaming: true` | 没有它 `replyMode` 不会被读取，恒为纯文本 |
-| ② 模式 | `replyMode: "streaming"` 或 `{default, group, direct}` | 场景选择；auto 时私聊流式/群聊静态 |
-| ③ 工具展示 | 默认开启 | `toolUseDisplay` 不配置即启用（原版默认关闭，本项目已改） |
+| 层 | 配置（2026.9.4+） | 配置（旧宿主 ≤2026.9.1） | 说明 |
+|----|------|------|------|
+| ① 总开关 | `streaming: { mode: "partial" }` | `streaming: true` | 没有流式开关恒为纯文本（`mode: "off"` 关闭） |
+| ② 模式 | 不需要（新宿主私聊即流式） | `replyMode: "streaming"` 或 `{default, group, direct}` | 旧宿主场景选择；auto 时私聊流式/群聊静态 |
+| ③ 工具展示 | 默认开启 | 默认开启 | `toolUseDisplay` 不配置即启用（原版默认关闭，本项目已改） |
+
+> 插件端对两代宿主 schema 均兼容（2.0.2 起自动识别 `streaming` 布尔/对象形态），按你的宿主版本选对应写法即可。
 
 飞书应用需开通：`im:message`（收发消息）+ `cardkit:card`（卡片读写）。连接模式推荐 `websocket`（无需公网回调地址）。
 
@@ -165,13 +166,14 @@ openclaw gateway restart
 | 边框颜色 | 绿 = 完成 · 红 = 出错 · 黄 = 停止 |
 | 展开状态 | 默认折叠，点击展开 |
 
-**面板设置**（推荐写在插件自有配置 `plugins.entries.claw-fry-cards.config.panel`——随插件版本化，不受宿主 schema 演化影响；旧位置 `channels.feishu.panel` 仍兼容读取）：
+**面板设置**（推荐写在插件自有配置 `plugins.entries.claw-fry-cards.config.panel`——随插件版本化，不受宿主 schema 演化影响；旧位置 `channels.feishu.panel` 仍兼容读取。Control UI 配置页可视化编辑，字段说明为中文）：
 
 ```json
 "panel": {
   "unifiedPanelMinDuration": 5,
   "contextDisplayMode": "text",
-  "expanded": false
+  "truncateModelName": true,
+  "modelAliasesEnabled": true
 }
 ```
 
@@ -180,27 +182,21 @@ openclaw gateway restart
 | `unifiedPanelMinDuration` | 面板显示的耗时门槛（秒）；回复 ≥ 此值或有思考/工具时显示，`0` = 每条必出 | `5` |
 | `contextDisplayMode` | 📊 上下文段样式（上下文 used = 最后一轮 inputTokens；🎫 = 会话累计输出）：`text`（`129.3k/1.0m (13%)`）/ `bar`（`[██▓░░░░░] 13%`）/ `text_bar`（`129.3k/1.0m [██▓░░░░░] 13%`） | `text` |
 | `expanded` | 面板默认展开 | `false` |
+| `truncateModelName` | 截断模型名显示：`mimo/mimo-v2.5` → `⇲mimo-v2.5`（别名命中时优先显示别名） | `true` |
+| `modelAliases` | 模型显示别名（子串匹配 + 可选时段规则），见下节 | 空 |
+| `modelAliasesEnabled` | 别名功能总开关；`false` 时忽略 `modelAliases` 整体回落截断，配置本身保留 | `true` |
+| `peakValley` | 峰谷价标识（record，key=匹配模型），见下节 | 空 |
 
 ### ⏱️ 峰谷价标识（DeepSeek 峰谷计费区间）
 
-DeepSeek 等按峰谷计费的模型：**峰段显示峰时名称，谷段（闲时）显示谷时名称**，一眼看出当前计费档位。可添加多条（不同模型/渠道各配各的）：
+DeepSeek 等按峰谷计费的模型：**峰段显示峰时名称，谷段（闲时）显示谷时名称**，一眼看出当前计费档位。key 为匹配模型（大小写不敏感子串，如 `deepseek` 命中所有带 deepseek 的模型），可添加多条：
 
 ```json
 "panel": {
-  "peakValley": [
-    {
-      "match": "deepseek",
-      "peakName": "梁文锋⚡️",
-      "valleyName": "梁文谷⚡️",
-      "schedule": "deepseek"
-    },
-    {
-      "match": "gemini",
-      "peakName": "Gemini☀️",
-      "valleyName": "Gemini🌙",
-      "schedule": "workday-918"
-    }
-  ]
+  "peakValley": {
+    "deepseek": { "peakName": "梁文锋⚡️", "valleyName": "梁文谷⚡️", "schedule": "deepseek" },
+    "gemini":   { "peakName": "Gemini☀️",  "valleyName": "Gemini🌙",  "schedule": "workday-918" }
+  }
 }
 ```
 
@@ -212,28 +208,30 @@ DeepSeek 等按峰谷计费的模型：**峰段显示峰时名称，谷段（闲
 | `always-peak` | 恒为峰段 |
 | `custom` | 自定义（改用下面的 `modelAliases.timeAliases`）|
 
-> 与 `modelAliases` 可共存；同 key 时手写别名优先。
+> 与 `modelAliases` 可共存；同 key 时手写别名优先。Control UI 配置页里本字段默认收起（高级折叠区）。
 
-### 🏷️ 模型别名（含时段人设）
+### 🏷️ 模型别名（含时段规则）
 
-面板里的模型名可按模型映射为友好名，并支持**按时间自动切换**（如 DeepSeek 高峰/空闲计费时段的人设）。写在上面 `panel.modelAliases` 里：
+面板里的模型名可按模型映射为友好名，并支持**按时间自动切换**。key 对完整模型名做**大小写不敏感子串匹配**（`"mimo"` 命中 `mimo/mimo-v2.5`），写在 `panel.modelAliases` 里：
 
 ```json
 "modelAliases": {
-    "deepseek-v4-flash": {
+    "deepseek": {
       "name": "梁文谷⚡️",
       "timeAliases": [
-        { "days": "1-5", "start": "09:00", "end": "12:00", "name": "梁文锋⚡️" },
-        { "days": "1-5", "start": "14:00", "end": "18:00", "name": "梁文锋⚡️" }
+        { "days": [1, 2, 3, 4, 5], "start": "09:00", "end": "12:00", "name": "梁文锋⚡️" },
+        { "days": [1, 2, 3, 4, 5], "start": "14:00", "end": "18:00", "name": "梁文锋⚡️" }
       ]
-    }
+    },
+    "mimo": "小虾米"
   }
 ```
 
-- `days`：生效星期（`0`=周日），支持区间与枚举（`"1-5"`、`"0,6"`、`"1-5,0"`），省略 = 每天
-- `start`/`end`：生效时段 HH:MM（北京时间 UTC+8），支持跨午夜（如 `"22:00"-"02:00"`）
-- 命中第一条规则用其 `name`；都不命中用默认 `name`；静态写法 `"模型id": "名字"` 仍兼容
-- 模型 id 写完整名（`deepseek-v4-flash`）或去掉 provider 的裸名均可
+- **匹配**：key 对完整模型名做大小写不敏感子串匹配，按插入顺序第一条命中即生效（`"mimo"` 命中 `mimo/mimo-v2.5`）
+- `days`：生效星期（`0`=周日），推荐**数组** `[1,2,3,4,5]`（每项可枚举），字符串 `"1-5"`、`"0,6"` 兼容；省略 = 每天
+- `start`/`end`：生效时段 HH:MM（北京时间 UTC+8），支持跨午夜（如 `"22:00"`-`"02:00"`）
+- 命中第一条规则用其 `name`；都不命中用顶层 `name`（即"其他时间"的兜底）；静态写法 `"模型id": "名字"` 仍兼容
+- 别名命中优先于 `truncateModelName` 截断；`modelAliasesEnabled: false` 可整体关闭别名（回落截断，配置保留）
 
 > 指标来源是 agent transcript SQLite（`~/.openclaw/agents/<agent>/agent/openclaw-agent.sqlite`），模型名/token/上下文窗口由最近一轮 usage 事件解析。老版本宿主无此库时统一面板自动省略指标段（详见 [docs/compat-test-report.md](docs/compat-test-report.md)）。
 
