@@ -137,16 +137,19 @@ const pluginConfigSchema = buildPluginConfigSchema(
       },
       'panel.peakValley': {
         label: '峰谷价标识',
+        advanced: true,
         help: 'DeepSeek 等按峰谷计费的模型（可添加多条）：峰段显示峰时名称，谷段（闲时）显示谷时名称；与 modelAliases 可共存，同 key 手写优先',
       },
       'panel.peakValley.match': {
         label: '匹配模型',
+        advanced: true,
         help: '大小写不敏感子串，如 "flash" 命中所有带 flash 的模型',
       },
-      'panel.peakValley.peakName': { label: '峰时显示', help: '峰段（计费高峰窗口）内显示的名称，如 梁文锋⚡️' },
-      'panel.peakValley.valleyName': { label: '谷时显示', help: '谷段（闲时/优惠窗口）显示的名称，如 梁文谷⚡️' },
+      'panel.peakValley.peakName': { label: '峰时显示', advanced: true, help: '峰段（计费高峰窗口）内显示的名称，如 梁文锋⚡️' },
+      'panel.peakValley.valleyName': { label: '谷时显示', advanced: true, help: '谷段（闲时/优惠窗口）显示的名称，如 梁文谷⚡️' },
       'panel.peakValley.schedule': {
         label: '峰段窗口',
+        advanced: true,
         help: 'deepseek / workday-918 / everyday-day / always-peak / custom',
       },
     },
