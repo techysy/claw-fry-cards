@@ -312,14 +312,35 @@ const ModelAliasValueSchema = z.union([
 export const PluginConfigSchema = z.object({
   panel: z
     .object({
-      unifiedPanelMinDuration: z.number().optional(),
-      contextDisplayMode: z.enum(['text', 'bar', 'text_bar']).optional(),
-      expanded: z.boolean().optional(),
-      truncateModelName: z.boolean().optional(),
-      modelAliases: z.record(z.string(), ModelAliasValueSchema).optional(),
+      unifiedPanelMinDuration: z
+        .number()
+        .describe(
+          '统一面板显示的耗时门槛（秒）：回复 ≥ 此值或有思考/工具过程时显示，0 = 每条必出（默认 5）',
+        )
+        .optional(),
+      contextDisplayMode: z
+        .enum(['text', 'bar', 'text_bar'])
+        .describe(
+          '上下文段样式：text（129.3k/1.0m (13%)）/ bar（[██▓░░░░░] 13%）/ text_bar（129.3k/1.0m [██▓░░░░░] 13%）；默认 text',
+        )
+        .optional(),
+      expanded: z.boolean().describe('面板默认展开（默认折叠）').optional(),
+      truncateModelName: z
+        .boolean()
+        .describe(
+          '截断模型名显示：mimo/mimo-v2.5 → ⇲mimo-v2.5（默认 true；modelAliases 别名命中时优先显示别名）',
+        )
+        .optional(),
+      modelAliases: z
+        .record(z.string(), ModelAliasValueSchema)
+        .describe(
+          '模型显示别名：key 对完整模型名做大小写不敏感子串匹配（如 "mimo" 命中 mimo/mimo-v2.5）；值为名称字符串，或含时段规则的对象 { name, timeAliases: [{ days, start, end, name }] }（北京时间，days 支持 "1-5"/"0,6"，0=周日，支持跨午夜）',
+        )
+        .optional(),
     })
+    .describe('统一面板设置（完成态底部折叠面板）')
     .optional(),
-});
+}).describe('claw-fry-cards 插件自有配置');
 
 export type PluginConfig = z.infer<typeof PluginConfigSchema>;
 
