@@ -19,6 +19,8 @@ src/tools/docs/
 # Internal documentation directories
 /doc/
 /docs/
+!/docs/compat-test-report.md
+!/docs/compat-test-harness.mjs
 
 /**/package-lock.json
 /**/.DS_Store

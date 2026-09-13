@@ -1,13 +1,29 @@
 # 🧪 兼容性测试报告 — 两代插件对 OpenClaw 老版本宿主
 
-- **日期**：2026-09-12
-- **被测对象**：claw-fry-cards 1.0（钩子伴侣插件，commit `f8a22e5`）· claw-lark-cards（通道插件，v2026.9.12）
+- **日期**：2026-09-12（首轮）· 2026-09-13（2.0.4 复测轮）
+- **被测对象**：claw-fry-cards 1.0（钩子伴侣插件，commit `f8a22e5`）· claw-lark-cards（通道插件，v2026.9.12）· **claw-fry-cards 2.0.4（npm 正式包，复测轮）**
 - **测试环境**：Windows x64 · Node v24.20.0 · npm 直连 registry
-- **结论**：**claw-lark-cards 的真实兼容下限是 OpenClaw 2026.5.12**，低于其 README 宣称的 2026.8.1；claw-fry-cards 1.0 在 2026.5.4 仍可通过。
+- **结论**：**通道插件的兼容下限是 OpenClaw 2026.5.12**（首轮以 claw-lark-cards 实测，2.0.4 复测轮边界不变）；claw-fry-cards 1.0 在 2026.5.4 仍可通过。
 
 ---
 
-## 📊 实测矩阵
+## 🔁 2.0.4 复测轮（2026-09-13，npm 正式包产物）
+
+被测对象改为 **npm registry 上的 `claw-fry-cards@2.0.4` tarball**（即用户实际安装的产物），沙箱与 harness 同首轮。
+
+| OpenClaw 宿主 | 🍤 claw-fry-cards 2.0.4（npm 包）|
+|---|---|
+| 2026.5.4 | ❌ 同首轮：缺 `plugin-sdk/channel-message` 导出（**下限边界无漂移**）|
+| 2026.5.12 | ✅ 加载 + 注册通过 |
+| 2026.6.35 | ✅ |
+| 2026.7.1 | ✅ |
+| 2026.9.4 | ✅ |
+
+2.0.4 相对首轮的增量（新配置键 `panel.peakValley` / `modelAliasesEnabled` / `truncateModelName`、configSchema 声明、uiHints）全部位于插件自有配置面，不新增宿主 API 依赖——矩阵与首轮一致，下限维持 **2026.5.12**。
+
+---
+
+## 📊 首轮实测矩阵（2026-09-12）
 
 | OpenClaw 宿主 | 🍤 claw-fry-cards 1.0 | 🦐 claw-lark-cards |
 |---|---|---|
