@@ -78,7 +78,15 @@ openclaw plugins uninstall openclaw-lark --force   # 或按其实际目录名卸
 
 **要求**：OpenClaw ≥ 2026.5.12（实测加载下限，见 [docs/compat-test-report.md](docs/compat-test-report.md)；推荐 **2026.9.4+**——本地 Docker + 飞书真机全链路验证版本）· Node.js ≥ 22
 
-### 方式一：npm 安装（推荐）
+### 方式一：一键安装脚本（推荐 · agent 友好）
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/techysy/claw-fry-cards/main/install.sh | bash
+```
+
+脚本自动定位 OpenClaw CLI（`OPENCLAW_BIN` 可指定，找不到时走 `npx` 回退）、从 npm 安装最新版并验证插件注册。`FRY_VERSION=2.0.4` 可固定版本。**不会自动重启网关**（脚本可能运行在网关回合内，重启会杀掉自己）——装完自行执行 `openclaw gateway restart`。
+
+### 方式二：npm 安装
 
 ```bash
 openclaw plugins install claw-fry-cards --force --accept-capabilities
@@ -87,7 +95,7 @@ openclaw gateway restart
 
 升级 / 重装用同一命令（`--force` 覆盖）。
 
-### 方式二：从源码构建安装
+### 方式三：从源码构建安装
 
 ```bash
 git clone https://github.com/techysy/claw-fry-cards.git
