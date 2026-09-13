@@ -17,7 +17,7 @@ import { createRequire } from 'node:module';
 interface ChannelMessageSdk {
   createReplyPrefixContext: typeof import('openclaw/plugin-sdk/channel-message').createReplyPrefixContext;
   createTypingCallbacks: typeof import('openclaw/plugin-sdk/channel-message').createTypingCallbacks;
-};
+}
 
 const requireSdk = createRequire(import.meta.url);
 

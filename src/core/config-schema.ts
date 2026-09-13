@@ -372,7 +372,8 @@ export const PluginConfigSchema = z
         appId: z.string().describe('飞书应用 App ID（cli_xxx）；留空沿用 channels.feishu 的配置').optional(),
         appSecret: z
           .string()
-          .meta({ sensitive: true, format: 'password' })
+          // 字段名含 "Secret" 即命中宿主表单的敏感名正则（/secret/i），自动掩码显示；
+          // 不要加 format:'password' 之类自定义元数据——设置页渲染器不认，会报"不支持的架构节点"
           .describe('飞书应用 App Secret；留空沿用 channels.feishu 的配置')
           .optional(),
         domain: z

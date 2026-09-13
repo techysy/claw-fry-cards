@@ -153,8 +153,6 @@
           },
           "appSecret": {
             "type": "string",
-            "sensitive": true,
-            "format": "password",
             "description": "飞书应用 App Secret；留空沿用 channels.feishu 的配置"
           },
           "domain": {
