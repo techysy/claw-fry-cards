@@ -11,7 +11,7 @@
  * 4. Assembles and returns FeishuReplyDispatcherResult
  */
 
-import { createReplyPrefixContext, createTypingCallbacks } from 'openclaw/plugin-sdk/channel-message';
+import { createReplyPrefixContext, createTypingCallbacks } from '../core/channel-message-compat';
 import { logTypingFailure } from 'openclaw/plugin-sdk/channel-feedback';
 import type { ReplyPayload } from 'openclaw/plugin-sdk/core';
 import { getLarkAccount } from '../core/accounts';
