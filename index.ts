@@ -140,7 +140,32 @@ const pluginConfigSchema = buildPluginConfigSchema(
         advanced: true,
         help: 'DeepSeek 等按峰谷计费的模型（可添加多条）：峰段显示峰时名称，谷段（闲时）显示谷时名称；与 modelAliases 可共存，同 key 手写优先',
       },
-
+      feishu: {
+        label: '飞书通道凭据',
+        advanced: true,
+        help: '可选覆盖 channels.feishu 同名字段；留空沿用原配置。推荐在插件设置页配置，随插件版本化',
+      },
+      'feishu.appId': {
+        label: 'App ID',
+        advanced: true,
+        help: '飞书应用 App ID（cli_xxx）；留空沿用 channels.feishu 的配置',
+      },
+      'feishu.appSecret': {
+        label: 'App Secret',
+        advanced: true,
+        sensitive: true,
+        help: '飞书应用 App Secret；留空沿用 channels.feishu 的配置',
+      },
+      'feishu.domain': {
+        label: '域名',
+        advanced: true,
+        help: 'feishu = 国内版，lark = 国际版；留空沿用 channels.feishu',
+      },
+      'feishu.connectionMode': {
+        label: '连接模式',
+        advanced: true,
+        help: 'websocket（推荐，无需公网回调）或 webhook；留空沿用 channels.feishu',
+      },
     },
   },
 );

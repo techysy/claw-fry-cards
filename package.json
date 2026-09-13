@@ -1,6 +1,6 @@
 {
   "name": "claw-fry-cards",
-  "version": "2.0.4",
+  "version": "2.0.5-dev.0",
   "description": "🍤 claw-fry-cards 2.0 — OpenClaw 飞书通道插件（fry 卡片引擎内置 · 派发即建卡 · 打字机 · 统一指标面板）",
   "repository": {
     "type": "git",

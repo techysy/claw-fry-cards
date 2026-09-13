@@ -367,6 +367,27 @@ export const PluginConfigSchema = z
       })
       .describe('统一面板设置（完成态底部折叠面板）')
       .optional(),
+    feishu: z
+      .object({
+        appId: z.string().describe('飞书应用 App ID（cli_xxx）；留空沿用 channels.feishu 的配置').optional(),
+        appSecret: z
+          .string()
+          .meta({ sensitive: true, format: 'password' })
+          .describe('飞书应用 App Secret；留空沿用 channels.feishu 的配置')
+          .optional(),
+        domain: z
+          .enum(['feishu', 'lark'])
+          .describe('飞书域名：feishu = 国内版，lark = 国际版；留空沿用 channels.feishu')
+          .optional(),
+        connectionMode: z
+          .enum(['websocket', 'webhook'])
+          .describe('连接模式：websocket（推荐，无需公网回调）或 webhook；留空沿用 channels.feishu')
+          .optional(),
+      })
+      .describe(
+        '飞书通道凭据（可选）：填写的字段覆盖 channels.feishu 同名字段，留空沿用原配置——推荐在插件设置页配置，随插件版本化',
+      )
+      .optional(),
   })
   .describe('claw-fry-cards 插件自有配置');
 

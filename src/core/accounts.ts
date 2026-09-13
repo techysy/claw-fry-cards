@@ -24,9 +24,39 @@ import type { ConfiguredLarkAccount, FeishuConfig, LarkAccount, LarkBrand, LarkC
 // Internal helpers
 // ---------------------------------------------------------------------------
 
-/** Extract the `channels.feishu` section from the top-level config. */
+/** 插件自有配置里可覆盖通道凭据的字段（plugins.entries.claw-fry-cards.config.feishu）。 */
+const PLUGIN_ID = 'claw-fry-cards';
+
+type FeishuCredentialOverrides = Pick<FeishuConfig, 'appId' | 'appSecret'> &
+  Partial<Pick<FeishuConfig, 'domain' | 'connectionMode'>>;
+
+/**
+ * Read credential overrides declared in the plugin's own config.
+ * 插件设置页配置的飞书凭据：填写的字段覆盖 channels.feishu 同名字段，留空沿用。
+ */
+function readPluginFeishuOverrides(cfg: OpenClawConfig): FeishuCredentialOverrides | undefined {
+  const entry = (cfg as { plugins?: { entries?: Record<string, { config?: { feishu?: unknown } }> } })?.plugins
+    ?.entries?.[PLUGIN_ID];
+  const f = entry?.config?.feishu;
+  if (!f || typeof f !== 'object') return undefined;
+  const o = f as Partial<FeishuCredentialOverrides>;
+  const out: Partial<FeishuCredentialOverrides> = {};
+  if (typeof o.appId === 'string' && o.appId) out.appId = o.appId;
+  if (typeof o.appSecret === 'string' && o.appSecret) out.appSecret = o.appSecret;
+  if (o.domain === 'feishu' || o.domain === 'lark') out.domain = o.domain;
+  if (o.connectionMode === 'websocket' || o.connectionMode === 'webhook') out.connectionMode = o.connectionMode;
+  return Object.keys(out).length > 0 ? (out as FeishuCredentialOverrides) : undefined;
+}
+
+/**
+ * Extract the effective `channels.feishu` section: 插件自有配置的凭据字段
+ * （plugins.entries.claw-fry-cards.config.feishu）覆盖 channels.feishu 同名字段。
+ */
 function getLarkConfig(cfg: OpenClawConfig): FeishuConfig | undefined {
-  return cfg?.channels?.feishu as FeishuConfig | undefined;
+  const base = cfg?.channels?.feishu as FeishuConfig | undefined;
+  const overrides = readPluginFeishuOverrides(cfg);
+  if (!overrides) return base;
+  return { ...base, ...overrides } as FeishuConfig;
 }
 
 /** Return the per-account override map, if present. */
