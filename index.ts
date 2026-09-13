@@ -39,11 +39,7 @@ const log = larkLogger('plugin');
 
 export { resolveModelAlias, resolvePanelModelName, truncateModelId, type ModelAliasEntry } from './src/card/builder';
 export { monitorFeishuProvider } from './src/channel/monitor';
-export {
-  PluginConfigSchema,
-  PLUGIN_CONFIG_JSON_SCHEMA,
-  type PluginConfig,
-} from './src/core/config-schema';
+export { PluginConfigSchema, PLUGIN_CONFIG_JSON_SCHEMA, type PluginConfig } from './src/core/config-schema';
 export { sendMessageFeishu, sendCardFeishu, updateCardFeishu, editMessageFeishu } from './src/messaging/outbound/send';
 export { getMessageFeishu } from './src/messaging/outbound/fetch';
 export {

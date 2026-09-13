@@ -156,28 +156,31 @@ export const feishuPlugin: ChannelPlugin<LarkAccount> = {
   // Config schema (JSON Schema)
   // -------------------------------------------------------------------------
 
-  configSchema: buildChannelConfigSchema(FeishuConfigSchema as unknown as Parameters<typeof buildChannelConfigSchema>[0], {
-    // 通道配置页（Control UI Channels）的中文标签/帮助与敏感字段掩码
-    uiHints: {
-      enabled: { label: '启用', help: '是否启用飞书通道（默认启用）' },
-      appId: { label: 'App ID', help: '飞书应用 App ID（cli_xxx，开放平台自建应用）' },
-      appSecret: { label: 'App Secret', sensitive: true, help: '开放平台「凭证与基础信息」页获取' },
-      encryptKey: { label: 'Encrypt Key', sensitive: true, help: '事件订阅 Encrypt Key（webhook 模式用）' },
-      verificationToken: {
-        label: 'Verification Token',
-        sensitive: true,
-        help: '事件订阅 Verification Token（webhook 模式用）',
+  configSchema: buildChannelConfigSchema(
+    FeishuConfigSchema as unknown as Parameters<typeof buildChannelConfigSchema>[0],
+    {
+      // 通道配置页（Control UI Channels）的中文标签/帮助与敏感字段掩码
+      uiHints: {
+        enabled: { label: '启用', help: '是否启用飞书通道（默认启用）' },
+        appId: { label: 'App ID', help: '飞书应用 App ID（cli_xxx，开放平台自建应用）' },
+        appSecret: { label: 'App Secret', sensitive: true, help: '开放平台「凭证与基础信息」页获取' },
+        encryptKey: { label: 'Encrypt Key', sensitive: true, help: '事件订阅 Encrypt Key（webhook 模式用）' },
+        verificationToken: {
+          label: 'Verification Token',
+          sensitive: true,
+          help: '事件订阅 Verification Token（webhook 模式用）',
+        },
+        domain: { label: '域名', help: 'feishu = 国内版，lark = 国际版' },
+        connectionMode: { label: '连接模式', help: 'websocket（推荐，无需公网回调）或 webhook' },
+        dmPolicy: { label: '私聊策略', help: 'open = 全部放行，pairing = 需配对' },
+        allowFrom: { label: '私聊白名单', help: '飞书 user id 列表，["*"] = 全部放行' },
+        groupPolicy: { label: '群聊策略', help: '群聊访问策略' },
+        groupAllowFrom: { label: '群聊白名单', help: '["*"] = 全部放行' },
+        requireMention: { label: '群聊需 @', help: '群聊中必须 @ 机器人才响应（默认开）' },
+        streaming: { label: '流式输出', help: '2026.9.4+ 宿主：{ "mode": "partial" }；旧宿主：true' },
       },
-      domain: { label: '域名', help: 'feishu = 国内版，lark = 国际版' },
-      connectionMode: { label: '连接模式', help: 'websocket（推荐，无需公网回调）或 webhook' },
-      dmPolicy: { label: '私聊策略', help: 'open = 全部放行，pairing = 需配对' },
-      allowFrom: { label: '私聊白名单', help: '飞书 user id 列表，["*"] = 全部放行' },
-      groupPolicy: { label: '群聊策略', help: '群聊访问策略' },
-      groupAllowFrom: { label: '群聊白名单', help: '["*"] = 全部放行' },
-      requireMention: { label: '群聊需 @', help: '群聊中必须 @ 机器人才响应（默认开）' },
-      streaming: { label: '流式输出', help: '2026.9.4+ 宿主：{ "mode": "partial" }；旧宿主：true' },
     },
-  }),
+  ),
 
   // -------------------------------------------------------------------------
   // Config adapter
