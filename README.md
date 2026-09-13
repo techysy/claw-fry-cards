@@ -162,6 +162,11 @@ openclaw gateway restart
 
 飞书应用需开通：`im:message`（收发消息）+ `cardkit:card`（卡片读写）。连接模式推荐 `websocket`（无需公网回调地址）。
 
+> ⚡ **生效方式**（改完配置后）：
+> - **热更新**：`panel` 全部显示类设置、模型列表/`contextWindow`——网关自动检测，下一条消息生效，无需重启
+> - **自动通道重载**：策略类（`dmPolicy`/`allowFrom`/`requireMention`/`streaming`）——agent 正忙时推迟到干完自动应用（通道页会出现英文 defer 提示，属正常，等完刷新即可）
+> - **建议重启网关**：凭据类（`appId`/`appSecret`）与连接级（`domain`/`connectionMode`）——涉及 websocket 重连，重启一次最稳
+
 ### 🎯 统一面板（完成态底部折叠面板）
 
 完成卡自动渲染，无需配置。行为如下：
@@ -176,6 +181,8 @@ openclaw gateway restart
 
 **面板设置**：在 **Control UI → 设置 → Claw Fry Cards → 配置页** 可视化编辑（全中文字段说明），存储于插件自有配置 `plugins.entries.claw-fry-cards.config.panel`——随插件版本化，不受宿主 schema 演化影响（旧位置 `channels.feishu.panel` 仍兼容读取）：
 
+> 🔥 **全部热更新**：保存后网关自动检测并应用（agent 正忙时重载排队，干完自动生效），**无需重启网关**；正在生成的回复不受影响，下一条消息即用新值。
+
 ```json
 "panel": {
   "unifiedPanelMinDuration": 5,
@@ -185,15 +192,15 @@ openclaw gateway restart
 }
 ```
 
-| 配置项 | 说明 | 默认 |
-|--------|------|------|
-| `unifiedPanelMinDuration` | 面板显示的耗时门槛（秒）；回复 ≥ 此值或有思考/工具时显示，`0` = 每条必出 | `5` |
-| `contextDisplayMode` | 📊 上下文段样式（上下文 used = 最后一轮 inputTokens；🎫 = 会话累计输出）：`text`（`129.3k/1.0m (13%)`）/ `bar`（`[██▓░░░░░] 13%`）/ `text_bar`（`129.3k/1.0m [██▓░░░░░] 13%`） | `text` |
-| `expanded` | 面板默认展开 | `false` |
-| `truncateModelName` | 截断模型名显示：`mimo/mimo-v2.5` → `⇲mimo-v2.5`（别名命中时优先显示别名） | `true` |
-| `modelAliases` | 模型显示别名（子串匹配 + 可选时段规则），见下节 | 空 |
-| `modelAliasesEnabled` | 别名功能总开关；`false` 时忽略 `modelAliases` 整体回落截断，配置本身保留 | `true` |
-| `peakValley` | 峰谷价标识（record，key=匹配模型），见下节 | 空 |
+| 配置项 | 说明 | 默认 | 生效 |
+|--------|------|------|------|
+| `unifiedPanelMinDuration` | 面板显示的耗时门槛（秒）；回复 ≥ 此值或有思考/工具时显示，`0` = 每条必出 | `5` | 🔥 下一条消息 |
+| `contextDisplayMode` | 📊 上下文段样式（上下文 used = 最后一轮 inputTokens；🎫 = 会话累计输出）：`text`（`129.3k/1.0m (13%)`）/ `bar`（`[██▓░░░░░] 13%`）/ `text_bar`（`129.3k/1.0m [██▓░░░░░] 13%`） | `text` | 🔥 下一条消息 |
+| `expanded` | 面板默认展开 | `false` | 🔥 下一条消息 |
+| `truncateModelName` | 截断模型名显示：`mimo/mimo-v2.5` → `⇲mimo-v2.5`（别名命中时优先显示别名） | `true` | 🔥 下一条消息 |
+| `modelAliases` | 模型显示别名（子串匹配 + 可选时段规则），见下节 | 空 | 🔥 下一条消息 |
+| `modelAliasesEnabled` | 别名功能总开关；`false` 时忽略 `modelAliases` 整体回落截断，配置本身保留 | `true` | 🔥 下一条消息 |
+| `peakValley` | 峰谷价标识（record，key=匹配模型），见下节 | 空 | 🔥 下一条消息 |
 
 ### ⏱️ 按时间切换显示名（峰谷价 / 时段人设）
 
