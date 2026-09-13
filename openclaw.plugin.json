@@ -1,5 +1,6 @@
 {
   "id": "claw-fry-cards",
+  "description": "🍤 OpenClaw 飞书通道插件——官方通道 2.0 适配 + fry 虾条流式卡片引擎（派发即建卡 · 打字机 · 统一指标面板）",
   "channels": [
     "feishu"
   ],
@@ -143,36 +144,6 @@
           }
         },
         "description": "统一面板设置（完成态底部折叠面板）"
-      },
-      "feishu": {
-        "type": "object",
-        "properties": {
-          "appId": {
-            "type": "string",
-            "description": "飞书应用 App ID（cli_xxx）；留空沿用 channels.feishu 的配置"
-          },
-          "appSecret": {
-            "type": "string",
-            "description": "飞书应用 App Secret；留空沿用 channels.feishu 的配置"
-          },
-          "domain": {
-            "type": "string",
-            "enum": [
-              "feishu",
-              "lark"
-            ],
-            "description": "飞书域名：feishu = 国内版，lark = 国际版；留空沿用 channels.feishu"
-          },
-          "connectionMode": {
-            "type": "string",
-            "enum": [
-              "websocket",
-              "webhook"
-            ],
-            "description": "连接模式：websocket（推荐，无需公网回调）或 webhook；留空沿用 channels.feishu"
-          }
-        },
-        "description": "飞书通道凭据（可选）：填写的字段覆盖 channels.feishu 同名字段，留空沿用原配置——推荐在插件设置页配置，随插件版本化"
       }
     },
     "description": "claw-fry-cards 插件自有配置"

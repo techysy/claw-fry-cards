@@ -194,22 +194,22 @@ export const FeishuGroupSchema = z.object({
 // ---------------------------------------------------------------------------
 
 export const FeishuAccountConfigSchema = z.object({
-  appId: z.string().optional(),
-  appSecret: z.string().optional(),
-  encryptKey: z.string().optional(),
-  verificationToken: z.string().optional(),
-  name: z.string().optional(),
-  enabled: z.boolean().optional(),
-  domain: DomainSchema,
-  connectionMode: ConnectionModeEnum.optional(),
-  webhookPath: z.string().optional(),
-  webhookPort: z.number().optional(),
-  dmPolicy: DmPolicyEnum.optional(),
-  allowFrom: AllowFromSchema,
-  groupPolicy: GroupPolicyEnum.optional(),
-  groupAllowFrom: AllowFromSchema,
-  requireMention: z.boolean().optional(),
-  respondToMentionAll: z.boolean().optional(),
+  appId: z.string().describe('飞书应用 App ID（cli_xxx，飞书开放平台创建的自建应用）').optional(),
+  appSecret: z.string().describe('飞书应用 App Secret（开放平台「凭证与基础信息」页获取）').optional(),
+  encryptKey: z.string().describe('事件订阅 Encrypt Key（webhook 模式用，websocket 模式可留空）').optional(),
+  verificationToken: z.string().describe('事件订阅 Verification Token（webhook 模式用）').optional(),
+  name: z.string().describe('账号显示名（多账号时用于区分）').optional(),
+  enabled: z.boolean().describe('是否启用该通道（默认 true）').optional(),
+  domain: DomainSchema.describe('飞书域名：feishu = 国内版，lark = 国际版'),
+  connectionMode: ConnectionModeEnum.optional().describe('连接模式：websocket（推荐，无需公网回调地址）或 webhook'),
+  webhookPath: z.string().describe('webhook 回调路径（仅 webhook 模式）').optional(),
+  webhookPort: z.number().describe('webhook 监听端口（仅 webhook 模式）').optional(),
+  dmPolicy: DmPolicyEnum.optional().describe('私聊访问策略：open = 全部放行，pairing = 需配对'),
+  allowFrom: AllowFromSchema.describe('私聊白名单（飞书 user id 列表，["*"] = 全部放行）'),
+  groupPolicy: GroupPolicyEnum.optional().describe('群聊访问策略'),
+  groupAllowFrom: AllowFromSchema.describe('群聊白名单（["*"] = 全部放行）'),
+  requireMention: z.boolean().describe('群聊中是否必须 @ 机器人才响应（默认 true）').optional(),
+  respondToMentionAll: z.boolean().describe('@ 所有人时是否响应').optional(),
   groups: z.record(z.string(), FeishuGroupSchema).optional(),
   historyLimit: z.number().optional(),
   dmHistoryLimit: z.number().optional(),
@@ -219,8 +219,11 @@ export const FeishuAccountConfigSchema = z.object({
   blockStreamingCoalesce: BlockStreamingCoalesceSchema,
   mediaMaxMb: z.number().optional(),
   heartbeat: HeartbeatSchema,
-  replyMode: ReplyModeSchema,
-  streaming: z.union([z.boolean(), z.object({ mode: z.string().optional() }).loose()]).optional(),
+  replyMode: ReplyModeSchema.describe('（旧宿主 ≤2026.9.1 用）场景流式模式：auto 时私聊流式/群聊静态；2026.9.4+ 宿主已废弃此键'),
+  streaming: z
+    .union([z.boolean(), z.object({ mode: z.string().optional() }).loose()])
+    .describe('流式输出开关：旧宿主布尔 true；2026.9.4+ 宿主为对象 { mode: "partial" }（off = 关闭）')
+    .optional(),
   blockStreaming: z.boolean().optional(),
   toolUseDisplay: z
     .object({
@@ -367,29 +370,7 @@ export const PluginConfigSchema = z
       })
       .describe('统一面板设置（完成态底部折叠面板）')
       .optional(),
-    feishu: z
-      .object({
-        appId: z.string().describe('飞书应用 App ID（cli_xxx）；留空沿用 channels.feishu 的配置').optional(),
-        appSecret: z
-          .string()
-          // 字段名含 "Secret" 即命中宿主表单的敏感名正则（/secret/i），自动掩码显示；
-          // 不要加 format:'password' 之类自定义元数据——设置页渲染器不认，会报"不支持的架构节点"
-          .describe('飞书应用 App Secret；留空沿用 channels.feishu 的配置')
-          .optional(),
-        domain: z
-          .enum(['feishu', 'lark'])
-          .describe('飞书域名：feishu = 国内版，lark = 国际版；留空沿用 channels.feishu')
-          .optional(),
-        connectionMode: z
-          .enum(['websocket', 'webhook'])
-          .describe('连接模式：websocket（推荐，无需公网回调）或 webhook；留空沿用 channels.feishu')
-          .optional(),
-      })
-      .describe(
-        '飞书通道凭据（可选）：填写的字段覆盖 channels.feishu 同名字段，留空沿用原配置——推荐在插件设置页配置，随插件版本化',
-      )
-      .optional(),
-  })
+    })
   .describe('claw-fry-cards 插件自有配置');
 
 export type PluginConfig = z.infer<typeof PluginConfigSchema>;
