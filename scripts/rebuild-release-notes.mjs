@@ -44,12 +44,13 @@ const releases = [
         'git clone https://github.com/techysy/claw-fry-cards.git && cd claw-fry-cards\ngit checkout v1.0.0\nnpm install --legacy-peer-deps && npm run build\nopenclaw plugins install . --force --accept-capabilities\nopenclaw gateway restart',
         '1.0.0 未发布 npm 包（npm 自 2.0.1 起），从标签源码构建：',
       ) +
-      '\n' + CHANGELOG,
+      '\n**Full Changelog**: https://github.com/techysy/claw-fry-cards/compare/v1.0.0\n\n' + CHANGELOG,
   },
   {
     tag: 'v2.0.0',
     body:
       '**主线转向通道插件形态** — 前身 [claw-lark-cards](https://github.com/techysy/claw-lark-cards)（官方 openclaw-lark 的 2.0 适配 fork）合并入本仓库并更名，claw-lark-cards 仓库同步废弃。1.0 伴侣插件形态保留于 `v1.0.0` 标签，按需降级使用。\n\n' +
+      '### ✨ 更新内容\n\n' +
       '- 🦐→🍤 形态升级：由"钩子伴侣插件"转为**通道插件**——官方通道 2.0 全量适配（SDK 导出路径迁移 100+ 处、`OpenClawConfig` 类型迁移、会话存储迁移 agent transcript SQLite），替换官方 `@larksuite/openclaw-lark`\n' +
       '- 🍤 卡片引擎内置：派发即建卡、CardKit streaming_mode 打字机、原生 reasoning 展示、统一指标面板、状态边框\n' +
       '- 🧰 继承官方全部工具契约（im / doc / wiki / drive / bitable / sheet / calendar / task / oauth 等 38 项）与 skills\n' +
@@ -65,6 +66,7 @@ const releases = [
     tag: 'v2.0.1',
     body:
       '2.0.0 发布审查后的修正版（元数据与文档层面，无引擎代码变更）。\n\n' +
+      '### ✨ 更新内容\n\n' +
       '- 🔖 `openclaw.plugin.json` 显示名 `OpenClaw Lark Cards` → `Claw Fry Cards`（2.0.0 漏改项，插件列表可见）\n' +
       '- 📝 Issue 模板更名：bug_report 插件版本字段 openclaw-lark → claw-fry-cards；config.yml 的 Ideas / Q&A 链接从官方 discussions 改指本仓库（已启用 Discussions）\n' +
       '- 📦 package.json 补 `repository` 字段（npm 包主页源码链接）\n' +
@@ -77,6 +79,7 @@ const releases = [
     tag: 'v2.0.2',
     body:
       '**修复 OpenClaw ≥2026.9.4 宿主上卡片永不生效的问题**（本地 Docker 部署实测发现）。\n\n' +
+      '### ✨ 更新内容\n\n' +
       '- 🐛 宿主 2026.9.4 起把 `channels.feishu.streaming` 从布尔迁移为对象（`{ mode: "off" | "partial" }`）并废弃 `replyMode`，旧判定 `streaming === true` 恒为 false，全部回复退化为纯文本\n' +
       '- ✅ 现兼容两种形态：布尔（≤2026.9.1 宿主）与对象（≥2026.9.4 宿主）\n' +
       '- 🧪 新增 reply-mode 单测（两代宿主 schema 形态）\n\n' +
@@ -87,6 +90,7 @@ const releases = [
     tag: 'v2.0.3',
     body:
       '**统一面板设置迁入插件自有配置**（随插件版本化，不再受宿主 channels.feishu schema 演化影响）。\n\n' +
+      '### ✨ 更新内容\n\n' +
       '- ✨ 面板设置新位置：`plugins.entries.claw-fry-cards.config.panel`；插件 configSchema 由空声明改为完整 JSON Schema（openclaw.plugin.json + 入口 `buildPluginConfigSchema`）\n' +
       '- 🛡️ 旧位置 `channels.feishu.panel` 仍兼容读取，插件配置优先\n' +
       '- 🔧 builder 面板 modelAliases 类型放宽为 `ModelAliasEntry`（兼容时段人设对象形态）\n' +
@@ -97,7 +101,8 @@ const releases = [
   {
     tag: 'v2.0.4',
     body:
-      '**面板模型名显示与峰谷价标识版本（本地 Docker + 飞书真机全链路实测）**。\n\n' +
+      '**面板模型名显示与峰谷价标识版本（本地 Docker + 飞书真机全链路实测）**——基于 2.0.3 的插件自有配置基座，升级面板显示能力。\n\n' +
+      '### ✨ 更新内容\n\n' +
       '- ⇲ **模型名截断**（默认开）：mimo/mimo-v2.5 → ⇲mimo-v2.5\n' +
       '- ⏱️ **峰谷价标识 peakValley**：DeepSeek 等峰谷计费模型按时间窗切换显示名（峰段 梁文锋⚡️ / 谷段 梁文谷⚡️），内置峰段预置（deepseek / workday-918 / everyday-day / always-peak / custom），可多条，Control UI 可视化编辑、默认收起\n' +
       '- 🏷️ **模型别名升级**：子串匹配 + 独立开关 + 星期数组化（修复 "1-5" 区间从未生效的存量 bug）\n' +
