@@ -9,7 +9,7 @@
  * start the inbound event gateway.
  */
 
-import type { ChannelPlugin, OpenClawConfig } from 'openclaw/plugin-sdk/core';
+import { buildChannelConfigSchema, type ChannelPlugin, type OpenClawConfig } from 'openclaw/plugin-sdk/core';
 import type { ChannelThreadingToolContext } from 'openclaw/plugin-sdk/channel-contract';
 import { DEFAULT_ACCOUNT_ID } from 'openclaw/plugin-sdk/account-id';
 import { PAIRING_APPROVED_MESSAGE } from 'openclaw/plugin-sdk/channel-status';
@@ -23,7 +23,7 @@ import { sendMessageFeishu } from '../messaging/outbound/send';
 import { looksLikeFeishuId, normalizeFeishuTarget } from '../core/targets';
 import { triggerOnboarding } from '../tools/onboarding-auth';
 import { larkLogger } from '../core/lark-logger';
-import { FEISHU_CONFIG_JSON_SCHEMA } from '../core/config-schema';
+import { FeishuConfigSchema } from '../core/config-schema';
 import { applyAccountConfig, collectFeishuSecurityWarnings, deleteAccount, setAccountEnabled } from './config-adapter';
 import {
   listFeishuDirectoryGroups,
@@ -156,8 +156,7 @@ export const feishuPlugin: ChannelPlugin<LarkAccount> = {
   // Config schema (JSON Schema)
   // -------------------------------------------------------------------------
 
-  configSchema: {
-    schema: FEISHU_CONFIG_JSON_SCHEMA,
+  configSchema: buildChannelConfigSchema(FeishuConfigSchema as unknown as Parameters<typeof buildChannelConfigSchema>[0], {
     // 通道配置页（Control UI Channels）的中文标签/帮助与敏感字段掩码
     uiHints: {
       enabled: { label: '启用', help: '是否启用飞书通道（默认启用）' },
@@ -178,7 +177,7 @@ export const feishuPlugin: ChannelPlugin<LarkAccount> = {
       requireMention: { label: '群聊需 @', help: '群聊中必须 @ 机器人才响应（默认开）' },
       streaming: { label: '流式输出', help: '2026.9.4+ 宿主：{ "mode": "partial" }；旧宿主：true' },
     },
-  },
+  }),
 
   // -------------------------------------------------------------------------
   // Config adapter
