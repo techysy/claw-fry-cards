@@ -219,7 +219,9 @@ export const FeishuAccountConfigSchema = z.object({
   blockStreamingCoalesce: BlockStreamingCoalesceSchema,
   mediaMaxMb: z.number().optional(),
   heartbeat: HeartbeatSchema,
-  replyMode: ReplyModeSchema.describe('（旧宿主 ≤2026.9.1 用）场景流式模式：auto 时私聊流式/群聊静态；2026.9.4+ 宿主已废弃此键'),
+  replyMode: ReplyModeSchema.describe(
+    '（旧宿主 ≤2026.9.1 用）场景流式模式：auto 时私聊流式/群聊静态；2026.9.4+ 宿主已废弃此键',
+  ),
   streaming: z
     .union([z.boolean(), z.object({ mode: z.string().optional() }).loose()])
     .describe('流式输出开关：旧宿主布尔 true；2026.9.4+ 宿主为对象 { mode: "partial" }（off = 关闭）')
@@ -370,7 +372,7 @@ export const PluginConfigSchema = z
       })
       .describe('统一面板设置（完成态底部折叠面板）')
       .optional(),
-    })
+  })
   .describe('claw-fry-cards 插件自有配置');
 
 export type PluginConfig = z.infer<typeof PluginConfigSchema>;

@@ -164,7 +164,11 @@ export const feishuPlugin: ChannelPlugin<LarkAccount> = {
       appId: { label: 'App ID', help: '飞书应用 App ID（cli_xxx，开放平台自建应用）' },
       appSecret: { label: 'App Secret', sensitive: true, help: '开放平台「凭证与基础信息」页获取' },
       encryptKey: { label: 'Encrypt Key', sensitive: true, help: '事件订阅 Encrypt Key（webhook 模式用）' },
-      verificationToken: { label: 'Verification Token', sensitive: true, help: '事件订阅 Verification Token（webhook 模式用）' },
+      verificationToken: {
+        label: 'Verification Token',
+        sensitive: true,
+        help: '事件订阅 Verification Token（webhook 模式用）',
+      },
       domain: { label: '域名', help: 'feishu = 国内版，lark = 国际版' },
       connectionMode: { label: '连接模式', help: 'websocket（推荐，无需公网回调）或 webhook' },
       dmPolicy: { label: '私聊策略', help: 'open = 全部放行，pairing = 需配对' },
