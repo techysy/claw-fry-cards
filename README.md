@@ -10,8 +10,6 @@
 
 ![卡片效果](assets/card-demo.png)
 
-![Control UI 配置页](assets/settings-panel.png)
-
 **这是什么**：一个**飞书通道插件**（替代官方 `@larksuite/openclaw-lark` / 内置 `@openclaw/feishu`），负责 OpenClaw Agent 的飞书消息收发，并用 CardKit v2.0 流式卡片呈现每一轮回复。
 
 **为什么存在**：官方通道插件停更于 2026-07-16，未适配 OpenClaw 2.0（SDK 导出重构、会话存储迁移 SQLite），在新版网关上无法加载。本项目完成了 2.0 适配，并顺手把流式卡片体验升级到 fry-cards（[🍟 hermes-fry-cards](https://github.com/techysy/hermes-fry-cards)）同款风格。
@@ -104,6 +102,8 @@ openclaw gateway restart
 > ⚠️ 若之前用过官方通道，先卸载并清理残留：`openclaw plugins uninstall feishu --force`（注意该命令会删除 `channels.feishu` 配置，请备份后恢复），并移除 `plugins.entries.feishu` 条目，否则网关收敛机制会把旧通道装回来。
 
 ## ⚙️ 配置
+
+![Control UI 配置页](assets/settings-panel.png)
 
 `~/.openclaw/openclaw.json`：
 
