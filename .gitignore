@@ -21,6 +21,7 @@ src/tools/docs/
 /docs/
 !/docs/compat-test-report.md
 !/docs/compat-test-harness.mjs
+!/docs/nas-fnos-trip-report.md
 
 /**/package-lock.json
 /**/.DS_Store
