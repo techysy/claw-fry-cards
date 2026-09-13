@@ -9,7 +9,7 @@
  * start the inbound event gateway.
  */
 
-import { buildChannelConfigSchema, type ChannelPlugin, type OpenClawConfig } from 'openclaw/plugin-sdk/core';
+import { type ChannelPlugin, type OpenClawConfig, buildChannelConfigSchema } from 'openclaw/plugin-sdk/core';
 import type { ChannelThreadingToolContext } from 'openclaw/plugin-sdk/channel-contract';
 import { DEFAULT_ACCOUNT_ID } from 'openclaw/plugin-sdk/account-id';
 import { PAIRING_APPROVED_MESSAGE } from 'openclaw/plugin-sdk/channel-status';
