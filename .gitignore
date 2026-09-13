@@ -18,7 +18,7 @@ src/tools/docs/
 
 # Internal documentation directories
 /doc/
-/docs/
+/docs/*
 !/docs/compat-test-report.md
 !/docs/compat-test-harness.mjs
 !/docs/nas-fnos-trip-report.md
