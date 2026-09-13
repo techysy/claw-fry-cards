@@ -194,21 +194,47 @@ export const FeishuGroupSchema = z.object({
 // ---------------------------------------------------------------------------
 
 export const FeishuAccountConfigSchema = z.object({
-  appId: z.string().describe('飞书应用 App ID（cli_xxx，飞书开放平台创建的自建应用）').optional(),
-  appSecret: z.string().describe('飞书应用 App Secret（开放平台「凭证与基础信息」页获取）').optional(),
-  encryptKey: z.string().describe('事件订阅 Encrypt Key（webhook 模式用，websocket 模式可留空）').optional(),
-  verificationToken: z.string().describe('事件订阅 Verification Token（webhook 模式用）').optional(),
+  appId: z
+    .string()
+    .meta({ title: 'App ID' })
+    .describe('飞书应用 App ID（cli_xxx，飞书开放平台创建的自建应用）')
+    .optional(),
+  appSecret: z
+    .string()
+    .meta({ title: 'App Secret' })
+    .describe('飞书应用 App Secret（开放平台「凭证与基础信息」页获取）')
+    .optional(),
+  encryptKey: z
+    .string()
+    .meta({ title: 'Encrypt Key' })
+    .describe('事件订阅 Encrypt Key（webhook 模式用，websocket 模式可留空）')
+    .optional(),
+  verificationToken: z
+    .string()
+    .meta({ title: 'Verification Token' })
+    .describe('事件订阅 Verification Token（webhook 模式用）')
+    .optional(),
   name: z.string().describe('账号显示名（多账号时用于区分）').optional(),
   enabled: z.boolean().describe('是否启用该通道（默认 true）').optional(),
-  domain: DomainSchema.describe('飞书域名：feishu = 国内版，lark = 国际版'),
-  connectionMode: ConnectionModeEnum.optional().describe('连接模式：websocket（推荐，无需公网回调地址）或 webhook'),
+  domain: DomainSchema.meta({ title: '域名' }).describe('飞书域名：feishu = 国内版，lark = 国际版'),
+  connectionMode: ConnectionModeEnum.optional()
+    .meta({ title: '连接模式' })
+    .describe('连接模式：websocket（推荐，无需公网回调地址）或 webhook'),
   webhookPath: z.string().describe('webhook 回调路径（仅 webhook 模式）').optional(),
   webhookPort: z.number().describe('webhook 监听端口（仅 webhook 模式）').optional(),
-  dmPolicy: DmPolicyEnum.optional().describe('私聊访问策略：open = 全部放行，pairing = 需配对'),
-  allowFrom: AllowFromSchema.describe('私聊白名单（飞书 user id 列表，["*"] = 全部放行）'),
-  groupPolicy: GroupPolicyEnum.optional().describe('群聊访问策略'),
-  groupAllowFrom: AllowFromSchema.describe('群聊白名单（["*"] = 全部放行）'),
-  requireMention: z.boolean().describe('群聊中是否必须 @ 机器人才响应（默认 true）').optional(),
+  dmPolicy: DmPolicyEnum.optional()
+    .meta({ title: '私聊策略' })
+    .describe('私聊访问策略：open = 全部放行，pairing = 需配对'),
+  allowFrom: AllowFromSchema.meta({ title: '私聊白名单' }).describe(
+    '私聊白名单（飞书 user id 列表，["*"] = 全部放行）',
+  ),
+  groupPolicy: GroupPolicyEnum.optional().meta({ title: '群聊策略' }).describe('群聊访问策略'),
+  groupAllowFrom: AllowFromSchema.meta({ title: '群聊白名单' }).describe('群聊白名单（["*"] = 全部放行）'),
+  requireMention: z
+    .boolean()
+    .meta({ title: '群聊需 @' })
+    .describe('群聊中是否必须 @ 机器人才响应（默认 true）')
+    .optional(),
   respondToMentionAll: z.boolean().describe('@ 所有人时是否响应').optional(),
   groups: z.record(z.string(), FeishuGroupSchema).optional(),
   historyLimit: z.number().optional(),
@@ -329,37 +355,46 @@ export const PluginConfigSchema = z
       .object({
         unifiedPanelMinDuration: z
           .number()
+          .meta({ title: '面板耗时门槛（秒）' })
           .describe('统一面板显示的耗时门槛（秒）：回复 ≥ 此值或有思考/工具过程时显示，0 = 每条必出（默认 5）')
           .optional(),
         contextDisplayMode: z
           .enum(['text', 'bar', 'text_bar'])
+          .meta({ title: '上下文段样式' })
           .describe(
             '上下文段样式：text（129.3k/1.0m (13%)）/ bar（[██▓░░░░░] 13%）/ text_bar（129.3k/1.0m [██▓░░░░░] 13%）；默认 text',
           )
           .optional(),
-        expanded: z.boolean().describe('面板默认展开（默认折叠）').optional(),
+        expanded: z.boolean().meta({ title: '默认展开' }).describe('面板默认展开（默认折叠）').optional(),
         truncateModelName: z
           .boolean()
+          .meta({ title: '截断模型名' })
           .describe('截断模型名显示：mimo/mimo-v2.5 → ⇲mimo-v2.5（默认 true；modelAliases 别名命中时优先显示别名）')
           .optional(),
         modelAliases: z
           .record(z.string(), ModelAliasValueSchema)
+          .meta({ title: '模型别名' })
           .describe(
             '模型显示别名：key 对完整模型名做大小写不敏感子串匹配（如 "mimo" 命中 mimo/mimo-v2.5）；值为名称字符串，或含时段规则的对象 { name, timeAliases: [{ days: [1,2,3,4,5], start: "09:00", end: "18:00", name }] }（北京时间，days 数组 0=周日，支持跨午夜）',
           )
           .optional(),
         modelAliasesEnabled: z
           .boolean()
+          .meta({ title: '别名开关' })
           .describe('别名功能总开关（默认 true）：false 时忽略 modelAliases，全部回落截断/完整名显示，配置本身保留')
           .optional(),
         peakValley: z
           .record(
             z.string().describe('匹配哪些模型（大小写不敏感子串，如 "deepseek" 命中所有带 deepseek 的模型）'),
             z.object({
-              peakName: z.string().describe('峰段（计费高峰窗口）显示的名称，如 梁文锋⚡️'),
-              valleyName: z.string().describe('谷段（闲时/优惠窗口）显示的名称，如 梁文谷⚡️'),
+              peakName: z.string().meta({ title: '峰时显示' }).describe('峰段（计费高峰窗口）显示的名称，如 梁文锋⚡️'),
+              valleyName: z
+                .string()
+                .meta({ title: '谷时显示' })
+                .describe('谷段（闲时/优惠窗口）显示的名称，如 梁文谷⚡️'),
               schedule: z
                 .enum(['deepseek', 'workday-918', 'everyday-day', 'always-peak', 'custom'])
+                .meta({ title: '峰段窗口' })
                 .describe(
                   '峰段窗口预置：deepseek = 工作日 09:00-12:00 & 14:00-18:00；workday-918 = 工作日 09:00-18:00；everyday-day = 每天 08:00-22:00；always-peak = 恒为峰段；custom = 改用 modelAliases.timeAliases 自定义',
                 ),
