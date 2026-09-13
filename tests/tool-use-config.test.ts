@@ -13,7 +13,13 @@ function createStorePath(testName: string): string {
 }
 
 afterEach(() => {
-  rmSync(join(tmpdir(), `claw-fry-cards-tool-use-${process.pid}`), { recursive: true, force: true });
+  try {
+    rmSync(join(tmpdir(), `claw-fry-cards-tool-use-${process.pid}`), { recursive: true, force: true });
+  } catch {
+    // loadSessionStore materializes a sibling SQLite store and caches the open
+    // connection with no close API; Windows refuses to delete open files, so
+    // on win32 the temp dir may survive — cleanup here is best-effort.
+  }
 });
 
 describe('resolveToolUseDisplayConfig', () => {

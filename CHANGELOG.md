@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.0.5 (2026-09-13)
+
+通道配置中文化与兼容性扩展版本（本地 Docker + 飞牛 fnOS 真机全链路实测）。
+
+- 🎨 **通道配置页中文化**：`channels.feishu` 核心字段中文 describe + uiHints（中文 label/help、App Secret 等敏感字段自动掩码，改用标准 `buildChannelConfigSchema` 入口）；通道 meta 品牌化（「飞书 Feishu」/ 虾条卡片 blurb / 文档指向本仓库）
+- 📝 **配置字段中文 title**：插件设置页字段标题汉化（schema title 通路）
+- ⏱️ **峰谷价标识 `peakValley` 定型 record 形态**：修复 anyOf 联合类型导致 Control UI 值编辑器退化为窄 JSON 框、配置被清空的问题
+- 🛡️ **兼容垫片**：`channel-message` 缺失时回落 `channel-runtime`（createRequire 同步解析，真网关加载器不支持顶层 await）——**兼容下限从 2026.5.12 下探至 2026.5.4**
+- 📚 文档：fnOS 专项部署指南 / NAS 部署行程报告 / 兼容性测试报告整合版；一键安装脚本 `install.sh`；全部 release 说明统一版式
+- 🔧 Windows 测试清理兼容（open file rmSync）；`.v2c` 取消跟踪
+
 ## 2.0.4 (2026-09-13)
 
 面板模型名显示与峰谷价标识版本（本地 Docker + 飞书真机全链路实测）。

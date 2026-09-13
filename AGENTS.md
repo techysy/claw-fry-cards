@@ -41,10 +41,10 @@ skills/                  官方技能目录（openclaw.plugin.json 声明）
 ## Key constraints
 
 - **插件 id 已从 `openclaw-lark` 更名为 `claw-fry-cards`**（package.json / openclaw.plugin.json / index.ts 三处一致）；用户配置键 `plugins.entries.claw-fry-cards`，通道配置 `channels.feishu` 不变。
-- 流式卡片三层开关缺一不可：`streaming: true` → `replyMode`（streaming/auto）→ `toolUseDisplay`（默认开）。
+- 流式卡片开关按宿主代际：2026.9.4+ 宿主 `streaming: { mode: "partial" }`（`replyMode` 已废弃）；旧宿主 `streaming: true` + `replyMode`。插件端两代兼容（2.0.2 起）。
 - 统一面板指标来源是 agent transcript SQLite（`~/.openclaw/agents/<agent>/agent/openclaw-agent.sqlite`）；读取失败时静默省略指标段，不报错。
-- 宿主兼容实测下限 OpenClaw **2026.5.12**（低于前身 README 曾宣称的 2026.8.1），见 `docs/compat-test-report.md`；SDK 子路径导出以宿主 package.json 的 exports 为准，裸的 `openclaw/plugin-sdk` 在宿主 ≥2026.8.1 已移除。
-- 构建产物分 chunk（`index.mjs` + `monitor-<hash>.mjs`），部署时需全部拷贝并清理旧 hash 残留。
+- 宿主兼容下限 OpenClaw **2026.5.4**（2.0.5 起 channel-message 垫片回落 channel-runtime；无垫片的 2.0.4 为 ≥2026.5.12），见 `docs/compat-test-report.md`；SDK 子路径导出以宿主 package.json 的 exports 为准，裸的 `openclaw/plugin-sdk` 在宿主 ≥2026.8.1 已移除。
+- 构建产物分 chunk（`index.mjs` + `secret-contract-api.mjs` + `monitor-<hash>.mjs`），部署时需全部拷贝并清理旧 hash 残留；`secret-contract-api.mjs` 是插件根目录发现 shim（`secret-contract-api.js`）的 re-export 目标（密钥字段解析依赖），漏拷会导致通道无法认证。
 - 本地安装：`openclaw plugins install . --force --accept-capabilities`；安装源目录不能 world-writable（777 会被 `blocked plugin candidate` 拒绝）。
 - 版本号用三位 semver（1.0.0 / 2.0.0…），发版打 `v<版本>` 标签。
 - Commit messages: body should use bullet list format (unnumbered `- item`).

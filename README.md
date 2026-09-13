@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Version](https://img.shields.io/github/v/tag/techysy/claw-fry-cards?label=Version&sort=semver&color=f97316)](https://github.com/techysy/claw-fry-cards/releases)
 [![npm](https://img.shields.io/npm/v/claw-fry-cards?color=CB3837&logo=npm&logoColor=white)](https://www.npmjs.com/package/claw-fry-cards)
-[![OpenClaw](https://img.shields.io/badge/OpenClaw-%E2%89%A52026.5.12-2463eb)](https://openclaw.ai)
+[![OpenClaw](https://img.shields.io/badge/OpenClaw-%E2%89%A52026.5.4-2463eb)](https://openclaw.ai)
 [![Node](https://img.shields.io/badge/Node-%E2%89%A522-blue)](https://nodejs.org/)
 
 > OpenClaw 飞书/Lark 通道插件 — 在官方 [@larksuite/openclaw-lark](https://github.com/larksuite/openclaw-lark) 基础上适配 OpenClaw 2.0 SDK，并带来 fry 风格的虾条式流式卡片体验。
@@ -76,7 +76,7 @@ openclaw plugins uninstall openclaw-lark --force   # 或按其实际目录名卸
 
 ## 📦 安装
 
-**要求**：OpenClaw ≥ 2026.5.12（实测加载下限，见 [docs/compat-test-report.md](docs/compat-test-report.md)；推荐 **2026.9.4+**——本地 Docker + 飞书真机全链路验证版本）· Node.js ≥ 22
+**要求**：OpenClaw ≥ 2026.5.4（2.0.5 起含兼容垫片；无垫片的 2.0.4 为 ≥ 2026.5.12，见 [docs/compat-test-report.md](docs/compat-test-report.md)）；推荐 **2026.9.4+**——Docker + 飞牛 fnOS 真机全链路验证版本 · Node.js ≥ 22
 
 ### 方式一：一键安装脚本（推荐 · agent 友好）
 
@@ -256,7 +256,7 @@ npm test            # vitest
 npm run typecheck   # tsc --noEmit
 ```
 
-构建产物分 chunk（`index.mjs` + `monitor-<hash>.mjs`），部署时需全部拷贝到扩展目录并删除旧 hash 残留文件。
+构建产物分 chunk（`index.mjs` + `secret-contract-api.mjs` + `monitor-<hash>.mjs`），部署时需全部拷贝到扩展目录并删除旧 hash 残留文件。其中 `secret-contract-api.mjs` 是插件根目录发现 shim（`secret-contract-api.js`）的 re-export 目标，负责 `appSecret` 等密钥字段的 contract 解析，漏拷会导致通道无法认证。
 
 ## 🙏 归属
 

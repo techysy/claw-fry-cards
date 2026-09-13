@@ -14,6 +14,7 @@ src/tools/docs/
 .claude/
 .cursor/
 .windsurf/
+.v2c/
 
 
 # Internal documentation directories
