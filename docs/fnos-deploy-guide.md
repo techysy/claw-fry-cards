@@ -3,7 +3,7 @@
 > 面向在飞牛 fnOS 上通过 **trim.openclaw 应用**（或同架构的原生部署）运行 OpenClaw，并接入 🍤 [claw-fry-cards](https://github.com/techysy/claw-fry-cards) 流式卡片的用户。本文记录真实部署中踩到的全部坑与修复方法，按"遇到什么 → 怎么修"组织。
 
 - **适用**：fnOS x86_64 · trim.openclaw fnOS 应用（OpenClaw 2026.9.x）· claw-fry-cards 2.0.4+
-- **验证环境**：飞牛 fnNAS（trim 定制内核 6.18）· Node 24.17.0 · 飞书自建应用 websocket 模式
+- **验证环境**：飞牛 <NAS 主机名>（trim 定制内核 6.18）· Node 24.17.0 · 飞书自建应用 websocket 模式
 
 ---
 
@@ -100,13 +100,13 @@ sed -i '/"allowInsecureAuth"/d' data/home/.openclaw/openclaw.json
 
 ### 坑 ④：状态树属主污染（以管理员用户手动跑网关后）
 
-**现象**：以 SSH 管理员用户（如 yangyu）手动跑过网关后，fnOS 应用报"无法读取状态/未安装"，网关报
+**现象**：以 SSH 管理员用户（如 <管理员用户>）手动跑过网关后，fnOS 应用报"无法读取状态/未安装"，网关报
 `device identity coordinator directory belongs to another user` 或插件
 `blocked plugin candidate: suspicious ownership`。
 
 **原因**：手动跑网关会把整棵状态树（1 万+ 文件）写成管理员用户属主；切回应用运行（trim.openclaw 用户）后，属主/权限安全检查全部拒绝。
 
-**修复**（yangyu 无 sudo 时，借 docker 组权限用容器 chown；fnOS 应用本身非 Docker，容器只是工具）：
+**修复**（<管理员用户> 无 sudo 时，借 docker 组权限用容器 chown；fnOS 应用本身非 Docker，容器只是工具）：
 
 ```bash
 docker run --rm -v /vol4/@apphome/trim.openclaw/data:/target alpine:3.20 chown -R 984:901 /target

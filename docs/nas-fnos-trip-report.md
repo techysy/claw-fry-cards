@@ -18,7 +18,7 @@ fnOS 应用**不是 Docker**，是原生进程组合：
 | 运行时安装 | `data/openclaw/node_modules/openclaw`（升级后为 **2026.9.4**）|
 | CLI 包装 | `@appcenter/trim.openclaw/bin/openclaw`（export PATH/HOME/OPENCLAW_DATA_DIR/OPENCLAW_CONFIG_PATH 后 exec 真正 CLI）|
 | 实例数据库 | `data/monitor/monitor.sqlite`（instances 表：端口、路径、状态）|
-| 运行用户 | `trim.openclaw`（nologin）；SSH 免密用户为 `yangyu`（仅 Administrators 组，无免密 sudo）|
+| 运行用户 | `trim.openclaw`（nologin）；SSH 免密用户为 `<管理员用户>`（仅 Administrators 组，无免密 sudo）|
 | Node 依赖 | fnOS 应用 `nodejs_v24`（`/var/apps/nodejs_v24/target/bin/node`）|
 
 wrapper 关键行为：每次启动**无条件重写** openclaw.json 的部分键（`gateway.controlUi.*`、根级 `cli`、`agents.defaults.workspace` 等），并运行环境 preflight（Node 版本检查、配置 schema 校验、插件目录扫描）。
@@ -33,7 +33,7 @@ wrapper 关键行为：每次启动**无条件重写** openclaw.json 的部分�
 5.4 时代配置被 9.4 schema 拒绝。**修复**：`doctor --fix` 自动迁移（备份 `openclaw.json.bak-20260913`）。
 
 ### ③ 插件安装与飞书接入 ✓
-`plugins install claw-fry-cards@2.0.4` → 飞书凭据（`cli_aa2ff32d58b85bc9`，fnOS 专用新应用）→ **卡片链路 E2E 通过**（飞书截图确认：流式卡 + ⇲截断 + 统一面板 + 🎫累计输出）。
+`plugins install claw-fry-cards@2.0.4` → 飞书凭据（`cli_aa2f****（NAS 应用）`，fnOS 专用新应用）→ **卡片链路 E2E 通过**（飞书截图确认：流式卡 + ⇲截断 + 统一面板 + 🎫累计输出）。
 
 ### ④ 面板上下文段缺失
 根因两个：provider key 大小写不一致（`10Router` vs transcript 里的 `10router`）+ UI 添加的模型条目缺 `contextWindow`。**修复**：key 统一小写 + 补 `contextWindow: 1048576` + 固定 `agents.defaults.model.primary`。
@@ -49,8 +49,8 @@ wrapper 关键行为：每次启动**无条件重写** openclaw.json 的部分�
 曾实现 `config.feishu` 凭据覆盖（插件设置页配置 appId/appSecret），后确认 Control UI 通道页已可配置，插件侧冗余——整体撤销（含凭据合并逻辑与测试）。
 
 ### ⑧ 状态树属主污染（当前待收尾）
-排查期间以 yangyu 手动跑网关，**13,774 个状态文件变成 yangyu 属主** → wrapper 以 `trim.openclaw` 拉起网关时，宿主安全检查（插件树属主校验 + world-writable 扫描）拒绝加载。
-已做：wrapper 补丁（停止写入 9.4 拒绝的 `allowInsecureAuth`/根级 `cli` 键，原文件备份 `server/index.js.bak-nodefix`）→ `doctor --fix` 清理 → `config validate` 通过；yangyu 属主文件权限补齐后又收紧（扩展目录去 world/group write）。
+排查期间以 <管理员用户> 手动跑网关，**13,774 个状态文件变成 <管理员用户> 属主** → wrapper 以 `trim.openclaw` 拉起网关时，宿主安全检查（插件树属主校验 + world-writable 扫描）拒绝加载。
+已做：wrapper 补丁（停止写入 9.4 拒绝的 `allowInsecureAuth`/根级 `cli` 键，原文件备份 `server/index.js.bak-nodefix`）→ `doctor --fix` 清理 → `config validate` 通过；<管理员用户> 属主文件权限补齐后又收紧（扩展目录去 world/group write）。
 **遗留**：属主修正需要 root（见 §6）；另 `data/openclaw/node_modules/openclaw` 被应用写成 777 需去 world-write。
 
 ### ⑨ 已定性为宿主限制的两个现象（插件侧无解，可提 issue）
@@ -76,7 +76,7 @@ wrapper 关键行为：每次启动**无条件重写** openclaw.json 的部分�
 |---|---|
 | NAS OpenClaw | 2026.9.4（应用升级后）+ Node 24.17.0（原地升级，备份在 bin/node.v24.15.0.bak）|
 | 插件 | claw-fry-cards **2.0.5-dev.0**（含通道配置中文化 + uiHints；未发 npm）|
-| 飞书 | `cli_aa2ff32d58b85bc9`（fnOS 专用应用），ws client ready |
+| 飞书 | `cli_aa2f****（NAS 应用）`（fnOS 专用应用），ws client ready |
 | 网关进程 | 已停止（等待属主修复后由 wrapper 拉起）|
 | wrapper 补丁 | `server/index.js.bak-nodefix` 备份在位；bin/openclaw PATH 补丁在位 |
 
@@ -84,11 +84,11 @@ wrapper 关键行为：每次启动**无条件重写** openclaw.json 的部分�
 
 ```bash
 # 状态/日志
-ssh 192.168.31.101 'tail -30 /vol4/@apphome/trim.openclaw/data/home/.openclaw/logs/gateway.log'
-ssh 192.168.31.101 'pgrep -af openclaw'
+ssh <NAS-IP> 'tail -30 /vol4/@apphome/trim.openclaw/data/home/.openclaw/logs/gateway.log'
+ssh <NAS-IP> 'pgrep -af openclaw'
 
 # 安装/升级插件（dev 构建走 tgz；正式版走 npm spec）
-ssh 192.168.31.101 '/vol4/@appcenter/trim.openclaw/bin/openclaw plugins install claw-fry-cards@<ver> --force --accept-capabilities'
+ssh <NAS-IP> '/vol4/@appcenter/trim.openclaw/bin/openclaw plugins install claw-fry-cards@<ver> --force --accept-capabilities'
 
 # 网关启停：fnOS 应用界面「启动服务」按钮（wrapper 负责；无自动重启）
 ```
