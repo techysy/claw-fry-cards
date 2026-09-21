@@ -155,10 +155,17 @@ openclaw gateway restart
 | 层 | 配置（2026.9.4+） | 配置（旧宿主 ≤2026.9.1） | 说明 |
 |----|------|------|------|
 | ① 总开关 | `streaming: { mode: "partial" }` | `streaming: true` | 没有流式开关恒为纯文本（`mode: "off"` 关闭） |
-| ② 模式 | 不需要（新宿主私聊即流式） | `replyMode: "streaming"` 或 `{default, group, direct}` | 旧宿主场景选择；auto 时私聊流式/群聊静态 |
+| ② 模式 | `replyMode: { default: "streaming", group: "streaming" }` | 同左 | **群聊默认静态文本**（继承官方行为：防卡片刷屏打扰群成员）；要群聊也出卡片须显式写 `group: "streaming"`。私聊默认流式 |
 | ③ 工具展示 | 默认开启 | 默认开启 | `toolUseDisplay` 不配置即启用（原版默认关闭，本项目已改） |
 
+> **群聊 / 私聊行为速查**：
+> - **私聊**：总开关开着即出流式卡片（不需要 `replyMode`）
+> - **群聊**：**默认静态文本**；要卡片需显式 `"replyMode": { "default": "streaming", "group": "streaming" }`（完整对象形式，新宿主同样读取）
+> - 最常见踩坑：只配了 `replyMode` 忘了 `streaming` 总开关 → 恒纯文本
+
 > 插件端对两代宿主 schema 均兼容（2.0.2 起自动识别 `streaming` 布尔/对象形态），按你的宿主版本选对应写法即可。
+>
+> ⚠️ **配置只认 `channels.feishu.*`**——不要写进 `plugins.entries.claw-fry-cards.config.feishu`（该路径随 2.0.5 撤销凭据覆盖功能后不再被读取，写了也不会生效）。
 
 飞书应用需开通：`im:message`（收发消息）+ `cardkit:card`（卡片读写）。连接模式推荐 `websocket`（无需公网回调地址）。
 

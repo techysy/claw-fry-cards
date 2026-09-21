@@ -141,6 +141,8 @@ bin/openclaw plugins uninstall feishu --force
 }
 ```
 
+- **群聊不出卡片**（只回纯文本）？群聊**默认静态文本**（继承官方行为防刷屏）——要卡片需在 `channels.feishu` 显式配 `"replyMode": { "default": "streaming", "group": "streaming" }` + 总开关 `"streaming": { "mode": "partial" }`；只配 replyMode 漏 streaming 也会退化为纯文本
+- ⚠️ 别把通道配置写进 `plugins.entries.claw-fry-cards.config.feishu`——该路径已随 2.0.5 撤销，写了不生效（只会造成改了没用的错觉）
 - **面板上下文段不显示**？检查模型配置里有没有 `contextWindow`（Control UI 添加模型时容易漏填，如 `"contextWindow": 1048576`）——该段数据缺失时自动省略
 - 模型别名的 key 是**子串匹配**（`"mimo"` 命中 `mimo/mimo-v2.5`），`peakValley` 的 key 同理（`"deepseek"` 命中所有 deepseek 模型）
 - 配置编辑两条路：Control UI 配置页（可视化，中文）或直接改 `openclaw.json` + 重启服务
