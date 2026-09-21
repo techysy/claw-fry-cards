@@ -32,15 +32,13 @@ describe('isStreamingEnabled', () => {
 
 describe('resolveReplyMode with object-form streaming', () => {
   it('returns auto when streaming object enables streaming (no replyMode on 9.4 hosts)', () => {
-    expect(
-      resolveReplyMode({ feishuCfg: feishuCfg({ streaming: { mode: 'partial' } }), chatType: 'p2p' }),
-    ).toBe('auto');
+    expect(resolveReplyMode({ feishuCfg: feishuCfg({ streaming: { mode: 'partial' } }), chatType: 'p2p' })).toBe(
+      'auto',
+    );
   });
 
   it('returns static when streaming object mode is off', () => {
-    expect(
-      resolveReplyMode({ feishuCfg: feishuCfg({ streaming: { mode: 'off' } }), chatType: 'p2p' }),
-    ).toBe('static');
+    expect(resolveReplyMode({ feishuCfg: feishuCfg({ streaming: { mode: 'off' } }), chatType: 'p2p' })).toBe('static');
   });
 
   it('keeps legacy boolean gate working', () => {
@@ -71,15 +69,18 @@ describe('resolveReplyMode with object-form streaming', () => {
 });
 
 describe('expandAutoMode with object-form streaming', () => {
-  it('p2p → streaming, group → static when object streaming enabled', () => {
+  it('p2p and group both stream when object streaming enabled (2.0.6: 群聊不再默认静态)', () => {
     const cfg = { mode: 'partial' } as const;
     expect(expandAutoMode({ mode: 'auto', streaming: cfg, chatType: 'p2p' })).toBe('streaming');
-    expect(expandAutoMode({ mode: 'auto', streaming: cfg, chatType: 'group' })).toBe('static');
+    expect(expandAutoMode({ mode: 'auto', streaming: cfg, chatType: 'group' })).toBe('streaming');
+  });
+
+  it('explicit group: static still wins (用户可显式关掉群聊卡片)', () => {
+    expect(expandAutoMode({ mode: 'static', streaming: { mode: 'partial' }, chatType: 'group' })).toBe('static');
   });
 
   it('static when object streaming mode is off', () => {
-    expect(
-      expandAutoMode({ mode: 'auto', streaming: { mode: 'off' }, chatType: 'p2p' }),
-    ).toBe('static');
+    expect(expandAutoMode({ mode: 'auto', streaming: { mode: 'off' }, chatType: 'p2p' })).toBe('static');
+    expect(expandAutoMode({ mode: 'auto', streaming: { mode: 'off' }, chatType: 'group' })).toBe('static');
   });
 });

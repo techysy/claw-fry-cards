@@ -58,9 +58,7 @@ describe('resolvePanelSettings', () => {
   it('returns undefined when nothing configured', () => {
     expect(resolvePanelSettings(undefined)).toBeUndefined();
     expect(resolvePanelSettings({})).toBeUndefined();
-    expect(
-      resolvePanelSettings({ plugins: { entries: { 'claw-fry-cards': { config: {} } } } }),
-    ).toBeUndefined();
+    expect(resolvePanelSettings({ plugins: { entries: { 'claw-fry-cards': { config: {} } } } })).toBeUndefined();
   });
 
   it('ignores invalid shapes', () => {
@@ -89,12 +87,12 @@ describe('expandPeakValley', () => {
   });
 
   it('expands workday-918 / everyday-day / always-peak', () => {
-    expect((expandPeakValley({ ...base, schedule: 'workday-918' }) as { timeAliases?: unknown[] }).timeAliases).toEqual([
-      { days: [1, 2, 3, 4, 5], start: '09:00', end: '18:00', name: '梁文锋⚡️' },
-    ]);
-    expect((expandPeakValley({ ...base, schedule: 'everyday-day' }) as { timeAliases?: unknown[] }).timeAliases).toEqual([
-      { start: '08:00', end: '22:00', name: '梁文锋⚡️' },
-    ]);
+    expect((expandPeakValley({ ...base, schedule: 'workday-918' }) as { timeAliases?: unknown[] }).timeAliases).toEqual(
+      [{ days: [1, 2, 3, 4, 5], start: '09:00', end: '18:00', name: '梁文锋⚡️' }],
+    );
+    expect(
+      (expandPeakValley({ ...base, schedule: 'everyday-day' }) as { timeAliases?: unknown[] }).timeAliases,
+    ).toEqual([{ start: '08:00', end: '22:00', name: '梁文锋⚡️' }]);
     expect(expandPeakValley({ ...base, schedule: 'always-peak' })).toEqual({ name: '梁文锋⚡️' });
   });
 

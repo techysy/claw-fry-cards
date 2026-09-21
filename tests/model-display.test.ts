@@ -30,9 +30,7 @@ describe('resolvePanelModelName', () => {
   });
 
   it('shows the full name when truncateModelName is false', () => {
-    expect(resolvePanelModelName({}, 'mimo/mimo-v2.5', { truncateModelName: false })).toBe(
-      'mimo/mimo-v2.5',
-    );
+    expect(resolvePanelModelName({}, 'mimo/mimo-v2.5', { truncateModelName: false })).toBe('mimo/mimo-v2.5');
   });
 
   it('matches alias keys case-insensitively as substrings', () => {
@@ -58,9 +56,9 @@ describe('resolvePanelModelName', () => {
   });
 
   it('modelAliasesEnabled=false ignores aliases entirely', () => {
-    expect(
-      resolvePanelModelName({ mimo: '小虾米' }, 'mimo/mimo-v2.5', { modelAliasesEnabled: false }),
-    ).toBe('⇲mimo-v2.5');
+    expect(resolvePanelModelName({ mimo: '小虾米' }, 'mimo/mimo-v2.5', { modelAliasesEnabled: false })).toBe(
+      '⇲mimo-v2.5',
+    );
   });
 });
 

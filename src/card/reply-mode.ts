@@ -68,7 +68,9 @@ export function resolveReplyMode(params: {
 /**
  * Expand "auto" mode to a concrete mode based on streaming flag and chat type.
  *
- * When streaming enabled: group → static, direct → streaming (legacy behavior).
+ * 本插件自带卡片引擎：装了它就是想要卡片，因此 auto 下**群聊与私聊一致**走流式
+ * （不再沿用官方插件的"群聊静态"防刷屏 legacy 行为——想要群聊静态请显式
+ * `replyMode: { group: "static" }`）。
  * When streaming disabled/unset: always static (new default).
  */
 export function expandAutoMode(params: {
@@ -76,10 +78,10 @@ export function expandAutoMode(params: {
   streaming: StreamingSetting;
   chatType?: 'p2p' | 'group';
 }): 'static' | 'streaming' {
-  const { mode, streaming, chatType } = params;
+  const { mode, streaming } = params;
   if (mode !== 'auto') return mode;
 
-  return isStreamingEnabled(streaming) ? (chatType === 'group' ? 'static' : 'streaming') : 'static';
+  return isStreamingEnabled(streaming) ? 'streaming' : 'static';
 }
 
 // ---------------------------------------------------------------------------
