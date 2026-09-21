@@ -17,13 +17,13 @@ Bun 包装层（trim.openclaw 用户，端口 5666）
   └─ 拉起 → OpenClaw 网关原生进程（内部端口 36412，仅 loopback）
 ```
 
-| 路径 | 内容 |
-|---|---|
-| `/vol4/@appcenter/trim.openclaw/` | 应用程序（server/index.js 包装层、bin/openclaw CLI 包装、vendor 补丁）|
+| 路径                                 | 内容                                                                                          |
+| ------------------------------------ | --------------------------------------------------------------------------------------------- |
+| `/vol4/@appcenter/trim.openclaw/`    | 应用程序（server/index.js 包装层、bin/openclaw CLI 包装、vendor 补丁）                        |
 | `/vol4/@apphome/trim.openclaw/data/` | 数据根（DATA_ROOT）：`home/.openclaw/`（状态）、`openclaw/`（npm 安装）、`state`、`workspace` |
-| `data/home/.openclaw/openclaw.json` | 网关主配置 |
-| `data/monitor/monitor.sqlite` | 实例数据库（仪表板"未安装/已停止"状态看这里）|
-| 配置声明 | `config/openclaw-version.env`（版本）、`config/privilege`（运行用户）|
+| `data/home/.openclaw/openclaw.json`  | 网关主配置                                                                                    |
+| `data/monitor/monitor.sqlite`        | 实例数据库（仪表板"未安装/已停止"状态看这里）                                                 |
+| 配置声明                             | `config/openclaw-version.env`（版本）、`config/privilege`（运行用户）                         |
 
 运行用户是专用的 `trim.openclaw`（uid 984）——**所有属主/权限问题的根源都和它有关**（见 §3）。
 
@@ -60,6 +60,7 @@ tar -xzf node-v24.17.0-linux-x64.tar.gz && rm node-v24.17.0-linux-x64.tar.gz
 ```
 
 然后让网关用上新 Node（二选一）：
+
 - **改 CLI 包装**（推荐）：`bin/openclaw` 的 export PATH 最前面插入 `data/node-v24.17.0-linux-x64/bin:`（应用更新会覆盖此文件，更新后重打；改前备份）
 - 或原地升级 `nodejs_v24` 应用的 node 二进制（mv 换名 + cp 新版；同主版本补丁升级，claude-code 等共用方受益；`Text file busy` 就先 mv 旧文件再 cp）
 
@@ -76,6 +77,7 @@ bin/openclaw config validate   # 确认 Config valid
 ```
 
 常见代差（手写配置注意）：
+
 - `channels.feishu.streaming`：旧布尔 `true` → 新对象 `{ "mode": "partial" }`
 - `channels.feishu.replyMode`：**整个键废弃**（9.4 schema 会拒绝）
 - 包装层启动时无条件写入的键（见坑 ③）
