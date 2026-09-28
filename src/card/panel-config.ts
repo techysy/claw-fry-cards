@@ -13,7 +13,6 @@
  */
 
 import type { ModelAliasEntry, PanelField } from './builder';
-import { PANEL_FIELD_POOL } from './builder';
 
 export interface UnifiedPanelSettings {
   unifiedPanelMinDurationMs?: number;
@@ -31,7 +30,26 @@ export interface UnifiedPanelSettings {
   fields?: PanelField[];
 }
 
-const PANEL_FIELD_SET: ReadonlySet<string> = new Set<string>(PANEL_FIELD_POOL);
+/**
+ * 合法面板字段集合。
+ *
+ * 刻意在此**本地声明**而非 import builder 的 `PANEL_FIELD_POOL`：panel-config 与
+ * builder 互相引用，若在模块顶层读取 builder 的常量会触发 TDZ
+ * （"Cannot access 'PANEL_FIELD_POOL' before initialization"），插件加载即失败。
+ * 两边用 `satisfies ReadonlyArray<PanelField>` 保证字段池同步，改动时 TS 会报错提醒。
+ */
+const PANEL_FIELDS = [
+  'model',
+  'reasoning',
+  'tools',
+  'context',
+  'cache',
+  'output',
+  'speed',
+  'elapsed',
+] as const satisfies ReadonlyArray<PanelField>;
+
+const PANEL_FIELD_SET: ReadonlySet<string> = new Set<string>(PANEL_FIELDS);
 
 /** 峰谷价标识条目：峰段（计费高峰窗口）显示 peakName，谷段（闲时/优惠）显示 valleyName */
 export interface PeakValleyConfig {
