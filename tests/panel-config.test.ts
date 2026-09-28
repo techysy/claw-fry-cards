@@ -61,31 +61,39 @@ describe('resolvePanelSettings', () => {
     expect(resolvePanelSettings({ plugins: { entries: { 'claw-fry-cards': { config: {} } } } })).toBeUndefined();
   });
 
-  it('parses segments toggles and maps legacy showCacheHit / showSpeed', () => {
-    const segs = {
+  it('parses the ordered fields array and drops unknown/duplicate entries', () => {
+    const cfg = {
+      plugins: {
+        entries: {
+          'claw-fry-cards': { config: { panel: { fields: ['cache', 'model', 'speed'] } } },
+        },
+      },
+    };
+    expect(resolvePanelSettings(cfg)).toEqual({ fields: ['cache', 'model', 'speed'] });
+
+    // 未知字段与重复项被过滤，顺序保留
+    const messy = {
       plugins: {
         entries: {
           'claw-fry-cards': {
-            config: { panel: { segments: { cache: false, speed: false, model: true } } },
+            config: { panel: { fields: ['model', 'bogus', 'cache', 'model', 42] } },
           },
         },
       },
     };
-    expect(resolvePanelSettings(segs)).toEqual({ segments: { model: true, cache: false, speed: false } });
+    expect(resolvePanelSettings(messy)).toEqual({ fields: ['model', 'cache'] });
 
-    // 旧键兼容：showCacheHit / showSpeed 并入 segments
-    const legacy = {
-      plugins: {
-        entries: { 'claw-fry-cards': { config: { panel: { showCacheHit: false, showSpeed: true } } } },
-      },
+    // 空数组是合法配置（表示什么都不显示）
+    const empty = {
+      plugins: { entries: { 'claw-fry-cards': { config: { panel: { fields: [] } } } } },
     };
-    expect(resolvePanelSettings(legacy)).toEqual({ segments: { cache: false, speed: true } });
+    expect(resolvePanelSettings(empty)).toEqual({ fields: [] });
 
-    // 非布尔值忽略；全为非布尔时不出 segments
-    const bad = {
-      plugins: { entries: { 'claw-fry-cards': { config: { panel: { segments: { cache: 'yes' } } } } } },
+    // 非数组忽略
+    const notArray = {
+      plugins: { entries: { 'claw-fry-cards': { config: { panel: { fields: 'model' } } } } },
     };
-    expect(resolvePanelSettings(bad)).toBeUndefined();
+    expect(resolvePanelSettings(notArray)).toBeUndefined();
   });
 
   it('ignores invalid shapes', () => {

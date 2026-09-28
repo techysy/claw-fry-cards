@@ -12,7 +12,8 @@
  * 插件配置优先；两处都没配时返回 undefined（引擎用内置默认值）。
  */
 
-import type { ModelAliasEntry, PanelSegmentToggles } from './builder';
+import type { ModelAliasEntry, PanelField } from './builder';
+import { PANEL_FIELD_POOL } from './builder';
 
 export interface UnifiedPanelSettings {
   unifiedPanelMinDurationMs?: number;
@@ -22,21 +23,15 @@ export interface UnifiedPanelSettings {
   modelAliasesEnabled?: boolean;
   truncateModelName?: boolean;
   peakValley?: PeakValleyConfig[];
-  /** 面板各段显示开关（缺省全开，见 PanelSegmentToggles） */
-  segments?: PanelSegmentToggles;
+  /**
+   * 面板字段**有序数组**（与 hermes-fry-cards 的 `panel_fields` 同源约定）：
+   * 数组顺序即卡片标题各段的显示顺序，成员即要显示的段。
+   * 缺省（未配置）时由引擎回落到默认全字段顺序。
+   */
+  fields?: PanelField[];
 }
 
-/** 面板段开关字段名（用于解析与旧键兼容） */
-const SEGMENT_KEYS = [
-  'model',
-  'reasoning',
-  'tools',
-  'context',
-  'cache',
-  'output',
-  'speed',
-  'elapsed',
-] as const satisfies ReadonlyArray<keyof PanelSegmentToggles>;
+const PANEL_FIELD_SET: ReadonlySet<string> = new Set<string>(PANEL_FIELD_POOL);
 
 /** 峰谷价标识条目：峰段（计费高峰窗口）显示 peakName，谷段（闲时/优惠）显示 valleyName */
 export interface PeakValleyConfig {
@@ -90,10 +85,7 @@ function readPanelSettings(raw: unknown): UnifiedPanelSettings | undefined {
     modelAliasesEnabled?: unknown;
     truncateModelName?: unknown;
     peakValley?: unknown;
-    segments?: unknown;
-    /** 旧键（2.0.6 早期形态），解析时并入 segments 保持兼容 */
-    showCacheHit?: unknown;
-    showSpeed?: unknown;
+    fields?: unknown;
   };
   const out: UnifiedPanelSettings = {};
   if (typeof p.unifiedPanelMinDuration === 'number') {
@@ -116,16 +108,17 @@ function readPanelSettings(raw: unknown): UnifiedPanelSettings | undefined {
       ([match, v]) => ({ ...v, match }),
     );
   }
-  // segments：面板各段显示开关（缺省全开，仅记录显式布尔值）
-  const segments: PanelSegmentToggles = {};
-  const rawSegments = p.segments && typeof p.segments === 'object' ? (p.segments as Record<string, unknown>) : {};
-  for (const key of SEGMENT_KEYS) {
-    if (typeof rawSegments[key] === 'boolean') segments[key] = rawSegments[key] as boolean;
+  // fields：面板字段有序数组（顺序即显示顺序）；逐项校验，过滤未知字段与重复项。
+  // 3.0 起为唯一形态（旧的 segments 布尔对象 / showCacheHit / showSpeed 已移除，不再解析）。
+  if (Array.isArray(p.fields)) {
+    const fields: PanelField[] = [];
+    for (const item of p.fields) {
+      if (typeof item !== 'string' || !PANEL_FIELD_SET.has(item)) continue;
+      const field = item as PanelField;
+      if (!fields.includes(field)) fields.push(field);
+    }
+    out.fields = fields;
   }
-  // 旧键兼容：showCacheHit / showSpeed → segments.cache / segments.speed
-  if (typeof p.showCacheHit === 'boolean') segments.cache = p.showCacheHit;
-  if (typeof p.showSpeed === 'boolean') segments.speed = p.showSpeed;
-  if (Object.keys(segments).length > 0) out.segments = segments;
 
   return Object.keys(out).length > 0 ? out : undefined;
 }

@@ -494,8 +494,8 @@ export function buildCardContent(
       peakValley?: PeakValleyConfig[];
       contextDisplayMode?: ContextDisplayMode;
       expanded?: boolean;
-      /** 面板各段显示开关（缺省全开） */
-      segments?: PanelSegmentToggles;
+      /** 面板字段有序数组（顺序即显示顺序）；缺省用 DEFAULT_PANEL_FIELDS */
+      fields?: readonly PanelField[];
     };
     text?: string;
     reasoningText?: string;
@@ -619,32 +619,28 @@ function buildStreamingCard(
 }
 
 /**
- * 统一面板 header 各指标段的显示开关。
- * 全部缺省开启（`!== false` 即显示）；任一数据缺失时该段仍自动省略。
+ * 统一面板 header 支持的字段（与 hermes-fry-cards 的 `panel_fields` 同源约定）。
+ *
+ * 配置里的 `panel.fields` 是一个**有序数组**，数组顺序即标题段显示顺序，
+ * 数组成员即要显示的段；未列出的段不显示。缺省（未配置）时用 {@link DEFAULT_PANEL_FIELDS}。
  */
-export interface PanelSegmentToggles {
-  /** 模型名段（含别名/截断） */
-  model?: boolean;
-  /** 思考计数段 💭N */
-  reasoning?: boolean;
-  /** 工具调用计数段 🔧N */
-  tools?: boolean;
-  /** 上下文占用段（样式见 contextDisplayMode） */
-  context?: boolean;
-  /** 缓存命中率段 💾 x% */
-  cache?: boolean;
-  /** 输出 token 段 🎫 */
-  output?: boolean;
-  /** 生成速度段 ⚡ x tok/s */
-  speed?: boolean;
-  /** 耗时段 ⏱️ */
-  elapsed?: boolean;
-}
+export const PANEL_FIELD_POOL = [
+  'model',
+  'reasoning',
+  'tools',
+  'context',
+  'cache',
+  'output',
+  'speed',
+  'elapsed',
+] as const;
 
-/** 判断某面板段是否启用（缺省开启） */
-function segEnabled(toggles: PanelSegmentToggles | undefined, key: keyof PanelSegmentToggles): boolean {
-  return toggles?.[key] !== false;
-}
+export type PanelField = (typeof PANEL_FIELD_POOL)[number];
+
+/** 缺省字段顺序（未配置 `panel.fields` 时使用；数据缺失的段仍会自动省略） */
+export const DEFAULT_PANEL_FIELDS: readonly PanelField[] = PANEL_FIELD_POOL;
+
+const PANEL_FIELD_SET: ReadonlySet<string> = new Set<string>(PANEL_FIELD_POOL);
 
 function buildCompleteCard(params: {
   text: string;
@@ -656,8 +652,8 @@ function buildCompleteCard(params: {
     modelAliasesEnabled?: boolean;
     truncateModelName?: boolean;
     peakValley?: PeakValleyConfig[];
-    /** 面板各段显示开关（缺省全开） */
-    segments?: PanelSegmentToggles;
+    /** 面板字段有序数组（顺序即显示顺序）；缺省用 DEFAULT_PANEL_FIELDS */
+    fields?: readonly PanelField[];
   };
   elapsedMs?: number;
   isError?: boolean;
@@ -725,50 +721,61 @@ function buildCompleteCard(params: {
       modelAliasesEnabled: panel?.modelAliasesEnabled,
     });
 
-    const segs = panel?.segments;
-    const parts: string[] = ['🍤'];
-    if (modelName && segEnabled(segs, 'model')) parts.push(modelName);
-    // 思考/工具计数恒随各自内容出现（💭0/🔧0 本身也是信息），仅受段开关控制
-    if (segEnabled(segs, 'reasoning')) parts.push(`💭${hasReasoning ? 1 : 0}`);
-    if (segEnabled(segs, 'tools')) parts.push(`🔧${toolCount}`);
+    // 按 panel.fields 的数组顺序渲染各段；未配置时用默认全字段顺序。
+    // 每个字段单独求值：该字段数据缺失（或值为空）返回 undefined，该段即被省略。
+    const activeFields = panel?.fields ?? DEFAULT_PANEL_FIELDS;
 
-    // 上下文：used = 最后一轮 inputTokens（≈当前上下文，zcode-feishu-bridge 同款），
-    // total = 模型上下文窗口（contextTokens）
-    const ctxWindow =
-      typeof footerMetrics?.contextTokens === 'number' && footerMetrics.contextTokens > 0
-        ? footerMetrics.contextTokens
-        : undefined;
-    const ctxUsedIn =
-      typeof footerMetrics?.inputTokens === 'number' && footerMetrics.inputTokens > 0
-        ? footerMetrics.inputTokens
-        : undefined;
-    if (segEnabled(segs, 'context') && ctxWindow != null && ctxUsedIn != null) {
-      const ctxSeg = formatContextSegment(ctxUsedIn, ctxWindow, ctxMode);
-      if (ctxSeg) parts.push(ctxSeg);
-    }
-    // 💾 缓存命中率（cacheRead/(input+read+write)，旧 footer 缓存段同口径）；未报 cache 时自动省略
-    if (segEnabled(segs, 'cache')) {
-      const hitRate = computeCacheHitRate(footerMetrics);
-      if (hitRate != null) parts.push(`💾 ${hitRate}%`);
-    }
-    // 🎫 输出 token：会话累计（outputTokensTotal），无累计时回落单轮 outputTokens
-    if (segEnabled(segs, 'output')) {
-      const outShown =
-        typeof footerMetrics?.outputTokensTotal === 'number'
-          ? footerMetrics.outputTokensTotal
-          : typeof footerMetrics?.outputTokens === 'number'
-            ? footerMetrics.outputTokens
+    const fieldValues: Record<PanelField, string | undefined> = {
+      model: modelName || undefined,
+      // 思考/工具计数恒随各自内容出现（💭0/🔧0 本身也是信息）
+      reasoning: `💭${hasReasoning ? 1 : 0}`,
+      tools: `🔧${toolCount}`,
+      context: (() => {
+        // used = 最后一轮 inputTokens（≈当前上下文，zcode-feishu-bridge 同款），
+        // total = 模型上下文窗口（contextTokens）
+        const ctxWindow =
+          typeof footerMetrics?.contextTokens === 'number' && footerMetrics.contextTokens > 0
+            ? footerMetrics.contextTokens
             : undefined;
-      if (outShown != null && outShown > 0) parts.push(`🎫 ${compactNumber(outShown)}`);
+        const ctxUsedIn =
+          typeof footerMetrics?.inputTokens === 'number' && footerMetrics.inputTokens > 0
+            ? footerMetrics.inputTokens
+            : undefined;
+        if (ctxWindow == null || ctxUsedIn == null) return undefined;
+        return formatContextSegment(ctxUsedIn, ctxWindow, ctxMode) || undefined;
+      })(),
+      // 💾 缓存命中率（cacheRead/(input+read+write)）；未报 cache 时省略
+      cache: (() => {
+        const hitRate = computeCacheHitRate(footerMetrics);
+        return hitRate != null ? `💾 ${hitRate}%` : undefined;
+      })(),
+      // 🎫 输出 token：会话累计（outputTokensTotal），无累计时回落单轮 outputTokens
+      output: (() => {
+        const outShown =
+          typeof footerMetrics?.outputTokensTotal === 'number'
+            ? footerMetrics.outputTokensTotal
+            : typeof footerMetrics?.outputTokens === 'number'
+              ? footerMetrics.outputTokens
+              : undefined;
+        return outShown != null && outShown > 0 ? `🎫 ${compactNumber(outShown)}` : undefined;
+      })(),
+      // ⚡ 本轮生成速度（tokens/s，transcript 时间戳推算）
+      speed: (() => {
+        const tps = footerMetrics?.tokensPerSecond;
+        return typeof tps === 'number' && Number.isFinite(tps) && tps > 0
+          ? `⚡ ${formatTokensPerSecond(tps)} tok/s`
+          : undefined;
+      })(),
+      elapsed: elapsed > 0 ? `⏱️ ${formatElapsed(elapsed)}` : undefined,
+    };
+
+    const parts: string[] = ['🍤'];
+    for (const field of activeFields) {
+      // 过滤未知字段（配置手写错误时静默跳过，避免渲染出 undefined）
+      if (!PANEL_FIELD_SET.has(field)) continue;
+      const value = fieldValues[field];
+      if (value) parts.push(value);
     }
-    // ⚡ 本轮生成速度（tokens/s，transcript 时间戳推算）
-    if (segEnabled(segs, 'speed')) {
-      const tps = footerMetrics?.tokensPerSecond;
-      if (typeof tps === 'number' && Number.isFinite(tps) && tps > 0) {
-        parts.push(`⚡ ${formatTokensPerSecond(tps)} tok/s`);
-      }
-    }
-    if (segEnabled(segs, 'elapsed') && elapsed > 0) parts.push(`⏱️ ${formatElapsed(elapsed)}`);
 
     const children: CardElement[] = [];
     if (hasReasoning) {

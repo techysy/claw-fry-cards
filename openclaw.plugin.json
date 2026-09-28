@@ -129,52 +129,32 @@
             },
             "description": "峰谷价标识列表（DeepSeek 等按峰谷计费的模型，可添加多条）：key 为匹配模型（子串），峰段显示 peakName，谷段（闲时）显示 valleyName；与 modelAliases 可共存，同 key 手写优先"
           },
-          "segments": {
-            "type": "object",
-            "title": "指标段开关",
-            "description": "统一面板标题各指标段的显示开关（每个字段都是复选框，默认全部开启）：关闭某段即从标题隐藏；即使开启，该段数据缺失时也自动省略",
-            "properties": {
-              "model": {
-                "type": "boolean",
-                "title": "模型名",
-                "description": "显示模型名段（含别名/⇲ 截断）"
-              },
-              "reasoning": {
-                "type": "boolean",
-                "title": "思考计数",
-                "description": "显示 💭N 思考计数段"
-              },
-              "tools": {
-                "type": "boolean",
-                "title": "工具计数",
-                "description": "显示 🔧N 工具调用计数段"
-              },
-              "context": {
-                "type": "boolean",
-                "title": "上下文",
-                "description": "显示上下文占用段（样式见 contextDisplayMode）"
-              },
-              "cache": {
-                "type": "boolean",
-                "title": "缓存命中率",
-                "description": "显示 💾 本轮缓存命中率 cacheRead/(input+read+write)"
-              },
-              "output": {
-                "type": "boolean",
-                "title": "输出 Token",
-                "description": "显示 🎫 会话累计输出 tokens 段"
-              },
-              "speed": {
-                "type": "boolean",
-                "title": "生成速度",
-                "description": "显示 ⚡ 本轮生成速度 tokens/s（transcript 时间戳推算，不含工具执行段）"
-              },
-              "elapsed": {
-                "type": "boolean",
-                "title": "耗时",
-                "description": "显示 ⏱️ 本轮回合耗时段"
-              }
-            }
+          "fields": {
+            "type": "array",
+            "title": "面板字段（顺序即显示顺序）",
+            "description": "统一面板标题要显示哪些段、以及显示顺序——数组顺序即标题从左到右的顺序，未列出的段不显示。留空表示全部不显示；删除整个字段则回落默认全字段顺序。即使列出，该段数据缺失时仍会自动省略",
+            "items": {
+              "type": "string",
+              "oneOf": [
+                { "const": "model", "title": "模型名", "description": "模型名段（含别名/⇲ 截断）" },
+                { "const": "reasoning", "title": "思考计数", "description": "💭N 思考计数段" },
+                { "const": "tools", "title": "工具计数", "description": "🔧N 工具调用计数段" },
+                { "const": "context", "title": "上下文", "description": "上下文占用段（样式见 contextDisplayMode）" },
+                {
+                  "const": "cache",
+                  "title": "缓存命中率",
+                  "description": "💾 本轮缓存命中率 cacheRead/(input+read+write)"
+                },
+                { "const": "output", "title": "输出 Token", "description": "🎫 会话累计输出 tokens 段" },
+                {
+                  "const": "speed",
+                  "title": "生成速度",
+                  "description": "⚡ 本轮生成速度 tok/s（transcript 时间戳推算，不含工具执行段）"
+                },
+                { "const": "elapsed", "title": "耗时", "description": "⏱️ 本轮回合耗时段" }
+              ]
+            },
+            "uniqueItems": true
           }
         },
         "description": "统一面板设置（完成态底部折叠面板）"

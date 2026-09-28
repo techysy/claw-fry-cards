@@ -1,5 +1,29 @@
 # Changelog
 
+## 3.0.0 (2026-09-29)
+
+**破坏性更新**：面板字段改为可排序的有序数组（配置结构变更）。
+
+- 🧩 **`panel.fields` 有序数组**（替代 2.0.6 的 `panel.segments` 布尔对象）：数组顺序即卡片标题各段的显示顺序，成员即要显示的段——一次解决“开关太多太长”“顺序写死不可调”两个问题
+  ```jsonc
+  // 只显示 模型名 · 缓存命中 · 输出 · 耗时，并按此顺序
+  "panel": { "fields": ["model", "cache", "output", "elapsed"] }
+  ```
+- 📐 字段池（与 hermes-fry-cards 的 `panel_fields` 同源约定，配置互通）：`model` / `reasoning` / `tools` / `context` / `cache` / `output` / `speed` / `elapsed`
+- ⚙️ 缺省（不配 `fields`）= 上述全字段按此顺序；空数组 `[]` = 标题只留 `🍤`；未列出的段不显示
+- 🖥️ 配置页由「8 个复选框」变成「1 个可增删条目的列表」，显著缩短表单
+- ⚡ 💾 速度段（`⚡ 42.3 tok/s`，transcript 时间戳推算）与缓存命中率段（`💾 86%` = `cacheRead/(input+read+write)`）随 2.0.6 一并保留
+- 🐛 修复出错/停止卡片丢弃面板配置（`onError` / `abortCard` 补传 `panel`）
+- ⚠️ **迁移**：旧键 `panel.segments` / `showCacheHit` / `showSpeed` **已移除且不再解析**，网关加载时会提示无效配置。升级到 3.0 后把旧的布尔对象改写为 `fields` 数组即可：
+  ```jsonc
+  // 2.x
+  "segments": { "model": true, "reasoning": true, "tools": true, "context": true,
+                "cache": true, "output": true, "speed": true, "elapsed": true }
+  // 3.0 等价写法（也可只留你想要的段、自由调序）
+  "fields": ["model", "reasoning", "tools", "context", "cache", "output", "speed", "elapsed"]
+  ```
+- 🧪 56 文件 / 480 tests（数组顺序、缺省、空数组、未知字段过滤用例），tsc strict，本地 Docker 全链路验证
+
 ## 2.0.6 (2026-09-29)
 
 群聊默认流式卡片 + 面板可选速度/缓存指标版本（本地 Docker 真机实测）。

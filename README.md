@@ -177,12 +177,12 @@ openclaw gateway restart
 
 当 Agent 回复生成完成时，底部会自动注入统计面板。面板支持在 **Control UI → 设置 → Claw Fry Cards** 界面进行全中文可视化配置。
 
-| 项           | 规则与行为                                                                                                         |
-| ------------ | ------------------------------------------------------------------------------------------------------------------ |
-| **标题格式** | `🍤 ⇲模型 · 💭N · 🔧N · 368.6k/1.0m (37%) · 💾 86% · 🎫 1.5k · ⚡ 42.3 tok/s · ⏱️ 13.3s`（缺失字段自适应折叠省略） |
-| **展开内容** | 模型的完整思考推导记录 + 工具调用顺序流水；两项均空时呈现“暂无思考与工具调用过程”                                  |
-| **展示触发** | 单次交互耗时 ≥ 5 秒，**或**会话中包含了思考/工具调用步骤                                                           |
-| **边框反馈** | 绿色（成功完成）· 红色（执行异常）· 黄色（任务被手动停止）                                                         |
+| 项           | 规则与行为                                                                                                                                                 |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **标题格式** | `🍤 ⇲模型 · 💭N · 🔧N · 368.6k/1.0m (37%) · 💾 86% · 🎫 1.5k · ⚡ 42.3 tok/s · ⏱️ 13.3s`（显示哪些段、什么顺序由 `panel.fields` 决定；缺失字段自适应省略） |
+| **展开内容** | 模型的完整思考推导记录 + 工具调用顺序流水；两项均空时呈现“暂无思考与工具调用过程”                                                                          |
+| **展示触发** | 单次交互耗时 ≥ 5 秒，**或**会话中包含了思考/工具调用步骤                                                                                                   |
+| **边框反馈** | 绿色（成功完成）· 红色（执行异常）· 黄色（任务被手动停止）                                                                                                 |
 
 ### 核心面板选项（`panel`）
 
@@ -193,20 +193,29 @@ openclaw gateway restart
 | `truncateModelName`       | 超长模型名自适应截断（如 `mimo/mimo-v2.5` → `⇲mimo-v2.5`）                                 | `true` |
 | `modelAliases`            | 模型重命名与分时段人设映射字典                                                             | `{}`   |
 | `peakValley`              | 针对特定模型的峰谷电价式名称映射配置                                                       | `{}`   |
-| `segments`                | 面板标题各指标段的显示开关（配置页每段一个复选框），见下表                                 | 全开   |
+| `fields`                  | 面板标题要显示哪些段、以及显示顺序（**有序数组**），见下节                                 | 全字段 |
 
-**`segments` 段开关**（每个都是复选框，**默认全部开启**；关闭某段即从标题隐藏，即使开启该段数据缺失时也自动省略）：
+**`fields` 面板字段**（**有序数组**——数组顺序即标题从左到右的顺序，未列出的段不显示；删除整个字段则回落默认全字段顺序）：
 
-| 键          | 段                                                             | 默认 |
-| ----------- | -------------------------------------------------------------- | ---- |
-| `model`     | 模型名（含别名/截断）                                          | 开   |
-| `reasoning` | 💭N 思考计数                                                   | 开   |
-| `tools`     | 🔧N 工具调用计数                                               | 开   |
-| `context`   | 上下文占用（样式见 `contextDisplayMode`）                      | 开   |
-| `cache`     | 💾 缓存命中率 `cacheRead/(input+read+write)`                   | 开   |
-| `output`    | 🎫 会话累计输出 tokens                                         | 开   |
-| `speed`     | ⚡ 本轮生成速度 tok/s（transcript 时间戳推算，不含工具执行段） | 开   |
-| `elapsed`   | ⏱️ 本轮回合耗时                                                | 开   |
+```jsonc
+// 只显示 模型名 · 缓存命中 · 输出 · 耗时，并按此顺序排列
+"panel": { "fields": ["model", "cache", "output", "elapsed"] }
+```
+
+| 字段值      | 显示内容                                                       |
+| ----------- | -------------------------------------------------------------- |
+| `model`     | 模型名（含别名/⇲ 截断）                                        |
+| `reasoning` | 💭N 思考计数                                                   |
+| `tools`     | 🔧N 工具调用计数                                               |
+| `context`   | 上下文占用（样式见 `contextDisplayMode`）                      |
+| `cache`     | 💾 缓存命中率 `cacheRead/(input+read+write)`                   |
+| `output`    | 🎫 会话累计输出 tokens                                         |
+| `speed`     | ⚡ 本轮生成速度 tok/s（transcript 时间戳推算，不含工具执行段） |
+| `elapsed`   | ⏱️ 本轮回合耗时                                                |
+
+- **缺省**（不配 `fields`）：等价于全字段，顺序 `model → reasoning → tools → context → cache → output → speed → elapsed`
+- **空数组** `[]`：标题只留 `🍤`，不显示任何指标段
+- 无论是否列出，**该段数据缺失时仍会自动省略**（如无缓存计量则不显示 💾）
 
 **面板设置**：在 **Control UI → 设置 → Claw Fry Cards → 配置页** 可视化编辑（全中文字段说明），存储于插件自有配置 `plugins.entries.claw-fry-cards.config.panel`——随插件版本化，不受宿主 schema 演化影响（旧位置 `channels.feishu.panel` 仍兼容读取）：
 
@@ -218,16 +227,7 @@ openclaw gateway restart
   "contextDisplayMode": "text",
   "truncateModelName": true,
   "modelAliasesEnabled": true,
-  "segments": {
-    "model": true,
-    "reasoning": true,
-    "tools": true,
-    "context": true,
-    "cache": true,
-    "output": true,
-    "speed": true,
-    "elapsed": true
-  }
+  "fields": ["model", "reasoning", "tools", "context", "cache", "output", "speed", "elapsed"]
 }
 ```
 
@@ -272,7 +272,7 @@ openclaw gateway restart
 
 </details>
 
-> 指标来源是 agent transcript SQLite（`~/.openclaw/agents/<agent>/agent/openclaw-agent.sqlite`），模型名/token/上下文窗口由最近一轮 usage 事件解析；💾 缓存命中率 = 本轮 cacheRead/(input+read+write)，⚡ 速度 = 本轮 output ÷ 生成耗时（本轮 assistant 事件与前一条事件的时间戳差，不含工具执行段，>30 分钟视为异常省略）。各段默认全开，可用 `segments` 逐段关闭；无论开关如何，该段数据缺失时都自动省略。老版本宿主无此库时统一面板自动省略指标段（详见 [docs/compat-test-report.md](docs/compat-test-report.md)）。
+> 指标来源是 agent transcript SQLite（`~/.openclaw/agents/<agent>/agent/openclaw-agent.sqlite`），模型名/token/上下文窗口由最近一轮 usage 事件解析；💾 缓存命中率 = 本轮 cacheRead/(input+read+write)，⚡ 速度 = 本轮 output ÷ 生成耗时（本轮 assistant 事件与前一条事件的时间戳差，不含工具执行段，>30 分钟视为异常省略）。显示哪些段与顺序由 `panel.fields` 有序数组决定；无论是否列出，该段数据缺失时都自动省略。老版本宿主无此库时统一面板自动省略指标段（详见 [docs/compat-test-report.md](docs/compat-test-report.md)）。
 
 ---
 

@@ -123,7 +123,7 @@ describe('formatTokensPerSecond', () => {
   });
 });
 
-describe('buildCardContent – unified panel header segments', () => {
+describe('buildCardContent – unified panel header fields', () => {
   function panelHeaderText(card: ReturnType<typeof buildCardContent>): string {
     const panel = ((card.elements ?? []).find((el) => (el as Record<string, unknown>).tag === 'collapsible_panel') ??
       {}) as Record<string, unknown>;
@@ -142,7 +142,7 @@ describe('buildCardContent – unified panel header segments', () => {
     model: 'test-model',
   };
 
-  it('shows every segment by default (all toggles unset)', () => {
+  it('shows every field in default order when panel.fields unset', () => {
     const card = buildCardContent('complete', { text: 'hello', elapsedMs: 6000, footerMetrics: richMetrics });
     const text = panelHeaderText(card);
     expect(text).toContain('test-model');
@@ -152,33 +152,51 @@ describe('buildCardContent – unified panel header segments', () => {
     expect(text).toContain('🎫 1.2k');
     expect(text).toContain('⚡ 135 tok/s');
     expect(text).toContain('⏱️');
-    // 段序：💾 在 🎫 之前，⚡ 在 🎫 与 ⏱️ 之间
-    expect(text.indexOf('💾')).toBeLessThan(text.indexOf('🎫'));
-    expect(text.indexOf('⚡')).toBeGreaterThan(text.indexOf('🎫'));
-    expect(text.indexOf('⚡')).toBeLessThan(text.indexOf('⏱️'));
+    // 默认顺序：model → reasoning → tools → context → cache → output → speed → elapsed
+    const order = ['test-model', '💭', '🔧', '💾', '🎫', '⚡', '⏱️'];
+    const idx = order.map((t) => text.indexOf(t));
+    expect(idx).toEqual([...idx].sort((a, b) => a - b));
   });
 
-  it('hides individual segments when their toggle is false', () => {
+  it('renders only listed fields, in the array order given', () => {
     const card = buildCardContent('complete', {
       text: 'hello',
       elapsedMs: 6000,
-      panel: { segments: { cache: false, speed: false, model: false, elapsed: false } },
+      // 自定义顺序 + 只选三段
+      panel: { fields: ['cache', 'model', 'speed'] },
+      footerMetrics: richMetrics,
+    });
+    const text = panelHeaderText(card);
+    expect(text).toContain('💾 86%');
+    expect(text).toContain('test-model');
+    expect(text).toContain('⚡ 135 tok/s');
+    // 未列出的段不显示
+    expect(text).not.toContain('🎫');
+    expect(text).not.toContain('⏱️');
+    // 顺序按数组：cache → model → speed
+    expect(text.indexOf('💾')).toBeLessThan(text.indexOf('test-model'));
+    expect(text.indexOf('test-model')).toBeLessThan(text.indexOf('⚡'));
+  });
+
+  it('renders no metric segments for an empty fields array', () => {
+    const card = buildCardContent('complete', {
+      text: 'hello',
+      elapsedMs: 6000,
+      panel: { fields: [] },
       footerMetrics: richMetrics,
     });
     const text = panelHeaderText(card);
     expect(text).not.toContain('💾');
     expect(text).not.toContain('⚡');
     expect(text).not.toContain('test-model');
-    expect(text).not.toContain('⏱️');
-    // 其余段仍在
-    expect(text).toContain('🎫 1.2k');
-    expect(text).toContain('🔧');
+    expect(text).not.toContain('🎫');
   });
 
-  it('omits cache and speed segments when data is unavailable', () => {
+  it('omits a listed field when its data is unavailable', () => {
     const card = buildCardContent('complete', {
       text: 'hello',
       elapsedMs: 6000,
+      panel: { fields: ['cache', 'speed', 'output'] },
       footerMetrics: { inputTokens: 100, outputTokens: 50, model: 'test-model' },
     });
     const text = panelHeaderText(card);
