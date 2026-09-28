@@ -404,16 +404,32 @@ export const PluginConfigSchema = z
             '峰谷价标识列表（DeepSeek 等按峰谷计费的模型，可添加多条）：key 为匹配模型（子串），峰段显示 peakName，谷段（闲时）显示 valleyName；与 modelAliases 可共存，同 key 手写优先',
           )
           .optional(),
-        showCacheHit: z
-          .boolean()
-          .meta({ title: '显示缓存命中率' })
-          .describe('面板显示 💾 本轮缓存命中率 cacheRead/(input+read+write)（默认 false，不显示以免标题过长）')
-          .optional(),
-        showSpeed: z
-          .boolean()
-          .meta({ title: '显示生成速度' })
+        segments: z
+          .object({
+            model: z.boolean().meta({ title: '模型名' }).describe('显示模型名段（含别名/⇲ 截断）').optional(),
+            reasoning: z.boolean().meta({ title: '思考计数' }).describe('显示 💭N 思考计数段').optional(),
+            tools: z.boolean().meta({ title: '工具计数' }).describe('显示 🔧N 工具调用计数段').optional(),
+            context: z
+              .boolean()
+              .meta({ title: '上下文' })
+              .describe('显示上下文占用段（样式见 contextDisplayMode）')
+              .optional(),
+            cache: z
+              .boolean()
+              .meta({ title: '缓存命中率' })
+              .describe('显示 💾 本轮缓存命中率 cacheRead/(input+read+write)')
+              .optional(),
+            output: z.boolean().meta({ title: '输出 Token' }).describe('显示 🎫 会话累计输出 tokens 段').optional(),
+            speed: z
+              .boolean()
+              .meta({ title: '生成速度' })
+              .describe('显示 ⚡ 本轮生成速度 tokens/s（transcript 时间戳推算，不含工具执行段）')
+              .optional(),
+            elapsed: z.boolean().meta({ title: '耗时' }).describe('显示 ⏱️ 本轮回合耗时段').optional(),
+          })
+          .meta({ title: '指标段开关' })
           .describe(
-            '面板显示 ⚡ 本轮生成速度 tokens/s，由 transcript 时间戳推算（本轮 assistant 事件 − 前一条事件，不含工具执行段；默认 false，不显示以免标题过长）',
+            '统一面板标题各指标段的显示开关（每个字段都是复选框，默认全部开启）：关闭某段即从标题隐藏；即使开启，该段数据缺失时也自动省略',
           )
           .optional(),
       })

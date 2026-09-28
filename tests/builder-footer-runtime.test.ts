@@ -123,7 +123,7 @@ describe('formatTokensPerSecond', () => {
   });
 });
 
-describe('buildCardContent – unified panel header cache/speed segments', () => {
+describe('buildCardContent – unified panel header segments', () => {
   function panelHeaderText(card: ReturnType<typeof buildCardContent>): string {
     const panel = ((card.elements ?? []).find((el) => (el as Record<string, unknown>).tag === 'collapsible_panel') ??
       {}) as Record<string, unknown>;
@@ -142,37 +142,43 @@ describe('buildCardContent – unified panel header cache/speed segments', () =>
     model: 'test-model',
   };
 
-  it('hides 💾 and ⚡ by default (panel.showCacheHit/showSpeed unset)', () => {
+  it('shows every segment by default (all toggles unset)', () => {
     const card = buildCardContent('complete', { text: 'hello', elapsedMs: 6000, footerMetrics: richMetrics });
     const text = panelHeaderText(card);
-    expect(text).not.toContain('💾');
-    expect(text).not.toContain('⚡');
-    // 其余指标段照常显示
-    expect(text).toContain('🎫 1.2k');
-    expect(text).toContain('⏱️');
-  });
-
-  it('renders 💾 hit rate and ⚡ speed only when explicitly enabled', () => {
-    const card = buildCardContent('complete', {
-      text: 'hello',
-      elapsedMs: 6000,
-      panel: { showCacheHit: true, showSpeed: true },
-      footerMetrics: richMetrics,
-    });
-    const text = panelHeaderText(card);
+    expect(text).toContain('test-model');
+    expect(text).toContain('💭');
+    expect(text).toContain('🔧');
     expect(text).toContain('💾 86%');
+    expect(text).toContain('🎫 1.2k');
     expect(text).toContain('⚡ 135 tok/s');
+    expect(text).toContain('⏱️');
     // 段序：💾 在 🎫 之前，⚡ 在 🎫 与 ⏱️ 之间
     expect(text.indexOf('💾')).toBeLessThan(text.indexOf('🎫'));
     expect(text.indexOf('⚡')).toBeGreaterThan(text.indexOf('🎫'));
     expect(text.indexOf('⚡')).toBeLessThan(text.indexOf('⏱️'));
   });
 
+  it('hides individual segments when their toggle is false', () => {
+    const card = buildCardContent('complete', {
+      text: 'hello',
+      elapsedMs: 6000,
+      panel: { segments: { cache: false, speed: false, model: false, elapsed: false } },
+      footerMetrics: richMetrics,
+    });
+    const text = panelHeaderText(card);
+    expect(text).not.toContain('💾');
+    expect(text).not.toContain('⚡');
+    expect(text).not.toContain('test-model');
+    expect(text).not.toContain('⏱️');
+    // 其余段仍在
+    expect(text).toContain('🎫 1.2k');
+    expect(text).toContain('🔧');
+  });
+
   it('omits cache and speed segments when data is unavailable', () => {
     const card = buildCardContent('complete', {
       text: 'hello',
       elapsedMs: 6000,
-      panel: { showCacheHit: true, showSpeed: true },
       footerMetrics: { inputTokens: 100, outputTokens: 50, model: 'test-model' },
     });
     const text = panelHeaderText(card);

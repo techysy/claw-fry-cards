@@ -5,11 +5,12 @@
 群聊默认流式卡片 + 面板可选速度/缓存指标版本（本地 Docker 真机实测）。
 
 - 💬 **群聊默认改为流式卡片**：群聊回复默认走卡片（`streaming.mode=partial`），与私聊一致
-- ⚡ **面板可选指标——速度**：`⚡ 42.3 tok/s`，本轮 output ÷ 生成耗时（transcript 时间戳推算：本轮 assistant 事件 − 前一条事件，不含工具执行段，>30 分钟视为异常省略）
-- 💾 **面板可选指标——缓存命中率**：`💾 86%` = 本轮 `cacheRead/(input+read+write)`（旧 footer 缓存段同口径）
-- 🎛️ **两项默认不显示**（标题已够长）：`panel.showCacheHit` / `panel.showSpeed` 显式开启；开启后位置 `… · 💾 86% · 🎫 1.5k · ⚡ 42.3 tok/s · ⏱️ …`
-- 🐛 **修复出错/停止卡片丢弃面板配置**：`onError` / `abortCard` 分支补传 `panel`，模型别名、上下文样式、新开关在两条路径下与完成卡一致
-- 🧪 56 文件 / 479 tests（新增缓存命中率、速度格式化、开关缺省行为用例），tsc strict，本地 Docker 全链路验证
+- ⚡ **面板新增速度段**：`⚡ 42.3 tok/s`，本轮 output ÷ 生成耗时（transcript 时间戳推算：本轮 assistant 事件 − 前一条事件，不含工具执行段，>30 分钟视为异常省略）
+- 💾 **面板新增缓存命中率段**：`💾 86%` = 本轮 `cacheRead/(input+read+write)`（旧 footer 缓存段同口径）
+- 🎛️ **面板各段均可勾选**：新增 `panel.segments`（配置页每段一个复选框）——`model` / `reasoning` / `tools` / `context` / `cache` / `output` / `speed` / `elapsed`，**默认全部开启**，关闭即从标题隐藏
+- 🐛 **修复出错/停止卡片丢弃面板配置**：`onError` / `abortCard` 分支补传 `panel`，模型别名、上下文样式、段开关在两条路径下与完成卡一致
+- ♻️ 兼容：早期 `showCacheHit` / `showSpeed` 键解析时并入 `segments.cache` / `segments.speed`
+- 🧪 56 文件 / 479 tests（新增缓存命中率、速度格式化、段开关缺省与逐段关闭用例），tsc strict，本地 Docker 全链路验证
 
 ## 2.0.5 (2026-09-13)
 

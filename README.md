@@ -177,26 +177,36 @@ openclaw gateway restart
 
 当 Agent 回复生成完成时，底部会自动注入统计面板。面板支持在 **Control UI → 设置 → Claw Fry Cards** 界面进行全中文可视化配置。
 
-| 项           | 规则与行为                                                                                |
-| ------------ | ----------------------------------------------------------------------------------------- |
-| **标题格式** | `🍤 ⇲模型 · 💭N · 🔧N · 368.6k/1.0m (37%) · 🎫 1.5k · ⏱️ 13.3s`（缺失字段自适应折叠省略） |
-| **展开内容** | 模型的完整思考推导记录 + 工具调用顺序流水；两项均空时呈现“暂无思考与工具调用过程”         |
-| **展示触发** | 单次交互耗时 ≥ 5 秒，**或**会话中包含了思考/工具调用步骤                                  |
-| **边框反馈** | 绿色（成功完成）· 红色（执行异常）· 黄色（任务被手动停止）                                |
+| 项           | 规则与行为                                                                                                         |
+| ------------ | ------------------------------------------------------------------------------------------------------------------ |
+| **标题格式** | `🍤 ⇲模型 · 💭N · 🔧N · 368.6k/1.0m (37%) · 💾 86% · 🎫 1.5k · ⚡ 42.3 tok/s · ⏱️ 13.3s`（缺失字段自适应折叠省略） |
+| **展开内容** | 模型的完整思考推导记录 + 工具调用顺序流水；两项均空时呈现“暂无思考与工具调用过程”                                  |
+| **展示触发** | 单次交互耗时 ≥ 5 秒，**或**会话中包含了思考/工具调用步骤                                                           |
+| **边框反馈** | 绿色（成功完成）· 红色（执行异常）· 黄色（任务被手动停止）                                                         |
 
 ### 核心面板选项（`panel`）
 
-| 参数                      | 说明                                                                                       | 默认值  |
-| ------------------------- | ------------------------------------------------------------------------------------------ | ------- |
-| `unifiedPanelMinDuration` | 面板常驻显示的耗时门槛（秒）。耗时超出该阈值或含有工具调用时渲染，`0` 表示全量显示         | `5`     |
-| `contextDisplayMode`      | 上下文消耗指标呈现格式：`text` (`129.3k/1.0m (13%)`)、`bar` (`[██▓░░░░░] 13%`)、`text_bar` | `text`  |
-| `truncateModelName`       | 超长模型名自适应截断（如 `mimo/mimo-v2.5` → `⇲mimo-v2.5`）                                 | `true`  |
-| `modelAliases`            | 模型重命名与分时段人设映射字典                                                             | `{}`    |
-| `peakValley`              | 针对特定模型的峰谷电价式名称映射配置                                                       | `{}`    |
-| `showCacheHit`            | 面板显示 `💾 86%` 本轮缓存命中率（`cacheRead/(input+read+write)`）                         | `false` |
-| `showSpeed`               | 面板显示 `⚡ 42.3 tok/s` 本轮生成速度（transcript 时间戳推算，不含工具执行段）             | `false` |
+| 参数                      | 说明                                                                                       | 默认值 |
+| ------------------------- | ------------------------------------------------------------------------------------------ | ------ |
+| `unifiedPanelMinDuration` | 面板常驻显示的耗时门槛（秒）。耗时超出该阈值或含有工具调用时渲染，`0` 表示全量显示         | `5`    |
+| `contextDisplayMode`      | 上下文消耗指标呈现格式：`text` (`129.3k/1.0m (13%)`)、`bar` (`[██▓░░░░░] 13%`)、`text_bar` | `text` |
+| `truncateModelName`       | 超长模型名自适应截断（如 `mimo/mimo-v2.5` → `⇲mimo-v2.5`）                                 | `true` |
+| `modelAliases`            | 模型重命名与分时段人设映射字典                                                             | `{}`   |
+| `peakValley`              | 针对特定模型的峰谷电价式名称映射配置                                                       | `{}`   |
+| `segments`                | 面板标题各指标段的显示开关（配置页每段一个复选框），见下表                                 | 全开   |
 
-> **面板标题**：`🍤 ⇲模型 · 💭N · 🔧N · 368.6k/1.0m (37%) · 🎫 1.5k · ⏱️ 13.3s`，数据缺失的段自动省略。`showCacheHit` / `showSpeed` 打开后，`💾` 插在 `🎫` 前、`⚡` 插在 `🎫` 与 `⏱️` 之间——因标题已够长，**两项默认关闭**。
+**`segments` 段开关**（每个都是复选框，**默认全部开启**；关闭某段即从标题隐藏，即使开启该段数据缺失时也自动省略）：
+
+| 键          | 段                                                             | 默认 |
+| ----------- | -------------------------------------------------------------- | ---- |
+| `model`     | 模型名（含别名/截断）                                          | 开   |
+| `reasoning` | 💭N 思考计数                                                   | 开   |
+| `tools`     | 🔧N 工具调用计数                                               | 开   |
+| `context`   | 上下文占用（样式见 `contextDisplayMode`）                      | 开   |
+| `cache`     | 💾 缓存命中率 `cacheRead/(input+read+write)`                   | 开   |
+| `output`    | 🎫 会话累计输出 tokens                                         | 开   |
+| `speed`     | ⚡ 本轮生成速度 tok/s（transcript 时间戳推算，不含工具执行段） | 开   |
+| `elapsed`   | ⏱️ 本轮回合耗时                                                | 开   |
 
 **面板设置**：在 **Control UI → 设置 → Claw Fry Cards → 配置页** 可视化编辑（全中文字段说明），存储于插件自有配置 `plugins.entries.claw-fry-cards.config.panel`——随插件版本化，不受宿主 schema 演化影响（旧位置 `channels.feishu.panel` 仍兼容读取）：
 
@@ -207,7 +217,17 @@ openclaw gateway restart
   "unifiedPanelMinDuration": 5,
   "contextDisplayMode": "text",
   "truncateModelName": true,
-  "modelAliasesEnabled": true
+  "modelAliasesEnabled": true,
+  "segments": {
+    "model": true,
+    "reasoning": true,
+    "tools": true,
+    "context": true,
+    "cache": true,
+    "output": true,
+    "speed": true,
+    "elapsed": true
+  }
 }
 ```
 
@@ -252,7 +272,7 @@ openclaw gateway restart
 
 </details>
 
-> 指标来源是 agent transcript SQLite（`~/.openclaw/agents/<agent>/agent/openclaw-agent.sqlite`），模型名/token/上下文窗口由最近一轮 usage 事件解析；💾 缓存命中率 = 本轮 cacheRead/(input+read+write)，⚡ 速度 = 本轮 output ÷ 生成耗时（本轮 assistant 事件与前一条事件的时间戳差，不含工具执行段，>30 分钟视为异常省略）。💾/⚡ 两段**默认不显示**（分别用 `showCacheHit` / `showSpeed` 打开），其余段任一数据缺失时自动省略。老版本宿主无此库时统一面板自动省略指标段（详见 [docs/compat-test-report.md](docs/compat-test-report.md)）。
+> 指标来源是 agent transcript SQLite（`~/.openclaw/agents/<agent>/agent/openclaw-agent.sqlite`），模型名/token/上下文窗口由最近一轮 usage 事件解析；💾 缓存命中率 = 本轮 cacheRead/(input+read+write)，⚡ 速度 = 本轮 output ÷ 生成耗时（本轮 assistant 事件与前一条事件的时间戳差，不含工具执行段，>30 分钟视为异常省略）。各段默认全开，可用 `segments` 逐段关闭；无论开关如何，该段数据缺失时都自动省略。老版本宿主无此库时统一面板自动省略指标段（详见 [docs/compat-test-report.md](docs/compat-test-report.md)）。
 
 ---
 

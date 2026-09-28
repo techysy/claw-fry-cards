@@ -61,21 +61,29 @@ describe('resolvePanelSettings', () => {
     expect(resolvePanelSettings({ plugins: { entries: { 'claw-fry-cards': { config: {} } } } })).toBeUndefined();
   });
 
-  it('parses showCacheHit / showSpeed opt-ins and leaves them unset by default', () => {
-    const on = {
+  it('parses segments toggles and maps legacy showCacheHit / showSpeed', () => {
+    const segs = {
       plugins: {
-        entries: { 'claw-fry-cards': { config: { panel: { showCacheHit: true, showSpeed: true } } } },
+        entries: {
+          'claw-fry-cards': {
+            config: { panel: { segments: { cache: false, speed: false, model: true } } },
+          },
+        },
       },
     };
-    expect(resolvePanelSettings(on)).toEqual({ showCacheHit: true, showSpeed: true });
+    expect(resolvePanelSettings(segs)).toEqual({ segments: { model: true, cache: false, speed: false } });
 
-    // 未配置时不写入键（builder 侧缺省即不显示，避免标题过长）
-    const other = { plugins: { entries: { 'claw-fry-cards': { config: { panel: { expanded: true } } } } } };
-    expect(resolvePanelSettings(other)).toEqual({ expanded: true });
+    // 旧键兼容：showCacheHit / showSpeed 并入 segments
+    const legacy = {
+      plugins: {
+        entries: { 'claw-fry-cards': { config: { panel: { showCacheHit: false, showSpeed: true } } } },
+      },
+    };
+    expect(resolvePanelSettings(legacy)).toEqual({ segments: { cache: false, speed: true } });
 
-    // 非布尔值忽略
+    // 非布尔值忽略；全为非布尔时不出 segments
     const bad = {
-      plugins: { entries: { 'claw-fry-cards': { config: { panel: { showCacheHit: 'yes' } } } } },
+      plugins: { entries: { 'claw-fry-cards': { config: { panel: { segments: { cache: 'yes' } } } } } },
     };
     expect(resolvePanelSettings(bad)).toBeUndefined();
   });

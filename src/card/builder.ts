@@ -494,10 +494,8 @@ export function buildCardContent(
       peakValley?: PeakValleyConfig[];
       contextDisplayMode?: ContextDisplayMode;
       expanded?: boolean;
-      /** 💾 缓存命中率段开关；缺省 false（默认不显示） */
-      showCacheHit?: boolean;
-      /** ⚡ 本轮生成速度段开关；缺省 false（默认不显示） */
-      showSpeed?: boolean;
+      /** 面板各段显示开关（缺省全开） */
+      segments?: PanelSegmentToggles;
     };
     text?: string;
     reasoningText?: string;
@@ -620,6 +618,34 @@ function buildStreamingCard(
   };
 }
 
+/**
+ * 统一面板 header 各指标段的显示开关。
+ * 全部缺省开启（`!== false` 即显示）；任一数据缺失时该段仍自动省略。
+ */
+export interface PanelSegmentToggles {
+  /** 模型名段（含别名/截断） */
+  model?: boolean;
+  /** 思考计数段 💭N */
+  reasoning?: boolean;
+  /** 工具调用计数段 🔧N */
+  tools?: boolean;
+  /** 上下文占用段（样式见 contextDisplayMode） */
+  context?: boolean;
+  /** 缓存命中率段 💾 x% */
+  cache?: boolean;
+  /** 输出 token 段 🎫 */
+  output?: boolean;
+  /** 生成速度段 ⚡ x tok/s */
+  speed?: boolean;
+  /** 耗时段 ⏱️ */
+  elapsed?: boolean;
+}
+
+/** 判断某面板段是否启用（缺省开启） */
+function segEnabled(toggles: PanelSegmentToggles | undefined, key: keyof PanelSegmentToggles): boolean {
+  return toggles?.[key] !== false;
+}
+
 function buildCompleteCard(params: {
   text: string;
   panel?: {
@@ -630,8 +656,8 @@ function buildCompleteCard(params: {
     modelAliasesEnabled?: boolean;
     truncateModelName?: boolean;
     peakValley?: PeakValleyConfig[];
-    showCacheHit?: boolean;
-    showSpeed?: boolean;
+    /** 面板各段显示开关（缺省全开） */
+    segments?: PanelSegmentToggles;
   };
   elapsedMs?: number;
   isError?: boolean;
@@ -699,9 +725,12 @@ function buildCompleteCard(params: {
       modelAliasesEnabled: panel?.modelAliasesEnabled,
     });
 
+    const segs = panel?.segments;
     const parts: string[] = ['🍤'];
-    if (modelName) parts.push(modelName);
-    parts.push(`💭${hasReasoning ? 1 : 0}`, `🔧${toolCount}`);
+    if (modelName && segEnabled(segs, 'model')) parts.push(modelName);
+    // 思考/工具计数恒随各自内容出现（💭0/🔧0 本身也是信息），仅受段开关控制
+    if (segEnabled(segs, 'reasoning')) parts.push(`💭${hasReasoning ? 1 : 0}`);
+    if (segEnabled(segs, 'tools')) parts.push(`🔧${toolCount}`);
 
     // 上下文：used = 最后一轮 inputTokens（≈当前上下文，zcode-feishu-bridge 同款），
     // total = 模型上下文窗口（contextTokens）
@@ -713,32 +742,33 @@ function buildCompleteCard(params: {
       typeof footerMetrics?.inputTokens === 'number' && footerMetrics.inputTokens > 0
         ? footerMetrics.inputTokens
         : undefined;
-    if (ctxWindow != null && ctxUsedIn != null) {
+    if (segEnabled(segs, 'context') && ctxWindow != null && ctxUsedIn != null) {
       const ctxSeg = formatContextSegment(ctxUsedIn, ctxWindow, ctxMode);
       if (ctxSeg) parts.push(ctxSeg);
     }
-    // 💾 缓存命中率（cacheRead/(input+read+write)，旧 footer 缓存段同口径）
-    // 默认关闭：标题已够长，需要时用 panel.showCacheHit 打开；未报 cache 时也省略
-    if (panel?.showCacheHit) {
+    // 💾 缓存命中率（cacheRead/(input+read+write)，旧 footer 缓存段同口径）；未报 cache 时自动省略
+    if (segEnabled(segs, 'cache')) {
       const hitRate = computeCacheHitRate(footerMetrics);
       if (hitRate != null) parts.push(`💾 ${hitRate}%`);
     }
     // 🎫 输出 token：会话累计（outputTokensTotal），无累计时回落单轮 outputTokens
-    const outShown =
-      typeof footerMetrics?.outputTokensTotal === 'number'
-        ? footerMetrics.outputTokensTotal
-        : typeof footerMetrics?.outputTokens === 'number'
-          ? footerMetrics.outputTokens
-          : undefined;
-    if (outShown != null && outShown > 0) parts.push(`🎫 ${compactNumber(outShown)}`);
-    // ⚡ 本轮生成速度（tokens/s，transcript 时间戳推算）；默认关闭：panel.showSpeed 打开
-    if (panel?.showSpeed) {
+    if (segEnabled(segs, 'output')) {
+      const outShown =
+        typeof footerMetrics?.outputTokensTotal === 'number'
+          ? footerMetrics.outputTokensTotal
+          : typeof footerMetrics?.outputTokens === 'number'
+            ? footerMetrics.outputTokens
+            : undefined;
+      if (outShown != null && outShown > 0) parts.push(`🎫 ${compactNumber(outShown)}`);
+    }
+    // ⚡ 本轮生成速度（tokens/s，transcript 时间戳推算）
+    if (segEnabled(segs, 'speed')) {
       const tps = footerMetrics?.tokensPerSecond;
       if (typeof tps === 'number' && Number.isFinite(tps) && tps > 0) {
         parts.push(`⚡ ${formatTokensPerSecond(tps)} tok/s`);
       }
     }
-    if (elapsed > 0) parts.push(`⏱️ ${formatElapsed(elapsed)}`);
+    if (segEnabled(segs, 'elapsed') && elapsed > 0) parts.push(`⏱️ ${formatElapsed(elapsed)}`);
 
     const children: CardElement[] = [];
     if (hasReasoning) {

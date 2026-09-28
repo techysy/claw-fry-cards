@@ -12,7 +12,7 @@
  * 插件配置优先；两处都没配时返回 undefined（引擎用内置默认值）。
  */
 
-import type { ModelAliasEntry } from './builder';
+import type { ModelAliasEntry, PanelSegmentToggles } from './builder';
 
 export interface UnifiedPanelSettings {
   unifiedPanelMinDurationMs?: number;
@@ -22,11 +22,21 @@ export interface UnifiedPanelSettings {
   modelAliasesEnabled?: boolean;
   truncateModelName?: boolean;
   peakValley?: PeakValleyConfig[];
-  /** 💾 缓存命中率段开关；缺省 false（面板默认不显示，避免标题过长） */
-  showCacheHit?: boolean;
-  /** ⚡ 本轮生成速度段开关；缺省 false（面板默认不显示，避免标题过长） */
-  showSpeed?: boolean;
+  /** 面板各段显示开关（缺省全开，见 PanelSegmentToggles） */
+  segments?: PanelSegmentToggles;
 }
+
+/** 面板段开关字段名（用于解析与旧键兼容） */
+const SEGMENT_KEYS = [
+  'model',
+  'reasoning',
+  'tools',
+  'context',
+  'cache',
+  'output',
+  'speed',
+  'elapsed',
+] as const satisfies ReadonlyArray<keyof PanelSegmentToggles>;
 
 /** 峰谷价标识条目：峰段（计费高峰窗口）显示 peakName，谷段（闲时/优惠）显示 valleyName */
 export interface PeakValleyConfig {
@@ -80,6 +90,8 @@ function readPanelSettings(raw: unknown): UnifiedPanelSettings | undefined {
     modelAliasesEnabled?: unknown;
     truncateModelName?: unknown;
     peakValley?: unknown;
+    segments?: unknown;
+    /** 旧键（2.0.6 早期形态），解析时并入 segments 保持兼容 */
     showCacheHit?: unknown;
     showSpeed?: unknown;
   };
@@ -104,8 +116,17 @@ function readPanelSettings(raw: unknown): UnifiedPanelSettings | undefined {
       ([match, v]) => ({ ...v, match }),
     );
   }
-  if (typeof p.showCacheHit === 'boolean') out.showCacheHit = p.showCacheHit;
-  if (typeof p.showSpeed === 'boolean') out.showSpeed = p.showSpeed;
+  // segments：面板各段显示开关（缺省全开，仅记录显式布尔值）
+  const segments: PanelSegmentToggles = {};
+  const rawSegments = p.segments && typeof p.segments === 'object' ? (p.segments as Record<string, unknown>) : {};
+  for (const key of SEGMENT_KEYS) {
+    if (typeof rawSegments[key] === 'boolean') segments[key] = rawSegments[key] as boolean;
+  }
+  // 旧键兼容：showCacheHit / showSpeed → segments.cache / segments.speed
+  if (typeof p.showCacheHit === 'boolean') segments.cache = p.showCacheHit;
+  if (typeof p.showSpeed === 'boolean') segments.speed = p.showSpeed;
+  if (Object.keys(segments).length > 0) out.segments = segments;
+
   return Object.keys(out).length > 0 ? out : undefined;
 }
 
