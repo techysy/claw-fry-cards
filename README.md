@@ -24,21 +24,24 @@
 
 ## 🧭 版本说明（1.0 → 2.0）
 
-| 版本 | 形态 | 获取方式 |
-| --- | --- | --- |
-| **2.0**（本主线） | **通道插件**：官方通道 2.0 适配，卡片引擎内置，替换官方通道 | `main` 分支 / `v2.0.0+` 标签 |
-| **1.0**（伴侣插件） | 钩子观测自建卡片，官方通道继续收发，不替换通道 | `git checkout v1.0.0`（降级使用） |
+| 版本                | 形态                                                        | 获取方式                          |
+| ------------------- | ----------------------------------------------------------- | --------------------------------- |
+| **2.0**（本主线）   | **通道插件**：官方通道 2.0 适配，卡片引擎内置，替换官方通道 | `main` 分支 / `v2.0.0+` 标签      |
+| **1.0**（伴侣插件） | 钩子观测自建卡片，官方通道继续收发，不替换通道              | `git checkout v1.0.0`（降级使用） |
 
 > ⚠️ 1.0 与 2.0 架构不同，**切勿同时启用**（两套卡片会互相冲突）。  
 > 2.0 前身 [claw-lark-cards](https://github.com/techysy/claw-lark-cards) 已合并入本仓库并废弃，后续仅在此维护。
 
 ### 从 claw-lark-cards 升级
+
 ```bash
 openclaw plugins uninstall openclaw-lark --force   # 按其实际目录名卸载
 ```
+
 配置迁移：插件 ID 已更名为 `claw-fry-cards`，`channels.feishu` 配置不变，仅需将 `plugins.entries.openclaw-lark` 改为 `plugins.entries.claw-fry-cards`。
 
 ### 从 1.0 伴侣插件升级
+
 2.0 为通道插件，会**替换官方通道**。先卸载官方飞书通道（`openclaw plugins uninstall feishu --force`，注意该命令会删除 `channels.feishu` 配置，请备份后恢复），再安装本插件；1.0 的 `hooks.allowConversationAccess` 在 2.0 下不再需要。
 
 ---
@@ -46,6 +49,7 @@ openclaw plugins uninstall openclaw-lark --force   # 按其实际目录名卸载
 ## ✨ 特性
 
 ### 1. 通道基础能力（承自官方，2.0 全量适配）
+
 - 💬 **消息全覆盖**：群聊 / 单聊收发、话题回复、消息搜索、图片 / 文件上传下载。
 - 📄 **云文档交互**：云文档创建、更新、读取。
 - 📊 **多维表格**：数据表 / 字段 / 记录 CRUD、批量操作、高级筛选、视图。
@@ -53,6 +57,7 @@ openclaw plugins uninstall openclaw-lark --force   # 按其实际目录名卸载
 - 📅 **日历与任务**：日程管理、参会人忙闲查询；任务 / 清单 / 评论全周期追踪。
 
 ### 2. 🍤 虾条式流式卡片（增强体验）
+
 - ⚡ **派发即建卡**：用户消息到达 1 秒内建立“处理中”卡片，杜绝空白等待焦虑。
 - ✍️ **打字机输出**：基于 CardKit streaming_mode 客户端动画，回复文字流畅逐字上屏。
 - 🎯 **统一指标面板**：完成态底部收归单一折叠面板，一行带全关键指标：`🍤 ⇲模型 · 💭N · 🔧N · 上下文 (x%) · 🎫 输出 · ⏱️耗时`。
@@ -62,6 +67,7 @@ openclaw plugins uninstall openclaw-lark --force   # 按其实际目录名卸载
 - 📊 **原生会话指标**：实时读取 OpenClaw agent transcript SQLite，准确统计 token 与上下文水位。
 
 ### 3. OpenClaw 2.0 底层适配
+
 - 全面迁移 SDK 导入路径（`openclaw/plugin-sdk` → `plugin-sdk/core` 等 100+ 处）。
 - 升级类型定义（`ClawdbotConfig` → `OpenClawConfig`），对齐运行时配置 API。
 - 会话指标源自 SQLite 数据库提取，不再依赖已废弃的 `sessions.json`。
@@ -72,25 +78,31 @@ openclaw plugins uninstall openclaw-lark --force   # 按其实际目录名卸载
 ## 📦 安装
 
 **环境要求**：
+
 - OpenClaw ≥ 2026.5.4（推荐 **2026.9.4+**，已在 Docker + 飞牛 fnOS 验证）
 - Node.js ≥ 22
 
 ### 方式一：一键脚本（推荐 · Agent 友好）
+
 ```bash
 curl -fsSL https://raw.githubusercontent.com/techysy/claw-fry-cards/main/install.sh | bash
 ```
+
 脚本将自动定位 OpenClaw CLI 并从 npm 拉取注册（可通过 `FRY_VERSION=2.0.5` 指定版本）。安装完成后需手动重启网关：
+
 ```bash
 openclaw gateway restart
 ```
 
 ### 方式二：npm 安装
+
 ```bash
 openclaw plugins install claw-fry-cards --force --accept-capabilities
 openclaw gateway restart
 ```
 
 ### 方式三：从源码构建安装
+
 ```bash
 git clone https://github.com/techysy/claw-fry-cards.git
 cd claw-fry-cards
@@ -150,11 +162,11 @@ openclaw gateway restart
 
 ### 流式卡片三层开关（排障核对标准）
 
-| 层级 | 配置（2026.9.4+） | 配置（旧版 ≤2026.9.1） | 说明 |
-| --- | --- | --- | --- |
-| ① **总开关** | `streaming: { mode: "partial" }` | `streaming: true` | 未配置此开关则恒定输出为纯文本（`mode: "off"` 关闭） |
-| ② **交互模式** | 无需额外配置（2.0.6 起默认流式） | 同左 | **群聊与私聊默认统一采用流式卡片**；若群聊需保持安静可显式配置 `replyMode: { group: "static" }` |
-| ③ **工具展示** | 默认开启 | 默认开启 | `toolUseDisplay` 缺省即开启，自动展示工具调用步骤 |
+| 层级           | 配置（2026.9.4+）                | 配置（旧版 ≤2026.9.1） | 说明                                                                                            |
+| -------------- | -------------------------------- | ---------------------- | ----------------------------------------------------------------------------------------------- |
+| ① **总开关**   | `streaming: { mode: "partial" }` | `streaming: true`      | 未配置此开关则恒定输出为纯文本（`mode: "off"` 关闭）                                            |
+| ② **交互模式** | 无需额外配置（2.0.6 起默认流式） | 同左                   | **群聊与私聊默认统一采用流式卡片**；若群聊需保持安静可显式配置 `replyMode: { group: "static" }` |
+| ③ **工具展示** | 默认开启                         | 默认开启               | `toolUseDisplay` 缺省即开启，自动展示工具调用步骤                                               |
 
 > ⚠️ **注意**：飞牛/本地部署请将凭据配置在 `channels.feishu.*` 下，勿混写至插件配置中。  
 > 飞牛 / 飞书开放平台应用须开通：`im:message`（消息收发）与 `cardkit:card`（卡片操作权限）。推荐采用 `websocket` 模式直连。
@@ -165,22 +177,82 @@ openclaw gateway restart
 
 当 Agent 回复生成完成时，底部会自动注入统计面板。面板支持在 **Control UI → 设置 → Claw Fry Cards** 界面进行全中文可视化配置。
 
-| 项 | 规则与行为 |
-| --- | --- |
+| 项           | 规则与行为                                                                                |
+| ------------ | ----------------------------------------------------------------------------------------- |
 | **标题格式** | `🍤 ⇲模型 · 💭N · 🔧N · 368.6k/1.0m (37%) · 🎫 1.5k · ⏱️ 13.3s`（缺失字段自适应折叠省略） |
-| **展开内容** | 模型的完整思考推导记录 + 工具调用顺序流水；两项均空时呈现“暂无思考与工具调用过程” |
-| **展示触发** | 单次交互耗时 ≥ 5 秒，**或**会话中包含了思考/工具调用步骤 |
-| **边框反馈** | 绿色（成功完成）· 红色（执行异常）· 黄色（任务被手动停止） |
+| **展开内容** | 模型的完整思考推导记录 + 工具调用顺序流水；两项均空时呈现“暂无思考与工具调用过程”         |
+| **展示触发** | 单次交互耗时 ≥ 5 秒，**或**会话中包含了思考/工具调用步骤                                  |
+| **边框反馈** | 绿色（成功完成）· 红色（执行异常）· 黄色（任务被手动停止）                                |
 
 ### 核心面板选项（`panel`）
 
-| 参数 | 说明 | 默认值 |
-| --- | --- | --- |
-| `unifiedPanelMinDuration` | 面板常驻显示的耗时门槛（秒）。耗时超出该阈值或含有工具调用时渲染，`0` 表示全量显示 | `5` |
-| `contextDisplayMode` | 上下文消耗指标呈现格式：`text` (`129.3k/1.0m (13%)`)、`bar` (`[██▓░░░░░] 13%`)、`text_bar` | `text` |
-| `truncateModelName` | 超长模型名自适应截断（如 `mimo/mimo-v2.5` → `⇲mimo-v2.5`） | `true` |
-| `modelAliases` | 模型重命名与分时段人设映射字典 | `{}` |
-| `peakValley` | 针对特定模型的峰谷电价式名称映射配置 | `{}` |
+| 参数                      | 说明                                                                                       | 默认值  |
+| ------------------------- | ------------------------------------------------------------------------------------------ | ------- |
+| `unifiedPanelMinDuration` | 面板常驻显示的耗时门槛（秒）。耗时超出该阈值或含有工具调用时渲染，`0` 表示全量显示         | `5`     |
+| `contextDisplayMode`      | 上下文消耗指标呈现格式：`text` (`129.3k/1.0m (13%)`)、`bar` (`[██▓░░░░░] 13%`)、`text_bar` | `text`  |
+| `truncateModelName`       | 超长模型名自适应截断（如 `mimo/mimo-v2.5` → `⇲mimo-v2.5`）                                 | `true`  |
+| `modelAliases`            | 模型重命名与分时段人设映射字典                                                             | `{}`    |
+| `peakValley`              | 针对特定模型的峰谷电价式名称映射配置                                                       | `{}`    |
+| `showCacheHit`            | 面板显示 `💾 86%` 本轮缓存命中率（`cacheRead/(input+read+write)`）                         | `false` |
+| `showSpeed`               | 面板显示 `⚡ 42.3 tok/s` 本轮生成速度（transcript 时间戳推算，不含工具执行段）             | `false` |
+
+> **面板标题**：`🍤 ⇲模型 · 💭N · 🔧N · 368.6k/1.0m (37%) · 🎫 1.5k · ⏱️ 13.3s`，数据缺失的段自动省略。`showCacheHit` / `showSpeed` 打开后，`💾` 插在 `🎫` 前、`⚡` 插在 `🎫` 与 `⏱️` 之间——因标题已够长，**两项默认关闭**。
+
+**面板设置**：在 **Control UI → 设置 → Claw Fry Cards → 配置页** 可视化编辑（全中文字段说明），存储于插件自有配置 `plugins.entries.claw-fry-cards.config.panel`——随插件版本化，不受宿主 schema 演化影响（旧位置 `channels.feishu.panel` 仍兼容读取）：
+
+> 🔥 **全部热更新**：保存后网关自动检测并应用（agent 正忙时重载排队，干完自动生效），**无需重启网关**；正在生成的回复不受影响，下一条消息即用新值。
+
+```json
+"panel": {
+  "unifiedPanelMinDuration": 5,
+  "contextDisplayMode": "text",
+  "truncateModelName": true,
+  "modelAliasesEnabled": true
+}
+```
+
+### ⏱️ 按时间切换显示名（峰谷价 / 时段人设）
+
+面板模型名支持按时间窗自动切换显示——典型用途是 DeepSeek 的**峰谷价标识**（峰段梁文锋⚡️ / 谷段梁文谷⚡️，一眼看出当前计费档位），也适用于任何时段人设。
+
+**配置入口：Control UI → 设置 → Claw Fry Cards → 配置页**，全部可视化编辑，无需手写 JSON：
+
+| 想要                         | 在配置页操作                                                                                                                      |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| 峰谷价标识（推荐，两行搞定） | 展开 **Peak Valley** → 添加条目 → 键填匹配模型（如 `deepseek`）→ 值里填峰时显示 / 谷时显示 → 时间表下拉选择                       |
+| 模型别名（含时段规则）       | 展开 **Model Aliases** → 添加条目 → 键填匹配模型子串（如 `mimo`）→ 值里填名称，需要时段切换就加时段规则（星期逐项勾选、起止时间） |
+| 纯别名（不按时段）           | 同上，值只填名称字符串                                                                                                            |
+
+- **匹配**：键对完整模型名做大小写不敏感子串匹配，按插入顺序第一条命中即生效（`mimo` 命中 `mimo/mimo-v2.5`）
+- **时间表**（峰谷价专用预置）：`deepseek`（工作日 9:00–12:00 & 14:00–18:00 峰段）/ `workday-918` / `everyday-day` / `always-peak` / `custom`
+- 时段规则里 `days` 星期逐项选择（`0`=周日），`start`/`end` 为北京时间 HH:MM，支持跨午夜；规则都不命中时回落默认名称（即"其他时间"）
+- 两种写法可共存：peakValley 运行时展开为等价时段规则，同键时 Model Aliases 手写条目优先；别名命中优先于 ⇲ 截断；**Model Aliases Enabled** 开关可整体关闭别名
+
+<details>
+<summary>对应的 openclaw.json 配置（直改配置文件时参考）</summary>
+
+```json
+"panel": {
+  "peakValley": {
+    "deepseek": { "peakName": "梁文锋⚡️", "valleyName": "梁文谷⚡️", "schedule": "deepseek" },
+    "gemini":   { "peakName": "Gemini☀️",  "valleyName": "Gemini🌙",  "schedule": "workday-918" }
+  },
+  "modelAliases": {
+    "deepseek": {
+      "name": "梁文谷⚡️",
+      "timeAliases": [
+        { "days": [1, 2, 3, 4, 5], "start": "09:00", "end": "12:00", "name": "梁文锋⚡️" },
+        { "days": [1, 2, 3, 4, 5], "start": "14:00", "end": "18:00", "name": "梁文锋⚡️" }
+      ]
+    },
+    "mimo": "小虾米"
+  }
+}
+```
+
+</details>
+
+> 指标来源是 agent transcript SQLite（`~/.openclaw/agents/<agent>/agent/openclaw-agent.sqlite`），模型名/token/上下文窗口由最近一轮 usage 事件解析；💾 缓存命中率 = 本轮 cacheRead/(input+read+write)，⚡ 速度 = 本轮 output ÷ 生成耗时（本轮 assistant 事件与前一条事件的时间戳差，不含工具执行段，>30 分钟视为异常省略）。💾/⚡ 两段**默认不显示**（分别用 `showCacheHit` / `showSpeed` 打开），其余段任一数据缺失时自动省略。老版本宿主无此库时统一面板自动省略指标段（详见 [docs/compat-test-report.md](docs/compat-test-report.md)）。
 
 ---
 

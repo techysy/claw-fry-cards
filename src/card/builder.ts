@@ -196,6 +196,27 @@ export function compactNumber(value: number): string {
   return String(value);
 }
 
+/**
+ * 💾 缓存命中率（%）：cacheRead / (input + cacheRead + cacheWrite)，与旧 footer 缓存段同口径。
+ * 未上报 cacheRead（≤0，模型/渠道无缓存计量）或 input 缺失时返回 undefined（面板省略该段）。
+ */
+export function computeCacheHitRate(metrics: FooterSessionMetrics | undefined): number | undefined {
+  if (!metrics) return undefined;
+  const read = typeof metrics.cacheRead === 'number' && metrics.cacheRead > 0 ? metrics.cacheRead : undefined;
+  const inputVal =
+    typeof metrics.inputTokens === 'number' && metrics.inputTokens >= 0 ? metrics.inputTokens : undefined;
+  if (read == null || inputVal == null) return undefined;
+  const write = typeof metrics.cacheWrite === 'number' && metrics.cacheWrite >= 0 ? metrics.cacheWrite : 0;
+  const total = inputVal + read + write;
+  if (total <= 0) return undefined;
+  return Math.round((read / total) * 100);
+}
+
+/** ⚡ 速度显示值：≥100 取整（135 tok/s），否则保留 1 位小数（38.5 tok/s） */
+export function formatTokensPerSecond(v: number): string {
+  return v >= 100 ? String(Math.round(v)) : v.toFixed(1);
+}
+
 /** fry 风格上下文进度（渐变密度条 █▓▒░，移植自 hermes-fry-cards） */
 export function contextProgressBar(used: number, total: number, width = 8): string {
   if (total <= 0) return '';
@@ -473,6 +494,10 @@ export function buildCardContent(
       peakValley?: PeakValleyConfig[];
       contextDisplayMode?: ContextDisplayMode;
       expanded?: boolean;
+      /** 💾 缓存命中率段开关；缺省 false（默认不显示） */
+      showCacheHit?: boolean;
+      /** ⚡ 本轮生成速度段开关；缺省 false（默认不显示） */
+      showSpeed?: boolean;
     };
     text?: string;
     reasoningText?: string;
@@ -605,6 +630,8 @@ function buildCompleteCard(params: {
     modelAliasesEnabled?: boolean;
     truncateModelName?: boolean;
     peakValley?: PeakValleyConfig[];
+    showCacheHit?: boolean;
+    showSpeed?: boolean;
   };
   elapsedMs?: number;
   isError?: boolean;
@@ -690,6 +717,12 @@ function buildCompleteCard(params: {
       const ctxSeg = formatContextSegment(ctxUsedIn, ctxWindow, ctxMode);
       if (ctxSeg) parts.push(ctxSeg);
     }
+    // 💾 缓存命中率（cacheRead/(input+read+write)，旧 footer 缓存段同口径）
+    // 默认关闭：标题已够长，需要时用 panel.showCacheHit 打开；未报 cache 时也省略
+    if (panel?.showCacheHit) {
+      const hitRate = computeCacheHitRate(footerMetrics);
+      if (hitRate != null) parts.push(`💾 ${hitRate}%`);
+    }
     // 🎫 输出 token：会话累计（outputTokensTotal），无累计时回落单轮 outputTokens
     const outShown =
       typeof footerMetrics?.outputTokensTotal === 'number'
@@ -698,6 +731,13 @@ function buildCompleteCard(params: {
           ? footerMetrics.outputTokens
           : undefined;
     if (outShown != null && outShown > 0) parts.push(`🎫 ${compactNumber(outShown)}`);
+    // ⚡ 本轮生成速度（tokens/s，transcript 时间戳推算）；默认关闭：panel.showSpeed 打开
+    if (panel?.showSpeed) {
+      const tps = footerMetrics?.tokensPerSecond;
+      if (typeof tps === 'number' && Number.isFinite(tps) && tps > 0) {
+        parts.push(`⚡ ${formatTokensPerSecond(tps)} tok/s`);
+      }
+    }
     if (elapsed > 0) parts.push(`⏱️ ${formatElapsed(elapsed)}`);
 
     const children: CardElement[] = [];

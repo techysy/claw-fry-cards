@@ -3,7 +3,13 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { buildCardContent, compactNumber, formatFooterRuntimeSegments } from '../src/card/builder';
+import {
+  buildCardContent,
+  compactNumber,
+  computeCacheHitRate,
+  formatFooterRuntimeSegments,
+  formatTokensPerSecond,
+} from '../src/card/builder';
 import type { ToolUseDisplayStep } from '../src/card/tool-use-display';
 
 // ---------------------------------------------------------------------------
@@ -88,6 +94,91 @@ describe('formatFooterRuntimeSegments', () => {
     expect(errored.primaryEn).toEqual(['Error', 'Elapsed 1.0s']);
     expect(errored.detailZh).toEqual([]);
     expect(errored.detailEn).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 💾 缓存命中率 / ⚡ 速度（统一面板 header 新增段）
+// ---------------------------------------------------------------------------
+
+describe('computeCacheHitRate', () => {
+  it('computes read share over input+read+write', () => {
+    expect(computeCacheHitRate({ inputTokens: 7465, cacheRead: 47488, cacheWrite: 0 })).toBe(86);
+    expect(computeCacheHitRate({ inputTokens: 1000, cacheRead: 1000, cacheWrite: 3000 })).toBe(20);
+  });
+
+  it('treats missing cacheWrite as 0 but requires positive cacheRead', () => {
+    expect(computeCacheHitRate({ inputTokens: 500, cacheRead: 1500 })).toBe(75);
+    expect(computeCacheHitRate({ inputTokens: 500, cacheRead: 0, cacheWrite: 200 })).toBeUndefined();
+    expect(computeCacheHitRate({ cacheRead: 100 })).toBeUndefined();
+    expect(computeCacheHitRate(undefined)).toBeUndefined();
+  });
+});
+
+describe('formatTokensPerSecond', () => {
+  it('rounds at 100+ and keeps one decimal below', () => {
+    expect(formatTokensPerSecond(135.2)).toBe('135');
+    expect(formatTokensPerSecond(38.44)).toBe('38.4');
+    expect(formatTokensPerSecond(5)).toBe('5.0');
+  });
+});
+
+describe('buildCardContent – unified panel header cache/speed segments', () => {
+  function panelHeaderText(card: ReturnType<typeof buildCardContent>): string {
+    const panel = ((card.elements ?? []).find((el) => (el as Record<string, unknown>).tag === 'collapsible_panel') ??
+      {}) as Record<string, unknown>;
+    const header = panel.header as { title?: { content?: string } } | undefined;
+    return header?.title?.content ?? '';
+  }
+
+  const richMetrics = {
+    inputTokens: 7465,
+    outputTokens: 882,
+    outputTokensTotal: 1200,
+    cacheRead: 47488,
+    cacheWrite: 0,
+    contextTokens: 131072,
+    tokensPerSecond: 135.2,
+    model: 'test-model',
+  };
+
+  it('hides 💾 and ⚡ by default (panel.showCacheHit/showSpeed unset)', () => {
+    const card = buildCardContent('complete', { text: 'hello', elapsedMs: 6000, footerMetrics: richMetrics });
+    const text = panelHeaderText(card);
+    expect(text).not.toContain('💾');
+    expect(text).not.toContain('⚡');
+    // 其余指标段照常显示
+    expect(text).toContain('🎫 1.2k');
+    expect(text).toContain('⏱️');
+  });
+
+  it('renders 💾 hit rate and ⚡ speed only when explicitly enabled', () => {
+    const card = buildCardContent('complete', {
+      text: 'hello',
+      elapsedMs: 6000,
+      panel: { showCacheHit: true, showSpeed: true },
+      footerMetrics: richMetrics,
+    });
+    const text = panelHeaderText(card);
+    expect(text).toContain('💾 86%');
+    expect(text).toContain('⚡ 135 tok/s');
+    // 段序：💾 在 🎫 之前，⚡ 在 🎫 与 ⏱️ 之间
+    expect(text.indexOf('💾')).toBeLessThan(text.indexOf('🎫'));
+    expect(text.indexOf('⚡')).toBeGreaterThan(text.indexOf('🎫'));
+    expect(text.indexOf('⚡')).toBeLessThan(text.indexOf('⏱️'));
+  });
+
+  it('omits cache and speed segments when data is unavailable', () => {
+    const card = buildCardContent('complete', {
+      text: 'hello',
+      elapsedMs: 6000,
+      panel: { showCacheHit: true, showSpeed: true },
+      footerMetrics: { inputTokens: 100, outputTokens: 50, model: 'test-model' },
+    });
+    const text = panelHeaderText(card);
+    expect(text).not.toContain('💾');
+    expect(text).not.toContain('⚡');
+    expect(text).toContain('🎫 50');
   });
 });
 

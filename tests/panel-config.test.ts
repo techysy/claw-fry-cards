@@ -61,6 +61,25 @@ describe('resolvePanelSettings', () => {
     expect(resolvePanelSettings({ plugins: { entries: { 'claw-fry-cards': { config: {} } } } })).toBeUndefined();
   });
 
+  it('parses showCacheHit / showSpeed opt-ins and leaves them unset by default', () => {
+    const on = {
+      plugins: {
+        entries: { 'claw-fry-cards': { config: { panel: { showCacheHit: true, showSpeed: true } } } },
+      },
+    };
+    expect(resolvePanelSettings(on)).toEqual({ showCacheHit: true, showSpeed: true });
+
+    // 未配置时不写入键（builder 侧缺省即不显示，避免标题过长）
+    const other = { plugins: { entries: { 'claw-fry-cards': { config: { panel: { expanded: true } } } } } };
+    expect(resolvePanelSettings(other)).toEqual({ expanded: true });
+
+    // 非布尔值忽略
+    const bad = {
+      plugins: { entries: { 'claw-fry-cards': { config: { panel: { showCacheHit: 'yes' } } } } },
+    };
+    expect(resolvePanelSettings(bad)).toBeUndefined();
+  });
+
   it('ignores invalid shapes', () => {
     expect(resolvePanelSettings({ plugins: { entries: { 'claw-fry-cards': 42 } } })).toBeUndefined();
     expect(

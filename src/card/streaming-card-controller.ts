@@ -166,9 +166,9 @@ export class StreamingCardController {
 
         const rows = db
           .prepare(
-            "SELECT event_json FROM transcript_events WHERE session_id = ? AND event_json LIKE '%usage%' ORDER BY rowid DESC LIMIT 500",
+            "SELECT rowid, event_json FROM transcript_events WHERE session_id = ? AND event_json LIKE '%usage%' ORDER BY rowid DESC LIMIT 500",
           )
-          .all(window.session_id) as Array<{ event_json: string } | undefined>;
+          .all(window.session_id) as Array<{ rowid: number; event_json: string } | undefined>;
         if (!rows.length) return undefined;
 
         // 最新一条 usage 事件给出本轮 input/模型/窗口；其余事件累加 outputTokens
@@ -178,7 +178,7 @@ export class StreamingCardController {
         let sawOutput = false;
         for (const row of rows) {
           if (!row?.event_json) continue;
-          let ev: { message?: { model?: unknown; provider?: unknown; usage?: unknown } };
+          let ev: { timestamp?: unknown; message?: { model?: unknown; provider?: unknown; usage?: unknown } };
           try {
             ev = JSON.parse(row.event_json) as typeof ev;
           } catch {
@@ -199,6 +199,13 @@ export class StreamingCardController {
               model: typeof msg.model === 'string' ? msg.model : undefined,
               provider: typeof msg.provider === 'string' ? msg.provider : undefined,
             };
+            metrics.tokensPerSecond = this.deriveTokensPerSecond(
+              db,
+              window.session_id,
+              row.rowid,
+              typeof ev.timestamp === 'string' ? ev.timestamp : undefined,
+              metrics.outputTokens,
+            );
           }
           if (typeof u.output === 'number' && u.output > 0) {
             outputTotal += u.output;
@@ -222,6 +229,40 @@ export class StreamingCardController {
       }
     } catch (err) {
       log.warn('footer metrics lookup failed', { error: String(err), sessionKey: this.deps.sessionKey });
+      return undefined;
+    }
+  }
+
+  /**
+   * ⚡ 本轮生成速度（tokens/s）= 本轮 output / 本轮生成耗时。
+   * 耗时由 transcript 时间戳推算：本轮 assistant(usage) 事件时间戳 − 其紧邻前一条事件
+   * 的时间戳（轮次起点），不含工具执行段。任一环缺失/异常时返回 undefined（静默省略）。
+   */
+  private deriveTokensPerSecond(
+    db: DatabaseSync,
+    sessionId: string,
+    usageRowid: number,
+    usageTimestamp: string | undefined,
+    outputTokens: number | undefined,
+  ): number | undefined {
+    try {
+      if (typeof outputTokens !== 'number' || outputTokens <= 0) return undefined;
+      const usageTsMs = typeof usageTimestamp === 'string' ? Date.parse(usageTimestamp) : NaN;
+      if (!Number.isFinite(usageTsMs)) return undefined;
+      const prev = db
+        .prepare(
+          'SELECT event_json FROM transcript_events WHERE session_id = ? AND rowid < ? ORDER BY rowid DESC LIMIT 1',
+        )
+        .get(sessionId, usageRowid) as { event_json: string } | undefined;
+      if (!prev?.event_json) return undefined;
+      const prevEv = JSON.parse(prev.event_json) as { timestamp?: unknown };
+      const prevTsMs = typeof prevEv?.timestamp === 'string' ? Date.parse(prevEv.timestamp) : NaN;
+      if (!Number.isFinite(prevTsMs)) return undefined;
+      const durationMs = usageTsMs - prevTsMs;
+      // 上限 30min：把队列等待/陈旧轮次算进耗时会严重低估速度，宁可省略
+      if (durationMs <= 0 || durationMs > 30 * 60_000) return undefined;
+      return outputTokens / (durationMs / 1000);
+    } catch {
       return undefined;
     }
   }
@@ -592,6 +633,7 @@ export class StreamingCardController {
           this.imageResolver,
         );
         const errorCard = buildCardContent('complete', {
+          panel: this.resolvePanelConfig(),
           text: terminalContent.text,
           reasoningText: terminalContent.reasoningText,
           reasoningElapsedMs: this.reasoning.reasoningElapsedMs || undefined,
@@ -792,6 +834,7 @@ export class StreamingCardController {
       const footerMetrics = this.needsFooterMetrics() ? await this.getFooterSessionMetrics() : undefined;
       if (effectiveCardId) {
         const abortCardContent = buildCardContent('complete', {
+          panel: this.resolvePanelConfig(),
           text: terminalContent.text,
           reasoningText: terminalContent.reasoningText,
           reasoningElapsedMs: this.reasoning.reasoningElapsedMs || undefined,
@@ -809,6 +852,7 @@ export class StreamingCardController {
       } else if (this.cardKit.cardMessageId) {
         // IM fallback: 卡片不是通过 CardKit 发的，用 im.message.patch 更新
         const abortCard = buildCardContent('complete', {
+          panel: this.resolvePanelConfig(),
           text: terminalContent.text,
           reasoningText: terminalContent.reasoningText,
           reasoningElapsedMs: this.reasoning.reasoningElapsedMs || undefined,

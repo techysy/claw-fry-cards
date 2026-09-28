@@ -404,6 +404,18 @@ export const PluginConfigSchema = z
             '峰谷价标识列表（DeepSeek 等按峰谷计费的模型，可添加多条）：key 为匹配模型（子串），峰段显示 peakName，谷段（闲时）显示 valleyName；与 modelAliases 可共存，同 key 手写优先',
           )
           .optional(),
+        showCacheHit: z
+          .boolean()
+          .meta({ title: '显示缓存命中率' })
+          .describe('面板显示 💾 本轮缓存命中率 cacheRead/(input+read+write)（默认 false，不显示以免标题过长）')
+          .optional(),
+        showSpeed: z
+          .boolean()
+          .meta({ title: '显示生成速度' })
+          .describe(
+            '面板显示 ⚡ 本轮生成速度 tokens/s，由 transcript 时间戳推算（本轮 assistant 事件 − 前一条事件，不含工具执行段；默认 false，不显示以免标题过长）',
+          )
+          .optional(),
       })
       .describe('统一面板设置（完成态底部折叠面板）')
       .optional(),

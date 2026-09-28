@@ -166,6 +166,8 @@ export interface FooterSessionMetrics {
   cacheWrite?: number;
   totalTokens?: number;
   totalTokensFresh?: boolean;
+  /** 本轮生成速度 tokens/s（transcript 时间戳推算）；无法推算时缺省，面板 ⚡ 段显示用 */
+  tokensPerSecond?: number;
   contextTokens?: number;
   model?: string;
   /** Model provider id (e.g. "opencode-go"), shown in the footer when enabled. */

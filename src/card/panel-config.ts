@@ -22,6 +22,10 @@ export interface UnifiedPanelSettings {
   modelAliasesEnabled?: boolean;
   truncateModelName?: boolean;
   peakValley?: PeakValleyConfig[];
+  /** 💾 缓存命中率段开关；缺省 false（面板默认不显示，避免标题过长） */
+  showCacheHit?: boolean;
+  /** ⚡ 本轮生成速度段开关；缺省 false（面板默认不显示，避免标题过长） */
+  showSpeed?: boolean;
 }
 
 /** 峰谷价标识条目：峰段（计费高峰窗口）显示 peakName，谷段（闲时/优惠）显示 valleyName */
@@ -76,6 +80,8 @@ function readPanelSettings(raw: unknown): UnifiedPanelSettings | undefined {
     modelAliasesEnabled?: unknown;
     truncateModelName?: unknown;
     peakValley?: unknown;
+    showCacheHit?: unknown;
+    showSpeed?: unknown;
   };
   const out: UnifiedPanelSettings = {};
   if (typeof p.unifiedPanelMinDuration === 'number') {
@@ -98,6 +104,8 @@ function readPanelSettings(raw: unknown): UnifiedPanelSettings | undefined {
       ([match, v]) => ({ ...v, match }),
     );
   }
+  if (typeof p.showCacheHit === 'boolean') out.showCacheHit = p.showCacheHit;
+  if (typeof p.showSpeed === 'boolean') out.showSpeed = p.showSpeed;
   return Object.keys(out).length > 0 ? out : undefined;
 }
 
