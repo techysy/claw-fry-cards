@@ -19,7 +19,7 @@
 
 > **这是什么**：一个**飞书通道插件**（替代官方 `@larksuite/openclaw-lark` / 内置 `@openclaw/feishu`），负责 OpenClaw Agent 的飞书消息收发，并用 CardKit v2.0 流式卡片呈现每一轮回复。  
 > **为什么存在**：官方通道插件停更于 2026-07-16，未适配 OpenClaw 2.0（SDK 导出重构、会话存储迁移 SQLite），在新版网关上无法加载。本项目完成了 2.0 适配，并将流式卡片体验升级到 fry-cards 系列风格。  
-> **宿主兼容**：已在 **OpenClaw 2026.10.6**（含 2026.10.3 的真实飞书凭据全链路）生产容器实测，3.x 内置三个 SDK 兼容垫片覆盖 2026.10.x 断崖（详见 [docs/compat-test-report.md](docs/compat-test-report.md)）。
+> **宿主兼容**：已在 **OpenClaw 2026.10.6** 生产容器实测通过（真实群消息收发 + 🍤 卡片渲染；2026.10.3 亦做过真实飞书凭据全链路验证），3.x 内置三个 SDK 兼容垫片覆盖 2026.10.x 断崖（详见 [docs/compat-test-report.md](docs/compat-test-report.md)）。
 
 ---
 
