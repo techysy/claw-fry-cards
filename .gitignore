@@ -10,6 +10,7 @@ src/tools/docs/
 
 # 本地部署/升级排障暂存（含容器 env 与 state 卷备份，切勿入库）
 .docker-stage/
+.backup/
 
 # IDE / AI config
 .idea/

@@ -14,6 +14,7 @@
 - ⬇️ peer 下限**维持 `>=2026.5.4`**：三代回落垫片保留老路径，不牺牲既有下限
 - ✅ **验证**：`docs/compat-test-harness.mjs` 在 **2026.9.4** 与 **2026.10.3** 两个真实宿主依赖树上均 `RESULT: PASS`（import + register 全通过，API 面一致）；**真实 2026.10.3 生产容器 + 真实飞书凭据全链路实测**——宿主由 9.4 就地升级至 10.3，插件加载 `enabled`、网关 `healthy`、飞书 websocket `client ready`、真实群消息走完「收→gate→agent→模型→回复」全链路（`dispatch complete (queuedFinal=true, replies=1)`）、卡片引擎 `progressCard.get` 调用成功且**回复经人工确认为 🍤 卡片**（`streaming.mode=partial` 被正确解析、未退化为静态纯文本）；三垫片在真实宿主上均命中 10.x 分支（channel-outbound / 重建路径 / getSessionEntry）；重建鉴权逻辑与 9.4 原实现**四种用例结果完全一致**；482 项单测、typecheck、lint(0 error) 全绿
 - ⚠️ **升级到 10.x 的必查项**：宿主 2026.10.3 会自动安装并启用官方 `@openclaw/feishu` 通道插件，与本插件抢占 `feishu` 通道（实测日志 `channel already registered: feishu (claw-fry-cards)`）。修复：`openclaw plugins disable feishu`。此与插件代码无关，属宿主自动启用行为，每次宿主大版本升级后都需复查
+- ✅ **2026.10.6 复测**（2026-10-23，无代码改动）：生产容器由 10.3 就地升级至 `2026.10.6 (fe06181)`，插件 3.1.0 未重装即正常运行——`plugin-sdk` 子路径 344→345 无新增移除、具名导出只增不减、宿主自动迁移 agent DB `v24→v25`、插件 `enabled`、飞书 websocket `client ready`、容器 `healthy`、官方 feishu 插件未回装。**10.6 为当前推荐宿主**。另修正文档：`openclaw plugins uninstall feishu --force` 会连带删除 `channels.feishu`（含 `appId`/`appSecret`），需先导出再恢复
 
 ## 3.0.1 (2026-09-29)
 

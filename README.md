@@ -18,7 +18,8 @@
 </div>
 
 > **这是什么**：一个**飞书通道插件**（替代官方 `@larksuite/openclaw-lark` / 内置 `@openclaw/feishu`），负责 OpenClaw Agent 的飞书消息收发，并用 CardKit v2.0 流式卡片呈现每一轮回复。  
-> **为什么存在**：官方通道插件停更于 2026-07-16，未适配 OpenClaw 2.0（SDK 导出重构、会话存储迁移 SQLite），在新版网关上无法加载。本项目完成了 2.0 适配，并将流式卡片体验升级到 fry-cards 系列风格。
+> **为什么存在**：官方通道插件停更于 2026-07-16，未适配 OpenClaw 2.0（SDK 导出重构、会话存储迁移 SQLite），在新版网关上无法加载。本项目完成了 2.0 适配，并将流式卡片体验升级到 fry-cards 系列风格。  
+> **宿主兼容**：已在 **OpenClaw 2026.10.6**（含 2026.10.3 的真实飞书凭据全链路）生产容器实测，3.x 内置三个 SDK 兼容垫片覆盖 2026.10.x 断崖（详见 [docs/compat-test-report.md](docs/compat-test-report.md)）。
 
 ---
 
@@ -30,6 +31,14 @@
 
 前身 [claw-lark-cards](https://github.com/techysy/claw-lark-cards) 已合并入本仓库并废弃，后续仅在此维护。
 
+### 宿主升级提示（OpenClaw 2026.10.x）
+
+- 升级宿主大版本后，**务必复查 `plugins.entries` 是否多出 `feishu`**——宿主会自动安装并启用官方飞书通道，与本插件抢占同一通道。
+- 清理官方通道二选一：
+  - `openclaw plugins disable feishu`（**推荐**，安全）
+  - `openclaw plugins uninstall feishu --force`——⚠️ **该命令会连带删除 `channels.feishu`（含 `appId` / `appSecret` / 群策略）**，执行前务必导出保存，卸载后立即写回。
+- 插件 3.1.0 **无需改动**即可运行在 2026.10.6 上；升级宿主不会迁移或修改 `channels.feishu` 配置。
+
 ### 从 claw-lark-cards 升级
 
 ```bash
@@ -40,7 +49,7 @@ openclaw plugins uninstall openclaw-lark --force   # 按其实际目录名卸载
 
 ### 从 1.0 伴侣插件升级
 
-2.0+ 为通道插件，会**替换官方通道**。先卸载官方飞书通道（`openclaw plugins uninstall feishu --force`，注意该命令会删除 `channels.feishu` 配置，请备份后恢复），再安装本插件；1.0 的 `hooks.allowConversationAccess` 在 2.0+ 下不再需要。
+2.0+ 为通道插件，会**替换官方通道**。先卸载官方飞书通道（`openclaw plugins uninstall feishu --force`，注意该命令会删除 `channels.feishu` 配置，请先导出、卸载后立即写回），再安装本插件；1.0 的 `hooks.allowConversationAccess` 在 2.0+ 下不再需要。
 
 ---
 
@@ -77,7 +86,7 @@ openclaw plugins uninstall openclaw-lark --force   # 按其实际目录名卸载
 
 **环境要求**：
 
-- OpenClaw ≥ 2026.5.4（推荐 **2026.9.4+**，已在 Docker + 飞牛 fnOS 验证）
+- OpenClaw ≥ 2026.5.4（推荐 **2026.10.6**，已在 Docker 生产容器实测；2026.9.4+ 及飞牛 fnOS 亦验证）
 - Node.js ≥ 22
 
 ### 方式一：一键脚本（推荐 · Agent 友好）
@@ -111,7 +120,8 @@ openclaw plugins install . --force --accept-capabilities
 openclaw gateway restart
 ```
 
-> ⚠️ 若之前使用过官方通道，请先执行清理：`openclaw plugins uninstall feishu --force` 并移除 `plugins.entries.feishu` 配置项，防止宿主收敛机制自动回装旧版本。
+> ⚠️ 若之前使用过官方通道，请先执行清理：`openclaw plugins uninstall feishu --force` 并移除 `plugins.entries.feishu` 配置项，防止宿主收敛机制自动回装旧版本。  
+> **注意**：该卸载命令会连带删除 `channels.feishu`（含 `appId` / `appSecret` / 群策略），即本插件赖以工作的配置。请先导出这段配置，卸载后立即写回；或改用 `openclaw plugins disable feishu`。
 
 ---
 

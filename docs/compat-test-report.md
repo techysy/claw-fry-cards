@@ -1,7 +1,7 @@
 # 🧪 兼容性测试报告 — claw-fry-cards 对 OpenClaw 各版本宿主
 
 - **版本**：claw-fry-cards 3.1.0（10.x 适配）· 2.0.4（npm 正式包）· 2.0.5-dev（兼容垫片）· 1.0（伴侣插件终版）
-- **测试方法**：仿宿主沙箱（真实依赖树 + 递归 Proxy mock，见附录）× **真机**（Docker 2026.9.4 · 飞牛 fnOS 应用 2026.9.4）
+- **测试方法**：仿宿主沙箱（真实依赖树 + 递归 Proxy mock，见附录）× **真机**（Docker 2026.9.4 · 飞牛 fnOS 应用 2026.9.4 · 生产容器 2026.10.3 / 2026.10.6）
 - **环境**：Windows x64 · Node 24 · npm registry
 
 ## ✅ 结论速览
@@ -10,7 +10,7 @@
 |---|---|
 | 兼容下限（无垫片，≤2.0.4）| OpenClaw **2026.5.12**（远低于官方插件时代的 2026.2.26 口径）|
 | 兼容下限（2.0.5+ 垫片）| OpenClaw **2026.5.4** |
-| 推荐宿主 | **2026.10.3**（真实生产容器 + 真实飞书凭据全链路 E2E 验证）；**2026.9.4** 亦受支持 |
+| 推荐宿主 | **2026.10.6**（真实生产容器升级实测通过）；**2026.10.3**（真实飞书凭据全链路 E2E）、**2026.9.4** 亦受支持 |
 | 断崖方向 | 裸导出 `./plugin-sdk` 在 2026.8.1 移除——新宿主跑不了旧插件（官方 openclaw-lark 失效原因），反向无此问题 |
 
 ## 🔻 2026.10.3 断崖与本插件适配（3.1.0）
@@ -36,8 +36,6 @@
 
 ## 📊 兼容性矩阵（最终态）
 
-## 📊 兼容性矩阵（最终态）
-
 | OpenClaw 宿主 | 1.0 伴侣插件 | 2.0.4（npm 包）| 2.0.5+（垫片）| 备注 |
 |---|---|---|---|---|
 | 2026.5.4 | ✅ | ❌ 缺 `plugin-sdk/channel-message` 导出 | ✅ **垫片回落生效** | 负例/下限边界 |
@@ -47,6 +45,7 @@
 | 2026.8.1+ | ✅ | ✅ | ✅ | 裸 `./plugin-sdk` 移除（内置插件不受影响）|
 | **2026.9.4** | ✅ | ✅ | ✅ **推荐** | Docker + 飞牛 fnOS 真机 E2E 全链路 |
 | **2026.10.3** | ❌ | ❌ 缺 `channel-message`/`command-auth` 等 | ✅ **推荐** | 子路径移除 + 具名导出移除，3.1.0 三垫片覆盖；**真实生产容器 + 真实飞书凭据全链路 E2E 通过**（见下）|
+| **2026.10.6** | ❌ | ❌ 缺 `channel-message`/`channel-runtime`/`command-auth` | ✅ **最新推荐** | 生产容器由 10.3 就地升级实测通过；`plugin-sdk` 子路径 344 → 345 且无新增移除（见下）|
 
 ## 🔬 测试方法
 
@@ -95,6 +94,36 @@
 - 本插件因先注册而保住通道，但官方插件仍 enabled 且尝试另起 websocket，状态混乱
 - **修复**：`openclaw plugins disable feishu` → `plugins.entries.feishu = {"enabled":false}`，重启后冲突消失
 - 这与本插件代码无关，属宿主自动启用行为；**每次宿主大版本升级后都需复查 `plugins.entries` 是否多出 `feishu`**
+
+### 10.6 就地升级实测（3.1.0，2026-10-23）
+
+**环境**：生产 Docker 容器 `2026.10.3` → `ghcr.io/openclaw/openclaw:2026.10.6`，沿用原 state 卷（真实飞书凭据 + 真实群），插件 3.1.0（npm 安装）。**未重新安装或改动插件，仅换镜像。**
+
+| 检查项 | 结果 |
+|---|---|
+| 宿主版本 | ✅ `OpenClaw 2026.10.6 (fe06181)` |
+| `plugin-sdk` 子路径 | ✅ 344 → 345，**插件所需 26 个中缺失的仍是 10.3 已移除的那 3 个**（`channel-message` / `channel-runtime` / `command-auth`），无新增破坏 |
+| 具名导出逐符号核对 | ✅ `channel-outbound` 102（10.3 为 101）、`session-store-runtime` 45（41）、`command-auth-native` 28、`channel-policy` 52、`channel-feedback` 18，只增不减 |
+| 三垫片目标符号 | ✅ `createReplyPrefixContext` / `createTypingCallbacks` / `resolveStorePath` / `getSessionEntry` / `resolveCommandAuthorizedFromAuthorizers` 均为 function |
+| 宿主自动迁移 | ✅ agent DB schema `v24 → v25`（main、openclaw 两个 agent），迁移前自动备份 SQLite |
+| 插件加载 | ✅ `claw-fry-cards 3.1.0` `enabled`，出现在已加载插件列表 |
+| 网关 / 健康 | ✅ `[gateway] ready`，容器 `healthy`，`openclaw health` 全绿 |
+| 飞书 websocket | ✅ `client ready` + `[ws] client ready` |
+| 官方 feishu 插件 | ✅ 升级后**未**自动重新启用（此前已卸载），无 `channel already registered` 冲突 |
+
+**结论**：10.3 的适配在 10.6 上原样有效，**插件侧无需改动**；升级只需换镜像 + 复查官方 feishu 插件是否回装。
+
+#### ⚠️ 10.6 实测补充：卸载官方 feishu 插件会连带删除 `channels.feishu`
+
+文档此前只写 `plugins disable feishu`。若改用卸载清理，实测 `openclaw plugins uninstall feishu --force` 会一并删除 **`channels.feishu`**（含 `appId` / `appSecret` / 群策略），而该配置正是本插件在用的：
+
+```
+Will remove: plugin settings, install record, channel config (channels.feishu), directory: ...
+```
+
+- 未加 `--force` 时命令会交互确认，非 TTY 环境直接报错退出，不会误删
+- **正确做法**：先导出 `channels.feishu` → 卸载 → 立即写回 → 逐字段比对（本次恢复后 13 个键完全一致）
+- 卸载后 `plugins.entries.feishu` 自动清除，无需手工删
 
 ## 🎯 下限定位过程（2026.5.12 的由来）
 
