@@ -82,7 +82,9 @@ function readVersionAndNotes() {
   if (!match) {
     die(`CHANGELOG.md 顶部找不到 \`## ${version}\` 小节——请先补更新日志再发版。`);
   }
-  const rest = changelog.slice(match.index + match[0].length);
+  const afterMatch = changelog.slice(match.index + match[0].length);
+  // 去除可能紧跟在标题行后的 (YYYY-MM-DD)
+  const rest = afterMatch.replace(/^\s*\([^)]*\)\s*\n*/, '');
   const nextHeading = rest.search(/^## /m);
   const notes = (nextHeading === -1 ? rest : rest.slice(0, nextHeading)).trim();
   if (!notes) die(`CHANGELOG.md 的 \`## ${version}\` 小节为空。`);
