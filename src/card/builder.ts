@@ -26,6 +26,14 @@ export const STREAMING_ELEMENT_ID = 'streaming_content';
 export const REASONING_ELEMENT_ID = 'reasoning_content';
 const TOOL_USE_STEP_CONTENT_INDENT = '0px 0px 0px 22px';
 
+/**
+ * 单张卡片内展示的工具步骤最大数量。
+ * 飞书卡片单卡总元素上限约为 99 个（实测超过触发 300305 / 230099: 11310 element exceeds the limit）。
+ * 每步工具占用 2~3 个元素（标题、参数详情、执行输出），因此单卡最多保留最近 15 步，
+ * 前序多余步骤收纳为省略提示行，避免单轮多步工具直接撑爆卡片。
+ */
+export const MAX_DISPLAY_TOOL_STEPS = 15;
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -792,7 +800,7 @@ function buildCompleteCard(params: {
       });
     }
     if (toolUseSteps && toolUseSteps.length > 0) {
-      children.push(...toolUseSteps.flatMap((step) => buildToolUseStepElements(step)));
+      children.push(...renderToolUseStepList(toolUseSteps));
     }
     if (children.length === 0) {
       children.push(buildToolUsePlaceholder({ zh: '暂无思考与工具调用过程', en: 'No reasoning or tool activity' }));
@@ -1054,7 +1062,7 @@ function buildStreamingToolUseActivePanel(params: { steps: ToolUseDisplayStep[];
     border: { color: 'grey', corner_radius: '5px' },
     vertical_spacing: '4px',
     padding: '8px 8px 8px 8px',
-    elements: steps.flatMap((step) => buildToolUseStepElements(step)),
+    elements: steps.length > 0 ? renderToolUseStepList(steps) : [],
   };
 }
 
@@ -1116,7 +1124,7 @@ function buildToolUsePanel(params: {
 
   const stepElements =
     toolUseSteps.length > 0
-      ? toolUseSteps.flatMap((step) => buildToolUseStepElements(step))
+      ? renderToolUseStepList(toolUseSteps)
       : [buildToolUsePlaceholder()];
 
   return {
@@ -1161,6 +1169,35 @@ function buildToolUseStepElements(step: ToolUseDisplayStep): CardElement[] {
     elements.push(outputElement);
   }
   return elements;
+}
+
+/**
+ * 渲染工具步骤列表。当步骤总数超过 MAX_DISPLAY_TOOL_STEPS 时，
+ * 仅保留最近的 MAX_DISPLAY_TOOL_STEPS 个步骤，并在顶部插入一条灰色折叠提示，
+ * 防止单张卡片内元素数量超出飞书 99 个的硬性上限（300305 / 230099:11310）。
+ */
+function renderToolUseStepList(steps: ToolUseDisplayStep[]): CardElement[] {
+  if (steps.length <= MAX_DISPLAY_TOOL_STEPS) {
+    return steps.flatMap((step) => buildToolUseStepElements(step));
+  }
+
+  const omittedCount = steps.length - MAX_DISPLAY_TOOL_STEPS;
+  const retainedSteps = steps.slice(omittedCount);
+  const omittedNotice: CardElement = {
+    tag: 'div',
+    text: {
+      tag: 'plain_text',
+      content: `... and ${omittedCount} earlier steps (${steps.length} total)`,
+      i18n_content: {
+        zh_cn: `... 已折叠前 ${omittedCount} 个早期步骤（共 ${steps.length} 步）`,
+        en_us: `... and ${omittedCount} earlier steps (${steps.length} total)`,
+      },
+      text_color: 'grey',
+      text_size: 'notation',
+    },
+  };
+
+  return [omittedNotice, ...retainedSteps.flatMap((step) => buildToolUseStepElements(step))];
 }
 
 function buildToolUsePlaceholder(labels?: { zh: string; en: string }): CardElement {

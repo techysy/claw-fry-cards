@@ -34,6 +34,7 @@ import {
 } from './builder';
 import {
   FEISHU_CARD_TABLE_LIMIT,
+  isCardElementLimitError,
   isCardRateLimitError,
   isCardTableLimitError,
   sanitizeTextSegmentsForCard,
@@ -771,20 +772,77 @@ export class StreamingCardController {
             seqBefore: seqBeforeUpdate,
             seqAfter: this.cardKit.cardKitSequence,
           });
-          await updateCardKitCard({
-            cfg: this.deps.cfg,
-            cardId: idleEffectiveCardId,
-            card: toCardKit2(completeCard),
-            sequence: this.cardKit.cardKitSequence,
-            accountId: this.deps.accountId,
-          });
+          try {
+            await updateCardKitCard({
+              cfg: this.deps.cfg,
+              cardId: idleEffectiveCardId,
+              card: toCardKit2(completeCard),
+              sequence: this.cardKit.cardKitSequence,
+              accountId: this.deps.accountId,
+            });
+          } catch (updateErr) {
+            // 元素超限等错误时降级重试：去掉工具列表与 reasoning 细节，仅保留核心正文，确保卡片一定能封口
+            log.warn('onIdle: CardKit update failed, attempting degraded finalize fallback', {
+              error: String(updateErr),
+              isElementLimit: isCardElementLimitError(updateErr),
+            });
+            const degradedCard = buildCardContent('complete', {
+              panel: this.resolvePanelConfig(),
+              text: terminalContent.text,
+              elapsedMs: this.elapsed(),
+              showToolUse: false,
+              footer: this.deps.resolvedFooter,
+              footerMetrics,
+            });
+            this.cardKit.cardKitSequence += 1;
+            try {
+              await updateCardKitCard({
+                cfg: this.deps.cfg,
+                cardId: idleEffectiveCardId,
+                card: toCardKit2(degradedCard),
+                sequence: this.cardKit.cardKitSequence,
+                accountId: this.deps.accountId,
+              });
+              log.info('onIdle: degraded CardKit update succeeded', { seq: this.cardKit.cardKitSequence });
+            } catch (cardKitDegradeErr) {
+              // CardKit update 仍被拒时，通过 IM message patch 终极保底封卡
+              log.warn('onIdle: degraded CardKit update failed, falling back to im.message.patch', {
+                error: String(cardKitDegradeErr),
+              });
+              await updateCardFeishu({
+                cfg: this.deps.cfg,
+                messageId: this.cardKit.cardMessageId,
+                card: toCardKit2(degradedCard) as unknown as Record<string, unknown>,
+                accountId: this.deps.accountId,
+              });
+              log.info('onIdle: im.message.patch fallback succeeded');
+            }
+          }
         } else {
-          await updateCardFeishu({
-            cfg: this.deps.cfg,
-            messageId: this.cardKit.cardMessageId,
-            card: completeCard as unknown as Record<string, unknown>,
-            accountId: this.deps.accountId,
-          });
+          try {
+            await updateCardFeishu({
+              cfg: this.deps.cfg,
+              messageId: this.cardKit.cardMessageId,
+              card: completeCard as unknown as Record<string, unknown>,
+              accountId: this.deps.accountId,
+            });
+          } catch (patchErr) {
+            log.warn('onIdle: IM card update failed, attempting degraded fallback', { error: String(patchErr) });
+            const degradedCard = buildCardContent('complete', {
+              panel: this.resolvePanelConfig(),
+              text: terminalContent.text,
+              elapsedMs: this.elapsed(),
+              showToolUse: false,
+              footer: this.deps.resolvedFooter,
+              footerMetrics,
+            });
+            await updateCardFeishu({
+              cfg: this.deps.cfg,
+              messageId: this.cardKit.cardMessageId,
+              card: degradedCard as unknown as Record<string, unknown>,
+              accountId: this.deps.accountId,
+            });
+          }
         }
         log.info('reply completed, card finalized', {
           elapsedMs: this.elapsed(),
@@ -1174,26 +1232,47 @@ export class StreamingCardController {
       seqBefore: seqBeforeClose,
       seqAfter: this.cardKit.cardKitSequence,
     });
-    await setCardStreamingMode({
-      cfg: this.deps.cfg,
-      cardId,
-      streamingMode: false,
-      sequence: this.cardKit.cardKitSequence,
-      accountId: this.deps.accountId,
-    });
+    try {
+      await setCardStreamingMode({
+        cfg: this.deps.cfg,
+        cardId,
+        streamingMode: false,
+        sequence: this.cardKit.cardKitSequence,
+        accountId: this.deps.accountId,
+      });
+    } catch (streamModeErr) {
+      log.warn(`${label}: setCardStreamingMode failed`, { error: String(streamModeErr) });
+    }
     const seqBeforeUpdate = this.cardKit.cardKitSequence;
     this.cardKit.cardKitSequence += 1;
     log.info(`${label}: updating card`, {
       seqBefore: seqBeforeUpdate,
       seqAfter: this.cardKit.cardKitSequence,
     });
-    await updateCardKitCard({
-      cfg: this.deps.cfg,
-      cardId,
-      card: toCardKit2(card),
-      sequence: this.cardKit.cardKitSequence,
-      accountId: this.deps.accountId,
-    });
+    try {
+      await updateCardKitCard({
+        cfg: this.deps.cfg,
+        cardId,
+        card: toCardKit2(card),
+        sequence: this.cardKit.cardKitSequence,
+        accountId: this.deps.accountId,
+      });
+    } catch (updateErr) {
+      log.warn(`${label}: updateCardKitCard failed, attempting degraded update`, { error: String(updateErr) });
+      if (this.cardKit.cardMessageId) {
+        try {
+          await updateCardFeishu({
+            cfg: this.deps.cfg,
+            messageId: this.cardKit.cardMessageId,
+            card: toCardKit2(card) as unknown as Record<string, unknown>,
+            accountId: this.deps.accountId,
+          });
+          log.info(`${label}: im.message.patch fallback succeeded`);
+        } catch (patchErr) {
+          log.warn(`${label}: im.message.patch fallback failed`, { error: String(patchErr) });
+        }
+      }
+    }
   }
 }
 

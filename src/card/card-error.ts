@@ -21,6 +21,18 @@ export const CARD_ERROR = {
   RATE_LIMITED: 230020,
   /** 卡片内容创建失败（通用码，需检查子错误） */
   CARD_CONTENT_FAILED: 230099,
+  /** 卡片元素数量超限 (CardKit) */
+  ELEMENT_EXCEEDS_LIMIT: 300305,
+} as const;
+
+/** CardKit 特有错误码 */
+export const CARDKIT_ERROR = {
+  /** 元素数量超限 (300305: element exceeds the limit) */
+  ELEMENT_EXCEEDS_LIMIT: 300305,
+  /** 流式连接超时 (200850: card streaming timeout) */
+  STREAMING_TIMEOUT: 200850,
+  /** 流式已关闭 (300309: streaming mode is closed) */
+  STREAMING_CLOSED: 300309,
 } as const;
 
 /** 230099 子错误码，嵌套在 msg 的 ErrCode 字段中。 */
@@ -131,6 +143,23 @@ export function isCardTableLimitError(err: unknown): boolean {
     parsed.subCode === CARD_CONTENT_SUB_ERROR.ELEMENT_LIMIT &&
     /table number over limit/i.test(parsed.errMsg)
   );
+}
+
+/** 判断错误是否为卡片或容器元素数量超限 (300305 或 230099/11310)。 */
+export function isCardElementLimitError(err: unknown): boolean {
+  if (err && typeof err === 'object') {
+    const e = err as { code?: unknown; msg?: unknown; message?: unknown };
+    if (e.code === CARD_ERROR.ELEMENT_EXCEEDS_LIMIT) return true;
+    if (typeof e.msg === 'string' && /element exceeds the limit/i.test(e.msg)) return true;
+    if (typeof e.message === 'string' && /element exceeds the limit/i.test(e.message)) return true;
+  }
+  const parsed = parseCardApiError(err);
+  if (!parsed) return false;
+  if (parsed.code === CARD_ERROR.ELEMENT_EXCEEDS_LIMIT) return true;
+  if (parsed.code === CARD_ERROR.CARD_CONTENT_FAILED && parsed.subCode === CARD_CONTENT_SUB_ERROR.ELEMENT_LIMIT) {
+    return true;
+  }
+  return /element exceeds the limit/i.test(parsed.errMsg);
 }
 
 /** 判断错误是否为卡片发送频率限制（230020）。 */

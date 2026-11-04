@@ -71,7 +71,13 @@ vi.mock('../src/card/unavailable-guard', () => ({
 }));
 
 import { shouldUseCard } from '../src/card/reply-mode';
-import { findMarkdownTablesOutsideCodeBlocks, sanitizeTextForCard } from '../src/card/card-error';
+import {
+  findMarkdownTablesOutsideCodeBlocks,
+  isCardElementLimitError,
+  sanitizeTextForCard,
+} from '../src/card/card-error';
+import { buildCardContent, MAX_DISPLAY_TOOL_STEPS } from '../src/card/builder';
+import type { ToolUseDisplayStep } from '../src/card/tool-use-display';
 import { prepareTerminalCardContent } from '../src/card/streaming-card-controller';
 
 // ---------------------------------------------------------------------------
@@ -148,3 +154,49 @@ describe('prepareTerminalCardContent', () => {
     expect(safeContent.text).not.toContain('```');
   });
 });
+
+describe('isCardElementLimitError & tool step truncation', () => {
+  it('detects 300305 and 11310 element limit errors', () => {
+    expect(isCardElementLimitError({ code: 300305, msg: 'ErrMsg: element exceeds the limit; ' })).toBe(true);
+    expect(
+      isCardElementLimitError({
+        code: 230099,
+        msg: 'Failed to create card content, ext=ErrCode: 11310; ErrMsg: element exceeds the limit; ',
+      }),
+    ).toBe(true);
+    expect(isCardElementLimitError(new Error('cardkit card.update FAILED: code=300305, msg=ErrMsg: element exceeds the limit; '))).toBe(true);
+    expect(isCardElementLimitError({ code: 230020, msg: 'rate limited' })).toBe(false);
+  });
+
+  it('truncates excessive tool steps to MAX_DISPLAY_TOOL_STEPS and prepends notice', () => {
+    const steps: ToolUseDisplayStep[] = Array.from({ length: 46 }, (_, i) => ({
+      title: `Step ${i + 1}`,
+      detail: `arg-${i + 1}`,
+      iconToken: 'setting_outlined',
+      status: 'success',
+    }));
+
+    const card = buildCardContent('complete', {
+      text: 'Finished task',
+      toolUseSteps: steps,
+      elapsedMs: 6000,
+      showToolUse: true,
+    });
+
+    const panel = (card.elements.find((el) => el.tag === 'collapsible_panel') ?? {}) as {
+      elements?: Array<{ tag: string; text?: { content?: string } }>;
+    };
+
+    expect(panel.elements).toBeDefined();
+    // 顶部应当有折叠提示
+    const noticeElement = panel.elements![0];
+    expect(noticeElement?.text?.content).toContain(`... and ${46 - MAX_DISPLAY_TOOL_STEPS} earlier steps (46 total)`);
+
+    // 实际渲染的 step 数量为 MAX_DISPLAY_TOOL_STEPS
+    const stepTitleElements = panel.elements!.filter(
+      (el) => el.tag === 'div' && (el as { icon?: unknown }).icon !== undefined,
+    );
+    expect(stepTitleElements.length).toBe(MAX_DISPLAY_TOOL_STEPS);
+  });
+});
+
