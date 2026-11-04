@@ -41,11 +41,14 @@ const SKIP_NPM = args.has('--skip-npm');
 // helpers
 // ---------------------------------------------------------------------------
 
+const isWin = process.platform === 'win32';
+const resolveCmd = (cmd) => (isWin && (cmd === 'npm' || cmd === 'pnpm') ? `${cmd}.cmd` : cmd);
+
 const sh = (cmd, argv, opts = {}) =>
-  execFileSync(cmd, argv, { cwd: ROOT, encoding: 'utf8', stdio: opts.quiet ? 'pipe' : 'inherit', ...opts });
+  execFileSync(resolveCmd(cmd), argv, { cwd: ROOT, encoding: 'utf8', stdio: opts.quiet ? 'pipe' : 'inherit', ...opts });
 
 const capture = (cmd, argv) =>
-  execFileSync(cmd, argv, { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+  execFileSync(resolveCmd(cmd), argv, { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 
 const step = (msg) => console.log(`\n\x1b[36m▸ ${msg}\x1b[0m`);
 const ok = (msg) => console.log(`  \x1b[32m✓\x1b[0m ${msg}`);
