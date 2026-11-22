@@ -10,6 +10,7 @@ import {
   formatFooterRuntimeSegments,
   formatTokensPerSecond,
 } from '../src/card/builder';
+import { resolveVendorDisplayName } from '../src/card/vendor-logos';
 import type { ToolUseDisplayStep } from '../src/card/tool-use-display';
 
 // ---------------------------------------------------------------------------
@@ -146,8 +147,8 @@ describe('buildCardContent – unified panel header fields', () => {
   it('shows every field in default order when panel.fields unset', () => {
     const card = buildCardContent('complete', { text: 'hello', elapsedMs: 6000, footerMetrics: richMetrics });
     const text = panelHeaderText(card);
-    // model 段显示实际路由模型（组合名不上卡；未渲染厂商 logo 时回落 🍤 品牌图标）
-    expect(text).toContain('🍤 upstream-real-model');
+    // model 段显示实际路由模型（组合名不上卡；未命中厂商 logo 时保持代理原样）
+    expect(text).toContain('upstream-real-model');
     expect(text).not.toContain('test-model');
     expect(text).toContain('💭');
     expect(text).toContain('🔧');
@@ -156,7 +157,7 @@ describe('buildCardContent – unified panel header fields', () => {
     expect(text).toContain('⚡ 135 tok/s');
     expect(text).toContain('⏱️');
     // 默认顺序：model → reasoning → tools → context → cache → output → speed → elapsed
-    const order = ['🍤 upstream-real-model', '💭', '🔧', '💾', '🎫', '⚡', '⏱️'];
+    const order = ['upstream-real-model', '💭', '🔧', '💾', '🎫', '⚡', '⏱️'];
     const idx = order.map((t) => text.indexOf(t));
     expect(idx).toEqual([...idx].sort((a, b) => a - b));
   });
@@ -171,14 +172,14 @@ describe('buildCardContent – unified panel header fields', () => {
     });
     const text = panelHeaderText(card);
     expect(text).toContain('💾 86%');
-    expect(text).toContain('🍤 upstream-real-model');
+    expect(text).toContain('upstream-real-model');
     expect(text).toContain('⚡ 135 tok/s');
     // 未列出的段不显示
     expect(text).not.toContain('🎫');
     expect(text).not.toContain('⏱️');
     // 顺序按数组：cache → model → speed
-    expect(text.indexOf('💾')).toBeLessThan(text.indexOf('🍤 upstream-real-model'));
-    expect(text.indexOf('🍤 upstream-real-model')).toBeLessThan(text.indexOf('⚡'));
+    expect(text.indexOf('💾')).toBeLessThan(text.indexOf('upstream-real-model'));
+    expect(text.indexOf('upstream-real-model')).toBeLessThan(text.indexOf('⚡'));
   });
 
   it('model segment shows routed model with fry fallback icon when logo strip not rendered', () => {
@@ -188,7 +189,8 @@ describe('buildCardContent – unified panel header fields', () => {
       footerMetrics: { model: 'openclaw', responseModel: 'qwen4-max' },
     });
     const text = panelHeaderText(card);
-    expect(text).toContain('🍤 qwen4-max');
+    // 官方名映射与 logo 显隐解耦：无 logo 也按内置厂商表映射官方名
+    expect(text).toContain('Qwen 4-max');
     // 组合名不上卡（维护者自知）
     expect(text).not.toContain('openclaw');
   });
@@ -199,7 +201,7 @@ describe('buildCardContent – unified panel header fields', () => {
       elapsedMs: 6000,
       footerMetrics: { model: 'claude-x', responseModel: 'claude-x' },
     });
-    expect(panelHeaderText(card)).toContain('🍤 claude-x');
+    expect(panelHeaderText(card)).toContain('Claude x');
   });
 
   it('model segment falls back to request model when responseModel absent', () => {
@@ -208,10 +210,10 @@ describe('buildCardContent – unified panel header fields', () => {
       elapsedMs: 6000,
       footerMetrics: { inputTokens: 100, outputTokens: 50, model: 'test-model' },
     });
-    expect(panelHeaderText(card)).toContain('🍤 test-model');
+    expect(panelHeaderText(card)).toContain('test-model');
   });
 
-  it('routing logo strip renders as the first panel body element when image key resolved', () => {
+  it('panel header icon becomes the vendor PNG when logo resolved (icon_position left)', () => {
     const card = buildCardContent('complete', {
       text: 'hello',
       elapsedMs: 6000,
@@ -220,18 +222,19 @@ describe('buildCardContent – unified panel header fields', () => {
     });
     const panel = ((card.elements ?? []).find((el) => (el as Record<string, unknown>).tag === 'collapsible_panel') ??
       {}) as Record<string, unknown>;
-    const children = (panel.elements ?? []) as Array<Record<string, unknown>>;
-    const strip = children[0];
-    expect(strip?.tag).toBe('column_set');
-    const logoColumn = (strip.columns as Array<{ elements: Array<Record<string, unknown>> }>)[0];
-    expect(logoColumn.elements[0]).toMatchObject({ tag: 'img', img_key: 'img_v2_01test' });
-    const textColumn = (strip.columns as Array<{ elements: Array<Record<string, unknown>> }>)[1];
-    expect(String(textColumn.elements[0].content)).toContain('qwen4-max');
-    // logo 条渲染时 header 模型段为纯名（不带 🍤 回落图标）
-    expect(panelHeaderText(card)).not.toContain("🍤 qwen4-max");
+    const header = panel.header as Record<string, unknown>;
+    // header 图标槽位放家族 PNG;icon_position/icon_expanded_angle 在 header 层级
+    expect(header.icon).toEqual({ tag: 'custom_icon', img_key: 'img_v2_01test', size: '16px 16px' });
+    expect(header.icon_position).toBe('left');
+    expect(header.icon_expanded_angle).toBe(0);
+    // model 段显示官方模型名(厂商官网口径)
+    expect(panelHeaderText(card)).toContain('Qwen 4-max');
+    expect(panelHeaderText(card)).not.toContain('openclaw');
+    // 无顶层路由条(方案已从 body 条改为 header 图标槽位)
+    expect((card.elements ?? []).some((el) => (el as Record<string, unknown>).tag === 'column_set')).toBe(false);
   });
 
-  it('routing logo strip is omitted when no image key resolved', () => {
+  it('panel header keeps the default expand arrow when no logo resolved', () => {
     const card = buildCardContent('complete', {
       text: 'hello',
       elapsedMs: 6000,
@@ -239,9 +242,12 @@ describe('buildCardContent – unified panel header fields', () => {
     });
     const panel = ((card.elements ?? []).find((el) => (el as Record<string, unknown>).tag === 'collapsible_panel') ??
       {}) as Record<string, unknown>;
-    const children = (panel.elements ?? []) as Array<Record<string, unknown>>;
-    expect(children[0]?.tag).not.toBe('column_set');
-    expect(panelHeaderText(card)).toContain("🍤 qwen4-max");
+    const header = panel.header as Record<string, unknown>;
+    expect(header.icon).toMatchObject({ tag: 'standard_icon', token: 'down-small-ccm_outlined' });
+    expect(header.icon_position).toBe('right');
+    expect(header.icon_expanded_angle).toBe(-180);
+    // 官方名映射与 logo 显隐解耦：无 logo（默认展开箭头）也显示官方名
+    expect(panelHeaderText(card)).toContain('Qwen 4-max');
   });
 
   it('renders no metric segments for an empty fields array', () => {
@@ -429,5 +435,19 @@ describe('buildCardContent – tool-use step rendering', () => {
     expect(((outputRow?.text ?? {}) as Record<string, unknown>).content).toContain('```text');
     expect(((outputRow?.text ?? {}) as Record<string, unknown>).content).toContain('exit code 1');
     expect(outputRow?.margin).toBe(toolUseContentIndent);
+  });
+});
+
+describe('resolveVendorDisplayName', () => {
+  it('strips channel prefixes and :tags, applies official family spelling', () => {
+    expect(resolveVendorDisplayName('tencent/hy4-flash:free')).toBe('Hy4 flash');
+    expect(resolveVendorDisplayName('qwen4-max')).toBe('Qwen 4-max');
+    expect(resolveVendorDisplayName('openclaw/deepseek-v4.1-flash')).toBe('DeepSeek v4.1-flash');
+    expect(resolveVendorDisplayName('claude-opus-5.5')).toBe('Claude opus-5.5');
+  });
+
+  it('returns undefined for unknown vendors', () => {
+    expect(resolveVendorDisplayName('hy4-flash'.replace('hy4', 'zzz'))).toBeUndefined();
+    expect(resolveVendorDisplayName('')).toBeUndefined();
   });
 });

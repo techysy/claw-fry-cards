@@ -107,6 +107,7 @@ function readPanelSettings(raw: unknown): UnifiedPanelSettings | undefined {
     vendorLogo?: unknown;
     peakValley?: unknown;
     fields?: unknown;
+    fieldToggles?: unknown;
   };
   const out: UnifiedPanelSettings = {};
   if (typeof p.unifiedPanelMinDuration === 'number') {
@@ -132,7 +133,13 @@ function readPanelSettings(raw: unknown): UnifiedPanelSettings | undefined {
   }
   // fields：面板字段有序数组（顺序即显示顺序）；逐项校验，过滤未知字段与重复项。
   // 3.0 起为唯一形态（旧的 segments 布尔对象 / showCacheHit / showSpeed 已移除，不再解析）。
-  if (Array.isArray(p.fields)) {
+  // fieldToggles（3.3.0 起）：复选框形态——逐字段显隐开关，勾选显示、取消隐藏，
+  // 配置条目不销毁；解析后按内置默认顺序展开为 fields。配置了 fieldToggles
+  // （至少一个合法布尔值）时优先于旧 fields 数组，二者不混用。
+  const toggles = readFieldToggles(p.fieldToggles);
+  if (toggles) {
+    out.fields = PANEL_FIELDS.filter((f) => toggles[f] !== false);
+  } else if (Array.isArray(p.fields)) {
     const fields: PanelField[] = [];
     for (const item of p.fields) {
       if (typeof item !== 'string' || !PANEL_FIELD_SET.has(item)) continue;
@@ -143,6 +150,19 @@ function readPanelSettings(raw: unknown): UnifiedPanelSettings | undefined {
   }
 
   return Object.keys(out).length > 0 ? out : undefined;
+}
+
+/** 解析 fieldToggles 复选框对象：仅接受合法字段名的布尔值；无有效项时视为未配置 */
+function readFieldToggles(raw: unknown): Partial<Record<PanelField, boolean>> | undefined {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return undefined;
+  let defined = false;
+  const out: Partial<Record<PanelField, boolean>> = {};
+  for (const [key, value] of Object.entries(raw)) {
+    if (typeof value !== 'boolean' || !PANEL_FIELD_SET.has(key)) continue;
+    out[key as PanelField] = value;
+    defined = true;
+  }
+  return defined ? out : undefined;
 }
 
 function readPluginPanel(raw: unknown): unknown {

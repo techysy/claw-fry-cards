@@ -361,9 +361,7 @@ export const PluginConfigSchema = z
         contextDisplayMode: z
           .enum(['text', 'bar', 'text_bar'])
           .meta({ title: '上下文段样式' })
-          .describe(
-            '上下文段样式：text（129.3k/1.0m (13%)）/ bar（[██▓░░░░░] 13%）/ text_bar（129.3k/1.0m [██▓░░░░░] 13%）；默认 text',
-          )
+          .describe('上下文段显示样式：text = 纯文本、bar = 渐变进度条、text_bar = 文本+进度条；默认 text')
           .optional(),
         expanded: z.boolean().meta({ title: '默认展开' }).describe('面板默认展开（默认折叠）').optional(),
         truncateModelName: z
@@ -411,11 +409,27 @@ export const PluginConfigSchema = z
             '面板展开区顶部显示「厂商 logo + 本轮路由模型」条（logo 为内置厂商图标 PNG，首次渲染上传缓存）。关闭或未命中厂商时不显示 logo 条，模型段回落 🦐 品牌图标。默认开启',
           )
           .optional(),
+        fieldToggles: z
+          .object({
+            model: z.boolean().meta({ title: '模型段' }).describe('显示 model 段（厂商 logo/品牌图标 + 模型名）').optional(),
+            reasoning: z.boolean().meta({ title: '思考计数段' }).describe('显示 💭N 思考计数段').optional(),
+            tools: z.boolean().meta({ title: '工具计数段' }).describe('显示 🔧N 工具计数段').optional(),
+            context: z.boolean().meta({ title: '上下文段' }).describe('显示上下文占用段（样式见 contextDisplayMode）').optional(),
+            cache: z.boolean().meta({ title: '缓存段' }).describe('显示 💾 缓存命中率段').optional(),
+            output: z.boolean().meta({ title: '输出段' }).describe('显示 🎫 会话累计输出 tokens 段').optional(),
+            speed: z.boolean().meta({ title: '速度段' }).describe('显示 ⚡ 本轮生成速度段').optional(),
+            elapsed: z.boolean().meta({ title: '耗时段' }).describe('显示 ⏱️ 回合耗时段').optional(),
+          })
+          .meta({ title: '面板字段显隐（复选框）' })
+          .describe(
+            '逐字段勾选显隐：勾选显示、取消隐藏，配置条目保留不销毁。配置了本项时优先于旧版 fields 数组（二者二选一）；顺序固定为内置默认顺序：model → reasoning → tools → context → cache → output → speed → elapsed。即使勾选，该段数据缺失时仍会自动省略；全部取消勾选 = 所有段不显示',
+          )
+          .optional(),
         fields: z
           .array(z.enum(['model', 'reasoning', 'tools', 'context', 'cache', 'output', 'speed', 'elapsed']))
-          .meta({ title: '面板字段（顺序即显示顺序）' })
+          .meta({ title: '面板字段（旧版·顺序即显示顺序）' })
           .describe(
-            '统一面板标题要显示哪些段、以及显示顺序——数组顺序即标题从左到右的顺序，未列出的段不显示。可选值：model（模型名：路由器回传实际模型时显示实际模型，直连时显示请求模型；无厂商 logo 时带 🦐 品牌图标）、reasoning（💭N 思考计数）、tools（🔧N 工具计数）、context（上下文占用，样式见 contextDisplayMode）、cache（💾 缓存命中率 cacheRead/(input+read+write)）、output（🎫 会话累计输出 tokens）、speed（⚡ 本轮生成速度 tok/s）、elapsed（⏱️ 回合耗时）。留空表示全部不显示；删除整个字段则回落默认全字段顺序。即使列出，该段数据缺失时仍会自动省略',
+            '（旧版有序数组，管自定义显示顺序；只想开关某段请用上面的「面板字段显隐（复选框）」，配置了复选框时本项不生效）统一面板标题要显示哪些段、以及显示顺序——数组顺序即标题从左到右的顺序，未列出的段不显示。可选值：model（模型名：路由器回传实际模型时显示实际模型，直连时显示请求模型；无厂商 logo 时带 🦐 品牌图标）、reasoning（💭N 思考计数）、tools（🔧N 工具计数）、context（上下文占用，样式见 contextDisplayMode）、cache（💾 缓存命中率 cacheRead/(input+read+write)）、output（🎫 会话累计输出 tokens）、speed（⚡ 本轮生成速度 tok/s）、elapsed（⏱️ 回合耗时）。留空表示全部不显示；删除整个字段则回落默认全字段顺序。即使列出，该段数据缺失时仍会自动省略',
           )
           .optional(),
       })

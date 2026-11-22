@@ -9,6 +9,7 @@
  */
 
 import { type PeakValleyConfig } from './panel-config';
+import { resolveVendorDisplayName } from './vendor-logos';
 import { optimizeMarkdownStyle } from './markdown-style';
 import type { FooterSessionMetrics } from './reply-dispatcher-types';
 import { EMPTY_TOOL_USE_PLACEHOLDER, type ToolUseDisplayStep } from './tool-use-display';
@@ -734,7 +735,10 @@ function buildCompleteCard(params: {
       model: (() => {
         const actual = (footerMetrics?.responseModel ?? '').trim() || rawModel;
         if (!actual) return undefined;
-        return routingLogo ? actual : `🍤 ${actual}`;
+        // 官方名映射与 logo 显隐解耦：logo 关闭/未渲染（开关关、上传失败）时
+        // 仍按内置厂商表映射官方名（如 hy4-flash → Hy4 flash），未知家族回落
+        // 原模型名；🍤 品牌图标的取舍仍由 routingLogo 决定
+        return resolveVendorDisplayName(actual) || actual;
       })(),
       // 思考/工具计数恒随各自内容出现（💭0/🔧0 本身也是信息）
       reasoning: `💭${hasReasoning ? 1 : 0}`,
@@ -778,7 +782,9 @@ function buildCompleteCard(params: {
       elapsed: elapsed > 0 ? `⏱️ ${formatElapsed(elapsed)}` : undefined,
     };
 
-    const parts: string[] = ['🍤'];
+    // header 图标槽位已被厂商 logo 占用时,不再叠加独立的 🍤 段(避免双品牌图标);
+    // 未命中厂商时 🍤 保留,维持 fry 品牌存在感
+    const parts: string[] = routingLogo ? [] : ['🍤'];
     for (const field of activeFields) {
       // 过滤未知字段（配置手写错误时静默跳过，避免渲染出 undefined）
       if (!PANEL_FIELD_SET.has(field)) continue;
@@ -807,44 +813,6 @@ function buildCompleteCard(params: {
       children.push(buildToolUsePlaceholder({ zh: '暂无思考与工具调用过程', en: 'No reasoning or tool activity' }));
     }
 
-    // 面板展开区顶部：厂商 PNG logo 并排实际路由模型名（header title 是纯文本贴不了图，
-    // logo 为打包内 lobehub icons 静态 PNG，首次渲染上传换 image_key 并缓存）
-    if (routingLogo) {
-      children.unshift({
-        tag: 'column_set',
-        flex_mode: 'stretch',
-        horizontal_spacing: '8px',
-        margin: '0 0 4px 0',
-        columns: [
-          {
-            tag: 'column',
-            width: 'weighted',
-            weight: 1,
-            vertical_align: 'center',
-            elements: [
-              { tag: 'img', img_key: routingLogo.imageKey, alt: routingLogo.model, custom_width: 28 },
-            ],
-          },
-          {
-            tag: 'column',
-            width: 'weighted',
-            weight: 6,
-            vertical_align: 'center',
-            elements: [
-              {
-                tag: 'markdown',
-                content: `**本轮路由** \`${routingLogo.model}\``,
-                i18n_content: {
-                  zh_cn: `**本轮路由** \`${routingLogo.model}\``,
-                  en_us: `**Routed model** \`${routingLogo.model}\``,
-                },
-              },
-            ],
-          },
-        ],
-      } as CardElement);
-    }
-
     elements.push({
       tag: 'collapsible_panel',
       expanded: panelExpanded,
@@ -855,14 +823,31 @@ function buildCompleteCard(params: {
           i18n_content: { zh_cn: parts.join(' · '), en_us: parts.join(' · ') },
         },
         vertical_align: 'center',
-        icon: {
-          tag: 'standard_icon',
-          token: 'down-small-ccm_outlined',
-          color: 'grey',
-          size: '16px 16px',
-        },
-        icon_position: 'right',
-        icon_expanded_angle: -180,
+        // 厂商路由 logo 命中时,header 图标槽位放家族 PNG（icon_position=left 即原
+        // 展开箭头位,不展开也可见;icon_position/icon_expanded_angle 是 header 层级
+        // 字段,嵌进 icon 对象里服务端不识别）。未命中保持默认展开箭头（右侧,旋转 -180°）
+        ...(routingLogo
+          ? {
+              icon: {
+                tag: 'custom_icon',
+                img_key: routingLogo.imageKey,
+                // 官方文档:size 支持 "[1,999] [1,999]px",默认 10px（过小）;
+                // 16px 与 header 文本等高协调
+                size: '16px 16px',
+              },
+              icon_position: 'left',
+              icon_expanded_angle: 0,
+            }
+          : {
+              icon: {
+                tag: 'standard_icon',
+                token: 'down-small-ccm_outlined',
+                color: 'grey',
+                size: '16px 16px',
+              },
+              icon_position: 'right',
+              icon_expanded_angle: -180,
+            }),
       },
       border: { color: borderColor, corner_radius: '5px' },
       vertical_spacing: '4px',

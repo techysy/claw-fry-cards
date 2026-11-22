@@ -27,7 +27,7 @@
               "text_bar"
             ],
             "title": "上下文段样式",
-            "description": "上下文段样式：text（129.3k/1.0m (13%)）/ bar（[██▓░░░░░] 13%）/ text_bar（129.3k/1.0m [██▓░░░░░] 13%）；默认 text"
+            "description": "上下文段显示样式：text = 纯文本、bar = 渐变进度条、text_bar = 文本+进度条；默认 text"
           },
           "expanded": {
             "type": "boolean",
@@ -151,10 +151,57 @@
             },
             "description": "峰谷价标识列表（DeepSeek 等按峰谷计费的模型，可添加多条）：key 为匹配模型（子串），峰段显示 peakName，谷段（闲时）显示 valleyName；与 modelAliases 可共存，同 key 手写优先"
           },
+          "fieldToggles": {
+            "type": "object",
+            "title": "面板字段显隐（复选框）",
+            "description": "逐字段勾选显隐：勾选显示、取消隐藏，配置条目保留不销毁。配置了本项时优先于旧版 fields 数组（二者二选一）；顺序固定为内置默认顺序：model → reasoning → tools → context → cache → output → speed → elapsed。即使勾选，该段数据缺失时仍会自动省略；全部取消勾选 = 所有段不显示",
+            "properties": {
+              "model": {
+                "type": "boolean",
+                "title": "模型段",
+                "description": "显示 model 段（厂商 logo/品牌图标 + 模型名）"
+              },
+              "reasoning": {
+                "type": "boolean",
+                "title": "思考计数段",
+                "description": "显示 💭N 思考计数段"
+              },
+              "tools": {
+                "type": "boolean",
+                "title": "工具计数段",
+                "description": "显示 🔧N 工具计数段"
+              },
+              "context": {
+                "type": "boolean",
+                "title": "上下文段",
+                "description": "显示上下文占用段（样式见 contextDisplayMode）"
+              },
+              "cache": {
+                "type": "boolean",
+                "title": "缓存段",
+                "description": "显示 💾 缓存命中率段"
+              },
+              "output": {
+                "type": "boolean",
+                "title": "输出段",
+                "description": "显示 🎫 会话累计输出 tokens 段"
+              },
+              "speed": {
+                "type": "boolean",
+                "title": "速度段",
+                "description": "显示 ⚡ 本轮生成速度段"
+              },
+              "elapsed": {
+                "type": "boolean",
+                "title": "耗时段",
+                "description": "显示 ⏱️ 回合耗时段"
+              }
+            }
+          },
           "fields": {
             "type": "array",
-            "title": "面板字段（顺序即显示顺序）",
-            "description": "统一面板标题要显示哪些段、以及显示顺序——数组顺序即标题从左到右的顺序，未列出的段不显示。可选值：model（厂商图标 + 模型名：路由器回传实际模型时显示实际模型，直连时显示请求模型）、reasoning（💭N 思考计数）、tools（🔧N 工具计数）、context（上下文占用，样式见 contextDisplayMode）、cache（💾 缓存命中率）、output（🎫 会话累计输出 tokens）、speed（⚡ 本轮生成速度 tok/s）、elapsed（⏱️ 回合耗时）。留空表示全部不显示；删除整个字段则回落默认全字段顺序。即使列出，该段数据缺失时仍会自动省略",
+            "title": "面板字段（旧版·顺序即显示顺序）",
+            "description": "（旧版有序数组，管自定义显示顺序；只想开关某段请用「面板字段显隐（复选框）」，配置了复选框时本项不生效）统一面板标题要显示哪些段、以及显示顺序——数组顺序即标题从左到右的顺序，未列出的段不显示。可选值：model（厂商图标 + 模型名：路由器回传实际模型时显示实际模型，直连时显示请求模型）、reasoning（💭N 思考计数）、tools（🔧N 工具计数）、context（上下文占用，样式见 contextDisplayMode）、cache（💾 缓存命中率）、output（🎫 会话累计输出 tokens）、speed（⚡ 本轮生成速度 tok/s）、elapsed（⏱️ 回合耗时）。留空表示全部不显示；删除整个字段则回落默认全字段顺序。即使列出，该段数据缺失时仍会自动省略",
             "items": {
               "type": "string",
               "oneOf": [

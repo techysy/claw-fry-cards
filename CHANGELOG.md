@@ -1,5 +1,16 @@
 # Changelog
 
+## 3.3.0 (2026-11-23)
+
+卡片健壮化专项：修复 fnOS 生产实例复盘出的「拒答空壳卡」「重启僵尸卡」两类悬空卡问题（小虾米装机补丁进源码，重装不再丢），并按用户反馈把统一面板字段改成复选框显隐、官方模型名映射与 logo 显隐解耦。
+
+- 🗑️ **静默回复撤回占位卡（修复拒答空壳卡）**：「派发即建卡」让占位卡在 dispatch 一开始就已发出，agent 最终选择不回复（NO_REPLY/空回复，如群消息语义性拒答）时，老行为是灌 `Done.` 兜底文案——群里留一张无信息空壳卡。现改为 `im.message.delete` 撤回占位卡（机器人撤回自己的消息），撤回失败（缺权限/消息已删）自动回落兜底文案路径，占位卡必收尾
+- 📔 **在途卡 journal + 启动收尾（修复重启僵尸卡）**：优雅关机 hook 挡不住 `kill -9`/崩溃/断电。卡片消息发出即记入本地 journal（`~/.openclaw/claw-fry-cards/card-journal-<account>.json`，原子写、best-effort），控制器进终态即移除；插件启动时按残留条目把上一进程没收尾的流式卡补成终态（CardKit 关流式 + 整体替换为中断说明卡，失败回落 `im.message.patch`），条目按账号隔离、7 天过期清理、失败保留下次启动重试。这也是缺口④（状态持久化）的最小实现
+- 🛡️ **降级收尾保留面板与 logo 条**：终态更新撞元素超限/10002 类错误时的降级重试卡不再硬编码 `showToolUse: false`——统一面板与厂商路由 logo 按配置保留（降级只剥离大体积工具步骤/思考正文），降级链改为「完整卡 → 精简卡（留面板/logo）→ `im.message.patch` 最小卡（仅正文）」，每层都比原实现更稳
+- ☑️ **面板字段显隐改为复选框（`panel.fieldToggles`）**：设置界面从「下拉框+垃圾桶」（只能删、条目销毁）改为逐字段复选框——勾选显示、取消隐藏、配置条目保留不销毁；顺序固定内置默认（model → reasoning → tools → context → cache → output → speed → elapsed）。配置了 fieldToggles 时优先于旧版 `fields` 有序数组（旧数组管自定义顺序，继续可用）。`openclaw.plugin.json` 内嵌 configSchema 已同步（教训：不同步会被宿主按旧 schema quarantine）
+- 🏷️ **官方模型名映射与 logo 显隐解耦**：v3.2.0 起 model 段仅在 logo 条渲染成功时才映射官方名（厂商官网口径），logo 关闭/上传失败/未命中就露代理原模型名（如 `hy4-flash`）。现改为恒映射：已知厂商（内置家族表，hy4/qwen/claude/grok/longcat/mimo 等 10R fleet 全家族）关掉 logo 也显示官方名（`hy4-flash` → `Hy4 flash`），只有未知家族回落原模型名；🍤 品牌图标取舍仍随 logo
+- 🧪 新增 33 项单测：静默回复撤回（撤回/回落/正常回复不误撤/journal 记录）、journal 存取（账号隔离/覆盖/坏文件容忍）、启动收尾（CardKit/IM 兜底/过期清理/失败保留）、fieldToggles 解析（优先级/全不勾/非法键过滤）、官方名解耦（无 logo 映射/未知厂商回落）；builder 终态 3 项断言随解耦语义更新。全套 518 过 / 2 skip，typecheck / lint(0 error) / build 全绿
+
 ## 3.2.0 (2026-11-22)
 
 统一面板新增**厂商路由 logo 条**与**实际路由模型直显**：展开区顶部渲染「厂商 PNG logo + 本轮路由模型」column_set 条（12 家厂商图标随包分发），header model 段直接显示 10R 本轮实际路由到的模型（组合名不上卡，无 logo 条时回落 🍤 品牌图标）。数据链零路由端改动——实际模型由 10R 响应体回传、宿主落库 transcript `message.responseModel`，卡片直读。
