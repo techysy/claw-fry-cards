@@ -21,6 +21,8 @@ export interface UnifiedPanelSettings {
   modelAliases?: Record<string, ModelAliasEntry>;
   modelAliasesEnabled?: boolean;
   truncateModelName?: boolean;
+  /** 厂商路由 logo 条开关（默认开启）：面板展开区顶部显示「厂商 PNG logo + 本轮路由模型」 */
+  vendorLogo?: boolean;
   peakValley?: PeakValleyConfig[];
   /**
    * 面板字段**有序数组**（与 hermes-fry-cards 的 `panel_fields` 同源约定）：
@@ -102,6 +104,7 @@ function readPanelSettings(raw: unknown): UnifiedPanelSettings | undefined {
     modelAliases?: unknown;
     modelAliasesEnabled?: unknown;
     truncateModelName?: unknown;
+    vendorLogo?: unknown;
     peakValley?: unknown;
     fields?: unknown;
   };
@@ -114,6 +117,7 @@ function readPanelSettings(raw: unknown): UnifiedPanelSettings | undefined {
   }
   if (typeof p.expanded === 'boolean') out.expanded = p.expanded;
   if (typeof p.truncateModelName === 'boolean') out.truncateModelName = p.truncateModelName;
+  if (typeof p.vendorLogo === 'boolean') out.vendorLogo = p.vendorLogo;
   if (typeof p.modelAliasesEnabled === 'boolean') out.modelAliasesEnabled = p.modelAliasesEnabled;
   if (p.modelAliases && typeof p.modelAliases === 'object') {
     out.modelAliases = p.modelAliases as Record<string, ModelAliasEntry>;

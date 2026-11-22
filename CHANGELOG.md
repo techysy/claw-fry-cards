@@ -1,5 +1,14 @@
 # Changelog
 
+## 3.2.0 (2026-11-22)
+
+统一面板新增**厂商路由 logo 条**与**实际路由模型直显**：展开区顶部渲染「厂商 PNG logo + 本轮路由模型」column_set 条（12 家厂商图标随包分发），header model 段直接显示 10R 本轮实际路由到的模型（组合名不上卡，无 logo 条时回落 🍤 品牌图标）。数据链零路由端改动——实际模型由 10R 响应体回传、宿主落库 transcript `message.responseModel`，卡片直读。
+
+- 🏷️ **`panel.vendorLogo` 开关（默认开启）**：面板展开区顶部渲染「厂商 PNG logo + 本轮路由模型」column_set 条；logo 资产取自 @lobehub/icons-static-png（12 家：Qwen/Zhipu/DeepSeek/Claude/Gemini/Kimi/Moonshot/MiniMax/OpenAI/Doubao/Hunyuan/StepFun）随包分发，新模块 `cardkit/vendor-logos` 首次渲染懒上传换 image_key 并进程内缓存，失败静默降级纯文本
+- 🎯 **model 段直显实际路由模型**：transcript `message.responseModel` 优先（组合名不上卡，维护者自知），直连 provider 回落请求模型；无 logo 条时回落 🍤 品牌图标
+- 🔁 **实际路由模型数据链零路由端改动**：10R 响应体本就回传实际模型，宿主落库 `message.responseModel`，卡片直读即可——无需 10R 任何配合
+- 📋 **`openclaw.plugin.json` 内嵌 configSchema 与 zod 同次同步**：`fields` 语义更新（教训：清单是手工维护的静态 JSON Schema，改 zod 必须同步，否则宿主准入按旧 schema quarantine 插件配置）
+
 ## 3.1.1 (2026-11-04)
 
 修复复杂任务下多工具步骤导致飞书卡片元素超限（300305 / 230099: 11310）且终态卡无法封口的问题。

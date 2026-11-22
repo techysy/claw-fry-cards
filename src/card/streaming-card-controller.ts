@@ -68,6 +68,7 @@ import {
   THROTTLE_CONSTANTS,
 } from './reply-dispatcher-types';
 import { UnavailableGuard } from './unavailable-guard';
+import { resolveVendorLogoImageKey } from './vendor-logos';
 
 const log = larkLogger('card/streaming');
 
@@ -179,7 +180,7 @@ export class StreamingCardController {
         let sawOutput = false;
         for (const row of rows) {
           if (!row?.event_json) continue;
-          let ev: { timestamp?: unknown; message?: { model?: unknown; provider?: unknown; usage?: unknown } };
+          let ev: { timestamp?: unknown; message?: { model?: unknown; provider?: unknown; responseModel?: unknown; usage?: unknown } };
           try {
             ev = JSON.parse(row.event_json) as typeof ev;
           } catch {
@@ -199,6 +200,7 @@ export class StreamingCardController {
               totalTokens: typeof u.totalTokens === 'number' ? u.totalTokens : undefined,
               model: typeof msg.model === 'string' ? msg.model : undefined,
               provider: typeof msg.provider === 'string' ? msg.provider : undefined,
+              responseModel: typeof msg.responseModel === 'string' ? msg.responseModel : undefined,
             };
             metrics.tokensPerSecond = this.deriveTokensPerSecond(
               db,
@@ -232,6 +234,20 @@ export class StreamingCardController {
       log.warn('footer metrics lookup failed', { error: String(err), sessionKey: this.deps.sessionKey });
       return undefined;
     }
+  }
+
+  /** 面板指标 + 厂商路由 logo（响应体 responseModel 命中厂商资产时懒上传换 image_key） */
+  private async resolvePanelMetrics(): Promise<{
+    footerMetrics: FooterSessionMetrics | undefined;
+    routingLogo: { imageKey: string; model: string } | undefined;
+  }> {
+    const footerMetrics = this.needsFooterMetrics() ? await this.getFooterSessionMetrics() : undefined;
+    const model = footerMetrics?.responseModel?.trim() || footerMetrics?.model?.trim() || '';
+    if (!model) return { footerMetrics, routingLogo: undefined };
+    // panel.vendorLogo=false 关闭厂商 logo 条；默认开启
+    if (this.resolvePanelConfig()?.vendorLogo === false) return { footerMetrics, routingLogo: undefined };
+    const imageKey = await resolveVendorLogoImageKey(this.deps.cfg, this.deps.accountId, model);
+    return { footerMetrics, routingLogo: imageKey ? { imageKey, model } : undefined };
   }
 
   /**
@@ -619,7 +635,7 @@ export class StreamingCardController {
     if (this.cardCreationPromise) await this.cardCreationPromise;
 
     const errorEffectiveCardId = this.cardKit.cardKitCardId ?? this.cardKit.originalCardKitCardId;
-    const footerMetrics = this.needsFooterMetrics() ? await this.getFooterSessionMetrics() : undefined;
+    const { footerMetrics, routingLogo } = await this.resolvePanelMetrics();
     const toolUseDisplay = this.computeToolUseDisplay();
     try {
       if (this.cardKit.cardMessageId) {
@@ -646,6 +662,7 @@ export class StreamingCardController {
           isError: true,
           footer: this.deps.resolvedFooter,
           footerMetrics,
+          routingLogo,
         });
         if (errorEffectiveCardId) {
           await this.closeStreamingAndUpdate(errorEffectiveCardId, errorCard, 'onError');
@@ -748,7 +765,7 @@ export class StreamingCardController {
           },
           this.imageResolver,
         );
-        const footerMetrics = this.needsFooterMetrics() ? await this.getFooterSessionMetrics() : undefined;
+        const { footerMetrics, routingLogo } = await this.resolvePanelMetrics();
 
         log.info('finalize panel probe', { panel: JSON.stringify(this.resolvePanelConfig() ?? null) });
         const completeCard = buildCardContent('complete', {
@@ -763,6 +780,7 @@ export class StreamingCardController {
           elapsedMs: this.elapsed(),
           footer: this.deps.resolvedFooter,
           footerMetrics,
+          routingLogo,
         });
 
         if (idleEffectiveCardId) {
@@ -889,7 +907,7 @@ export class StreamingCardController {
         },
         this.imageResolver,
       );
-      const footerMetrics = this.needsFooterMetrics() ? await this.getFooterSessionMetrics() : undefined;
+      const { footerMetrics, routingLogo } = await this.resolvePanelMetrics();
       if (effectiveCardId) {
         const abortCardContent = buildCardContent('complete', {
           panel: this.resolvePanelConfig(),
@@ -904,6 +922,7 @@ export class StreamingCardController {
           isAborted: true,
           footer: this.deps.resolvedFooter,
           footerMetrics,
+          routingLogo,
         });
         await this.closeStreamingAndUpdate(effectiveCardId, abortCardContent, 'abortCard');
         log.info('abortCard completed', { effectiveCardId });
@@ -922,6 +941,7 @@ export class StreamingCardController {
           isAborted: true,
           footer: this.deps.resolvedFooter,
           footerMetrics,
+          routingLogo,
         });
         await updateCardFeishu({
           cfg: this.deps.cfg,

@@ -404,11 +404,18 @@ export const PluginConfigSchema = z
             '峰谷价标识列表（DeepSeek 等按峰谷计费的模型，可添加多条）：key 为匹配模型（子串），峰段显示 peakName，谷段（闲时）显示 valleyName；与 modelAliases 可共存，同 key 手写优先',
           )
           .optional(),
+        vendorLogo: z
+          .boolean()
+          .meta({ title: '厂商路由 logo' })
+          .describe(
+            '面板展开区顶部显示「厂商 logo + 本轮路由模型」条（logo 为内置厂商图标 PNG，首次渲染上传缓存）。关闭或未命中厂商时不显示 logo 条，模型段回落 🦐 品牌图标。默认开启',
+          )
+          .optional(),
         fields: z
           .array(z.enum(['model', 'reasoning', 'tools', 'context', 'cache', 'output', 'speed', 'elapsed']))
           .meta({ title: '面板字段（顺序即显示顺序）' })
           .describe(
-            '统一面板标题要显示哪些段、以及显示顺序——数组顺序即标题从左到右的顺序，未列出的段不显示。可选值：model（模型名，含别名/⇲ 截断）、reasoning（💭N 思考计数）、tools（🔧N 工具计数）、context（上下文占用，样式见 contextDisplayMode）、cache（💾 缓存命中率 cacheRead/(input+read+write)）、output（🎫 会话累计输出 tokens）、speed（⚡ 本轮生成速度 tok/s）、elapsed（⏱️ 回合耗时）。留空表示全部不显示；删除整个字段则回落默认全字段顺序。即使列出，该段数据缺失时仍会自动省略',
+            '统一面板标题要显示哪些段、以及显示顺序——数组顺序即标题从左到右的顺序，未列出的段不显示。可选值：model（模型名：路由器回传实际模型时显示实际模型，直连时显示请求模型；无厂商 logo 时带 🦐 品牌图标）、reasoning（💭N 思考计数）、tools（🔧N 工具计数）、context（上下文占用，样式见 contextDisplayMode）、cache（💾 缓存命中率 cacheRead/(input+read+write)）、output（🎫 会话累计输出 tokens）、speed（⚡ 本轮生成速度 tok/s）、elapsed（⏱️ 回合耗时）。留空表示全部不显示；删除整个字段则回落默认全字段顺序。即使列出，该段数据缺失时仍会自动省略',
           )
           .optional(),
       })

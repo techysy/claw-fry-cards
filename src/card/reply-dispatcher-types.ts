@@ -172,6 +172,8 @@ export interface FooterSessionMetrics {
   model?: string;
   /** Model provider id (e.g. "opencode-go"), shown in the footer when enabled. */
   provider?: string;
+  /** 实际路由到的上游模型（transcript message.responseModel，路由器在响应体回传）；与请求模型不同时面板 → 段显示 */
+  responseModel?: string;
 }
 
 export interface StreamingCardDeps {

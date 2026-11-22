@@ -140,12 +140,15 @@ describe('buildCardContent – unified panel header fields', () => {
     contextTokens: 131072,
     tokensPerSecond: 135.2,
     model: 'test-model',
+    responseModel: 'upstream-real-model',
   };
 
   it('shows every field in default order when panel.fields unset', () => {
     const card = buildCardContent('complete', { text: 'hello', elapsedMs: 6000, footerMetrics: richMetrics });
     const text = panelHeaderText(card);
-    expect(text).toContain('test-model');
+    // model 段显示实际路由模型（组合名不上卡；未渲染厂商 logo 时回落 🍤 品牌图标）
+    expect(text).toContain('🍤 upstream-real-model');
+    expect(text).not.toContain('test-model');
     expect(text).toContain('💭');
     expect(text).toContain('🔧');
     expect(text).toContain('💾 86%');
@@ -153,7 +156,7 @@ describe('buildCardContent – unified panel header fields', () => {
     expect(text).toContain('⚡ 135 tok/s');
     expect(text).toContain('⏱️');
     // 默认顺序：model → reasoning → tools → context → cache → output → speed → elapsed
-    const order = ['test-model', '💭', '🔧', '💾', '🎫', '⚡', '⏱️'];
+    const order = ['🍤 upstream-real-model', '💭', '🔧', '💾', '🎫', '⚡', '⏱️'];
     const idx = order.map((t) => text.indexOf(t));
     expect(idx).toEqual([...idx].sort((a, b) => a - b));
   });
@@ -168,14 +171,77 @@ describe('buildCardContent – unified panel header fields', () => {
     });
     const text = panelHeaderText(card);
     expect(text).toContain('💾 86%');
-    expect(text).toContain('test-model');
+    expect(text).toContain('🍤 upstream-real-model');
     expect(text).toContain('⚡ 135 tok/s');
     // 未列出的段不显示
     expect(text).not.toContain('🎫');
     expect(text).not.toContain('⏱️');
     // 顺序按数组：cache → model → speed
-    expect(text.indexOf('💾')).toBeLessThan(text.indexOf('test-model'));
-    expect(text.indexOf('test-model')).toBeLessThan(text.indexOf('⚡'));
+    expect(text.indexOf('💾')).toBeLessThan(text.indexOf('🍤 upstream-real-model'));
+    expect(text.indexOf('🍤 upstream-real-model')).toBeLessThan(text.indexOf('⚡'));
+  });
+
+  it('model segment shows routed model with fry fallback icon when logo strip not rendered', () => {
+    const card = buildCardContent('complete', {
+      text: 'hello',
+      elapsedMs: 6000,
+      footerMetrics: { model: 'openclaw', responseModel: 'qwen4-max' },
+    });
+    const text = panelHeaderText(card);
+    expect(text).toContain('🍤 qwen4-max');
+    // 组合名不上卡（维护者自知）
+    expect(text).not.toContain('openclaw');
+  });
+
+  it('model segment falls back to request model for direct providers', () => {
+    const card = buildCardContent('complete', {
+      text: 'hello',
+      elapsedMs: 6000,
+      footerMetrics: { model: 'claude-x', responseModel: 'claude-x' },
+    });
+    expect(panelHeaderText(card)).toContain('🍤 claude-x');
+  });
+
+  it('model segment falls back to request model when responseModel absent', () => {
+    const card = buildCardContent('complete', {
+      text: 'hello',
+      elapsedMs: 6000,
+      footerMetrics: { inputTokens: 100, outputTokens: 50, model: 'test-model' },
+    });
+    expect(panelHeaderText(card)).toContain('🍤 test-model');
+  });
+
+  it('routing logo strip renders as the first panel body element when image key resolved', () => {
+    const card = buildCardContent('complete', {
+      text: 'hello',
+      elapsedMs: 6000,
+      footerMetrics: { model: 'openclaw', responseModel: 'qwen4-max' },
+      routingLogo: { imageKey: 'img_v2_01test', model: 'qwen4-max' },
+    });
+    const panel = ((card.elements ?? []).find((el) => (el as Record<string, unknown>).tag === 'collapsible_panel') ??
+      {}) as Record<string, unknown>;
+    const children = (panel.elements ?? []) as Array<Record<string, unknown>>;
+    const strip = children[0];
+    expect(strip?.tag).toBe('column_set');
+    const logoColumn = (strip.columns as Array<{ elements: Array<Record<string, unknown>> }>)[0];
+    expect(logoColumn.elements[0]).toMatchObject({ tag: 'img', img_key: 'img_v2_01test' });
+    const textColumn = (strip.columns as Array<{ elements: Array<Record<string, unknown>> }>)[1];
+    expect(String(textColumn.elements[0].content)).toContain('qwen4-max');
+    // logo 条渲染时 header 模型段为纯名（不带 🍤 回落图标）
+    expect(panelHeaderText(card)).not.toContain("🍤 qwen4-max");
+  });
+
+  it('routing logo strip is omitted when no image key resolved', () => {
+    const card = buildCardContent('complete', {
+      text: 'hello',
+      elapsedMs: 6000,
+      footerMetrics: { model: 'openclaw', responseModel: 'qwen4-max' },
+    });
+    const panel = ((card.elements ?? []).find((el) => (el as Record<string, unknown>).tag === 'collapsible_panel') ??
+      {}) as Record<string, unknown>;
+    const children = (panel.elements ?? []) as Array<Record<string, unknown>>;
+    expect(children[0]?.tag).not.toBe('column_set');
+    expect(panelHeaderText(card)).toContain("🍤 qwen4-max");
   });
 
   it('renders no metric segments for an empty fields array', () => {

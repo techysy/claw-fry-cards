@@ -1,8 +1,12 @@
 {
   "id": "claw-fry-cards",
   "description": "🍤 OpenClaw 飞书通道插件——官方通道 2.0 适配 + fry 虾条流式卡片引擎（派发即建卡 · 打字机 · 统一指标面板）",
-  "channels": ["feishu"],
-  "skills": ["./skills"],
+  "channels": [
+    "feishu"
+  ],
+  "skills": [
+    "./skills"
+  ],
   "configSchema": {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "type": "object",
@@ -17,7 +21,11 @@
           },
           "contextDisplayMode": {
             "type": "string",
-            "enum": ["text", "bar", "text_bar"],
+            "enum": [
+              "text",
+              "bar",
+              "text_bar"
+            ],
             "title": "上下文段样式",
             "description": "上下文段样式：text（129.3k/1.0m (13%)）/ bar（[██▓░░░░░] 13%）/ text_bar（129.3k/1.0m [██▓░░░░░] 13%）；默认 text"
           },
@@ -83,11 +91,15 @@
                             "description": "该时段显示的别名"
                           }
                         },
-                        "required": ["name"]
+                        "required": [
+                          "name"
+                        ]
                       }
                     }
                   },
-                  "required": ["name"]
+                  "required": [
+                    "name"
+                  ]
                 }
               ]
             },
@@ -120,41 +132,80 @@
                 },
                 "schedule": {
                   "type": "string",
-                  "enum": ["deepseek", "workday-918", "everyday-day", "always-peak", "custom"],
+                  "enum": [
+                    "deepseek",
+                    "workday-918",
+                    "everyday-day",
+                    "always-peak",
+                    "custom"
+                  ],
                   "title": "峰段窗口",
                   "description": "峰段窗口预置：deepseek = 工作日 09:00-12:00 & 14:00-18:00；workday-918 = 工作日 09:00-18:00；everyday-day = 每天 08:00-22:00；always-peak = 恒为峰段；custom = 改用 modelAliases.timeAliases 自定义"
                 }
               },
-              "required": ["peakName", "valleyName", "schedule"]
+              "required": [
+                "peakName",
+                "valleyName",
+                "schedule"
+              ]
             },
             "description": "峰谷价标识列表（DeepSeek 等按峰谷计费的模型，可添加多条）：key 为匹配模型（子串），峰段显示 peakName，谷段（闲时）显示 valleyName；与 modelAliases 可共存，同 key 手写优先"
           },
           "fields": {
             "type": "array",
             "title": "面板字段（顺序即显示顺序）",
-            "description": "统一面板标题要显示哪些段、以及显示顺序——数组顺序即标题从左到右的顺序，未列出的段不显示。留空表示全部不显示；删除整个字段则回落默认全字段顺序。即使列出，该段数据缺失时仍会自动省略",
+            "description": "统一面板标题要显示哪些段、以及显示顺序——数组顺序即标题从左到右的顺序，未列出的段不显示。可选值：model（厂商图标 + 模型名：路由器回传实际模型时显示实际模型，直连时显示请求模型）、reasoning（💭N 思考计数）、tools（🔧N 工具计数）、context（上下文占用，样式见 contextDisplayMode）、cache（💾 缓存命中率）、output（🎫 会话累计输出 tokens）、speed（⚡ 本轮生成速度 tok/s）、elapsed（⏱️ 回合耗时）。留空表示全部不显示；删除整个字段则回落默认全字段顺序。即使列出，该段数据缺失时仍会自动省略",
             "items": {
               "type": "string",
               "oneOf": [
-                { "const": "model", "title": "模型名", "description": "模型名段（含别名/⇲ 截断）" },
-                { "const": "reasoning", "title": "思考计数", "description": "💭N 思考计数段" },
-                { "const": "tools", "title": "工具计数", "description": "🔧N 工具调用计数段" },
-                { "const": "context", "title": "上下文", "description": "上下文占用段（样式见 contextDisplayMode）" },
+                {
+                  "const": "model",
+                  "title": "模型名",
+                  "description": "模型名段（含别名/⇲ 截断）"
+                },
+                {
+                  "const": "reasoning",
+                  "title": "思考计数",
+                  "description": "💭N 思考计数段"
+                },
+                {
+                  "const": "tools",
+                  "title": "工具计数",
+                  "description": "🔧N 工具调用计数段"
+                },
+                {
+                  "const": "context",
+                  "title": "上下文",
+                  "description": "上下文占用段（样式见 contextDisplayMode）"
+                },
                 {
                   "const": "cache",
                   "title": "缓存命中率",
                   "description": "💾 本轮缓存命中率 cacheRead/(input+read+write)"
                 },
-                { "const": "output", "title": "输出 Token", "description": "🎫 会话累计输出 tokens 段" },
+                {
+                  "const": "output",
+                  "title": "输出 Token",
+                  "description": "🎫 会话累计输出 tokens 段"
+                },
                 {
                   "const": "speed",
                   "title": "生成速度",
                   "description": "⚡ 本轮生成速度 tok/s（transcript 时间戳推算，不含工具执行段）"
                 },
-                { "const": "elapsed", "title": "耗时", "description": "⏱️ 本轮回合耗时段" }
+                {
+                  "const": "elapsed",
+                  "title": "耗时",
+                  "description": "⏱️ 本轮回合耗时段"
+                }
               ]
             },
             "uniqueItems": true
+          },
+          "vendorLogo": {
+            "type": "boolean",
+            "title": "厂商路由 logo",
+            "description": "面板展开区顶部显示「厂商 logo + 本轮路由模型」条（logo 为内置厂商图标 PNG，首次渲染上传缓存）。关闭或未命中厂商时不显示 logo 条，模型段回落 🦐 品牌图标。默认开启"
           }
         },
         "description": "统一面板设置（完成态底部折叠面板）"

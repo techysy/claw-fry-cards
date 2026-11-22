@@ -8,7 +8,7 @@
  * different agent response states (thinking, streaming, complete, confirm).
  */
 
-import { type PeakValleyConfig, expandPeakValley } from './panel-config';
+import { type PeakValleyConfig } from './panel-config';
 import { optimizeMarkdownStyle } from './markdown-style';
 import type { FooterSessionMetrics } from './reply-dispatcher-types';
 import { EMPTY_TOOL_USE_PLACEHOLDER, type ToolUseDisplayStep } from './tool-use-display';
@@ -525,6 +525,8 @@ export function buildCardContent(
       model?: boolean;
     };
     footerMetrics?: FooterSessionMetrics;
+    /** 面板展开区顶部的「厂商 logo + 实际路由模型」条；未取到 logo 时省略 */
+    routingLogo?: { imageKey: string; model: string };
   } = {},
 ): FeishuCard {
   switch (state) {
@@ -551,6 +553,7 @@ export function buildCardContent(
         isAborted: data.isAborted,
         footer: data.footer,
         footerMetrics: data.footerMetrics,
+        routingLogo: data.routingLogo,
         panel: data.panel,
       });
     case 'confirm':
@@ -682,6 +685,8 @@ function buildCompleteCard(params: {
     provider?: boolean;
   };
   footerMetrics?: FooterSessionMetrics;
+  /** 面板展开区顶部的「厂商 logo + 实际路由模型」条；未取到 logo 时省略 */
+  routingLogo?: { imageKey: string; model: string };
 }): FeishuCard {
   const {
     text,
@@ -694,6 +699,7 @@ function buildCompleteCard(params: {
     isAborted,
     footer,
     footerMetrics,
+    routingLogo,
     panel,
   } = params;
   const elements: CardElement[] = [];
@@ -716,25 +722,20 @@ function buildCompleteCard(params: {
     const borderColor = isError ? 'red' : isAborted ? 'yellow' : 'green';
 
     const rawModel = (footerMetrics?.model ?? '').trim();
-    // 模型显示：别名（子串匹配，含时段人设）优先；未命中回落 ⇲ 截断（truncateModelName !== false）
-    // 峰谷价标识（peakValley）先展开进表，手写 modelAliases 同 key 时覆盖
-    const aliasTable: Record<string, ModelAliasEntry> = {};
-    for (const pv of panel?.peakValley ?? []) {
-      const entry = expandPeakValley(pv);
-      if (entry && pv.match) aliasTable[pv.match] = entry;
-    }
-    Object.assign(aliasTable, panel?.modelAliases ?? {});
-    const modelName = resolvePanelModelName(aliasTable, rawModel, {
-      truncateModelName: panel?.truncateModelName,
-      modelAliasesEnabled: panel?.modelAliasesEnabled,
-    });
 
     // 按 panel.fields 的数组顺序渲染各段；未配置时用默认全字段顺序。
     // 每个字段单独求值：该字段数据缺失（或值为空）返回 undefined，该段即被省略。
     const activeFields = panel?.fields ?? DEFAULT_PANEL_FIELDS;
 
     const fieldValues: Record<PanelField, string | undefined> = {
-      model: modelName || undefined,
+      // 实际模型名：路由器响应体回传的 responseModel 优先（组合名不上卡，维护者自知），
+      // 直连时回落请求模型。厂商 PNG logo 条渲染在展开区顶部时模型段为纯名；
+      // logo 未渲染（开关关/未命中厂商/上传失败）时回落 🍤 品牌图标。
+      model: (() => {
+        const actual = (footerMetrics?.responseModel ?? '').trim() || rawModel;
+        if (!actual) return undefined;
+        return routingLogo ? actual : `🍤 ${actual}`;
+      })(),
       // 思考/工具计数恒随各自内容出现（💭0/🔧0 本身也是信息）
       reasoning: `💭${hasReasoning ? 1 : 0}`,
       tools: `🔧${toolCount}`,
@@ -804,6 +805,44 @@ function buildCompleteCard(params: {
     }
     if (children.length === 0) {
       children.push(buildToolUsePlaceholder({ zh: '暂无思考与工具调用过程', en: 'No reasoning or tool activity' }));
+    }
+
+    // 面板展开区顶部：厂商 PNG logo 并排实际路由模型名（header title 是纯文本贴不了图，
+    // logo 为打包内 lobehub icons 静态 PNG，首次渲染上传换 image_key 并缓存）
+    if (routingLogo) {
+      children.unshift({
+        tag: 'column_set',
+        flex_mode: 'stretch',
+        horizontal_spacing: '8px',
+        margin: '0 0 4px 0',
+        columns: [
+          {
+            tag: 'column',
+            width: 'weighted',
+            weight: 1,
+            vertical_align: 'center',
+            elements: [
+              { tag: 'img', img_key: routingLogo.imageKey, alt: routingLogo.model, custom_width: 28 },
+            ],
+          },
+          {
+            tag: 'column',
+            width: 'weighted',
+            weight: 6,
+            vertical_align: 'center',
+            elements: [
+              {
+                tag: 'markdown',
+                content: `**本轮路由** \`${routingLogo.model}\``,
+                i18n_content: {
+                  zh_cn: `**本轮路由** \`${routingLogo.model}\``,
+                  en_us: `**Routed model** \`${routingLogo.model}\``,
+                },
+              },
+            ],
+          },
+        ],
+      } as CardElement);
     }
 
     elements.push({
