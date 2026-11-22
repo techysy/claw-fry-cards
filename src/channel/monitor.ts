@@ -13,6 +13,7 @@ import type { OpenClawConfig } from 'openclaw/plugin-sdk/core';
 import type { RuntimeEnv } from 'openclaw/plugin-sdk/runtime-env';
 import type { HistoryEntry } from 'openclaw/plugin-sdk/reply-history';
 import { getEnabledLarkAccounts, getLarkAccount } from '../core/accounts';
+import { recoverInterruptedCards } from '../card/card-recovery';
 import { LarkClient } from '../core/lark-client';
 import { larkLogger } from '../core/lark-logger';
 import { drainShutdownHooks } from '../core/shutdown-hooks';
@@ -78,6 +79,13 @@ async function monitorSingleAccount(params: {
 
   // Attach dedup instance so it is disposed together with the client.
   lark.messageDedup = messageDedup;
+
+  // 重启后在途卡收尾：上一进程因强杀/崩溃没走到终态的流式卡，按 journal
+  // 记录补终态（优雅关机路径由 shutdown-hooks 的 abortCard 收尾，不走这里）。
+  // fire-and-forget——收尾失败不阻塞 websocket 启动，失败条目留待下次启动重试。
+  void recoverInterruptedCards({ cfg: params.cfg, accountId, log, error }).catch((err) => {
+    error(`feishu[${accountId}]: card recovery failed: ${String(err)}`);
+  });
 
   /** Per-chat history maps (used for group-chat context window). */
   const chatHistories = new Map<string, HistoryEntry[]>();

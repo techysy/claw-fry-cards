@@ -364,6 +364,28 @@ export async function updateCardFeishu(params: {
   });
 }
 
+/**
+ * Recall (delete) a message the bot sent — used to clean up placeholder
+ * streaming cards when the reply turns out to be silent (NO_REPLY).
+ *
+ * Deliberately NOT wrapped in runWithMessageUnavailableGuard: "message
+ * already gone" is an acceptable outcome for a cleanup call, and the
+ * caller decides how to degrade on failure.
+ */
+export async function deleteMessageFeishu(params: {
+  cfg: OpenClawConfig;
+  messageId: string;
+  accountId?: string;
+}): Promise<void> {
+  const { cfg, messageId, accountId } = params;
+
+  const client = LarkClient.fromCfg(cfg, accountId).sdk;
+
+  await client.im.message.delete({
+    path: { message_id: messageId },
+  });
+}
+
 // ---------------------------------------------------------------------------
 // buildMarkdownCard
 // ---------------------------------------------------------------------------

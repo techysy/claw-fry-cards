@@ -21,7 +21,7 @@ import { extractLarkApiCode } from '../core/api-error';
 import { larkLogger } from '../core/lark-logger';
 import { LarkClient } from '../core/lark-client';
 import { registerShutdownHook } from '../core/shutdown-hooks';
-import { sendCardFeishu, updateCardFeishu } from '../messaging/outbound/send';
+import { deleteMessageFeishu, sendCardFeishu, updateCardFeishu } from '../messaging/outbound/send';
 import { type UnifiedPanelSettings, resolvePanelSettings } from './panel-config';
 import {
   STREAMING_ELEMENT_ID,
@@ -46,6 +46,7 @@ import {
   streamCardContent,
   updateCardKitCard,
 } from './cardkit';
+import { recordStreamingCard, removeStreamingCard } from './card-journal';
 import { FlushController } from './flush-controller';
 import { ImageResolver } from './image-resolver';
 import { optimizeMarkdownStyle } from './markdown-style';
@@ -448,6 +449,11 @@ export class StreamingCardController {
     this.flush.complete();
     this.disposeShutdownHook?.();
     this.disposeShutdownHook = null;
+    // 终态即出 journal：在途记录只在「卡已发出但进程没走到终态」时留存，
+    // 供下次启动 card-recovery 收尾（正常路径关机 hook 已原卡收尾）
+    if (this.cardKit.cardMessageId) {
+      removeStreamingCard(this.deps.accountId, this.cardKit.cardMessageId);
+    }
     if (this.phase === 'terminated' || this.phase === 'creation_failed') {
       clearToolUseTraceRun(this.deps.sessionKey);
     }
@@ -702,6 +708,33 @@ export class StreamingCardController {
     const idleEffectiveCardId = this.cardKit.cardKitCardId ?? this.cardKit.originalCardKitCardId;
     try {
       if (this.cardKit.cardMessageId) {
+        // 🍤 静默回复（NO_REPLY / 空回复）不留空壳卡：撤回占位卡。
+        // 「派发即建卡」让占位卡在 dispatch 一开始就已发出，agent 最终选择
+        // 不回复时，老行为是灌 'Done.' 兜底文案——群里留一张无信息空壳。
+        // 撤回失败（缺 im:message:delete 权限/消息已被删等）回落原兜底文案
+        // 路径，保证占位卡一定收尾。
+        const silentReply =
+          !this.text.completedText.trim() &&
+          (!this.text.accumulatedText.trim() || SILENT_REPLY_TOKEN.startsWith(this.text.accumulatedText.trim()));
+        if (silentReply) {
+          try {
+            await deleteMessageFeishu({
+              cfg: this.deps.cfg,
+              messageId: this.cardKit.cardMessageId,
+              accountId: this.deps.accountId,
+            });
+            log.info('onIdle: silent reply, placeholder card recalled', {
+              messageId: this.cardKit.cardMessageId,
+            });
+            return;
+          } catch (recallErr) {
+            log.warn('onIdle: silent reply card recall failed, finalizing with fallback text', {
+              messageId: this.cardKit.cardMessageId,
+              error: String(recallErr),
+            });
+          }
+        }
+
         // 🍤 无 token 增量时的流式补偿：streaming_mode 仍开启时灌入最终全文，
         // CardKit 客户端自行播放逐字打字机动画，随后再关流式、替换终态卡。
         const isNoReplyLeakPre =
@@ -808,9 +841,10 @@ export class StreamingCardController {
               panel: this.resolvePanelConfig(),
               text: terminalContent.text,
               elapsedMs: this.elapsed(),
-              showToolUse: false,
+              showToolUse: this.deps.toolUseDisplay.showToolUse,
               footer: this.deps.resolvedFooter,
               footerMetrics,
+              routingLogo,
             });
             this.cardKit.cardKitSequence += 1;
             try {
@@ -823,14 +857,20 @@ export class StreamingCardController {
               });
               log.info('onIdle: degraded CardKit update succeeded', { seq: this.cardKit.cardKitSequence });
             } catch (cardKitDegradeErr) {
-              // CardKit update 仍被拒时，通过 IM message patch 终极保底封卡
+              // CardKit update 仍被拒时，通过 IM message patch 终极保底封卡——
+              // 此时剥离面板/logo 只留正文，保证这一步不再有可失败的富元素
               log.warn('onIdle: degraded CardKit update failed, falling back to im.message.patch', {
                 error: String(cardKitDegradeErr),
+              });
+              const minimalCard = buildCardContent('complete', {
+                text: terminalContent.text,
+                elapsedMs: this.elapsed(),
+                showToolUse: false,
               });
               await updateCardFeishu({
                 cfg: this.deps.cfg,
                 messageId: this.cardKit.cardMessageId,
-                card: toCardKit2(degradedCard) as unknown as Record<string, unknown>,
+                card: toCardKit2(minimalCard) as unknown as Record<string, unknown>,
                 accountId: this.deps.accountId,
               });
               log.info('onIdle: im.message.patch fallback succeeded');
@@ -846,13 +886,16 @@ export class StreamingCardController {
             });
           } catch (patchErr) {
             log.warn('onIdle: IM card update failed, attempting degraded fallback', { error: String(patchErr) });
+            // IM 路径的最后一次兜底：面板/logo 保留（元素数可忽略），工具步骤等
+            // 大体积内容仍剥离；正文尺寸导致的失败在这一层救不了，交外层记录
             const degradedCard = buildCardContent('complete', {
               panel: this.resolvePanelConfig(),
               text: terminalContent.text,
               elapsedMs: this.elapsed(),
-              showToolUse: false,
+              showToolUse: this.deps.toolUseDisplay.showToolUse,
               footer: this.deps.resolvedFooter,
               footerMetrics,
+              routingLogo,
             });
             await updateCardFeishu({
               cfg: this.deps.cfg,
@@ -1014,6 +1057,17 @@ export class StreamingCardController {
               accountId: this.deps.accountId,
             });
 
+            // 消息已发出即记在途 journal——放在 stale 检查之前：若创建途中被
+            // abort 抢先（epoch 失配 bail），消息照样发出去了，journal 留到
+            // 下次启动由 recovery 收尾，不留僵尸卡
+            recordStreamingCard(this.deps.accountId, {
+              cardKitCardId: this.cardKit.cardKitCardId,
+              cardMessageId: result.messageId,
+              chatId: this.deps.chatId,
+              sessionKey: this.deps.sessionKey,
+              createdAt: Date.now(),
+            });
+
             if (this.isStaleCreate(epoch)) {
               log.info('ensureCardCreated: stale epoch after sendCardByCardId, bailing out', {
                 epoch,
@@ -1056,6 +1110,15 @@ export class StreamingCardController {
             replyToMessageId: this.deps.replyToMessageId,
             replyInThread: this.deps.replyInThread,
             accountId: this.deps.accountId,
+          });
+
+          // 同 CardKit 主路径：消息已发出即记 journal（stale bail 也可被 recovery 收尾）
+          recordStreamingCard(this.deps.accountId, {
+            cardKitCardId: null,
+            cardMessageId: result.messageId,
+            chatId: this.deps.chatId,
+            sessionKey: this.deps.sessionKey,
+            createdAt: Date.now(),
           });
 
           if (this.isStaleCreate(epoch)) {
