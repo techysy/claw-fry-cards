@@ -219,9 +219,61 @@ export function createFeishuReplyDispatcher(params: CreateFeishuReplyDispatcherP
         return;
       }
 
+      // ---- Late continuation delivery (card already sealed) ----
+      // Background exec completions can wake a follow-up agent run AFTER the
+      // main reply's streaming card was finalized (dispatch complete →
+      // controller 'completed'). This deliver() then hits the static fallback
+      // below and lands as a bare text/card chunk with no unified panel —
+      // production 2026-11-23 fnOS group "overflow" report (bare markdown,
+      // no panel, flush-left). Route it through the fry static card path
+      // instead so late content keeps the 🍤 presentation.
+      const lateAnswerText = getVisiblePayloadText(payload);
+      const lateReasoningText = payload.isReasoning === true ? (payload.text ?? '') : '';
+      if (controller?.currentPhase === 'completed') {
+        const lateText = lateReasoningText.trim() || lateAnswerText.trim();
+        if (lateText) {
+          log.info('deliver: late continuation after card sealed, sending as standalone fry card', {
+            chatId,
+            textLen: lateText.length,
+          });
+          const lateChunks = core.channel.text.chunkTextWithMode(lateText, textChunkLimit, chunkMode);
+          for (const chunk of lateChunks) {
+            try {
+              await sendMarkdownCardFeishu({
+                cfg,
+                to: chatId,
+                text: chunk,
+                replyToMessageId,
+                replyInThread,
+                accountId,
+              });
+            } catch (err) {
+              if (controller.terminateIfUnavailable('deliver.lateContinuation', err)) return;
+              log.error('deliver: late continuation card send failed, falling back to text', {
+                error: String(err),
+              });
+              try {
+                await sendMessageFeishu({
+                  cfg,
+                  to: chatId,
+                  text: chunk,
+                  replyToMessageId,
+                  replyInThread,
+                  accountId,
+                  threadId,
+                });
+              } catch (textErr) {
+                log.error('deliver: late continuation text fallback failed', { error: String(textErr) });
+              }
+            }
+          }
+          return;
+        }
+      }
+
       // 提取文本和媒体 URL
-      const text = getVisiblePayloadText(payload);
-      const reasoningText = payload.isReasoning === true ? (payload.text ?? '') : '';
+      const text = lateAnswerText;
+      const reasoningText = lateReasoningText;
       const payloadMediaUrls = payload.mediaUrls?.length
         ? payload.mediaUrls
         : payload.mediaUrl
