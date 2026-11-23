@@ -39,6 +39,7 @@ import {
   isCardTableLimitError,
   sanitizeTextSegmentsForCard,
 } from './card-error';
+import { clampAnswerText, clampReasoningText, clampStreamingText } from './content-budget';
 import {
   createCardEntity,
   sendCardByCardId,
@@ -749,7 +750,7 @@ export class StreamingCardController {
               cfg: this.deps.cfg,
               cardId: idleEffectiveCardId,
               elementId: STREAMING_ELEMENT_ID,
-              content: preDisplayText,
+              content: clampStreamingText(preDisplayText),
               sequence: seqStream,
               accountId: this.deps.accountId,
             });
@@ -1186,7 +1187,7 @@ export class StreamingCardController {
             cfg: this.deps.cfg,
             cardId: this.cardKit.cardKitCardId,
             elementId: STREAMING_ELEMENT_ID,
-            content: optimizeMarkdownStyle(resolvedText),
+            content: optimizeMarkdownStyle(clampStreamingText(resolvedText)),
             sequence: this.cardKit.cardKitSequence,
             accountId: this.deps.accountId,
           });
@@ -1365,7 +1366,8 @@ export class StreamingCardController {
 
 /**
  * 终态卡片的正文和 reasoning 都会被飞书按 markdown 渲染，
- * 因此两者都要先做图片替换与表格降级，避免再次撞到 230099/11310。
+ * 因此两者都要先做图片替换与表格降级，避免再次撞到 230099/11310；
+ * 再按 UTF-8 字节预算钳制（终态保尾），防长回复撑爆单卡 ~30KB JSON 上限。
  */
 export function prepareTerminalCardContent(
   content: TerminalCardContentInput,
@@ -1377,7 +1379,7 @@ export function prepareTerminalCardContent(
   const sanitizedSegments = sanitizeTextSegmentsForCard(
     resolvedReasoningText ? [resolvedReasoningText, resolvedText] : [resolvedText],
     tableLimit,
-  );
+  ).map((segment, index) => (index === 0 && resolvedReasoningText ? clampReasoningText(segment) : clampAnswerText(segment)));
 
   if (resolvedReasoningText) {
     return {

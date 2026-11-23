@@ -11,6 +11,13 @@
 import { type PeakValleyConfig } from './panel-config';
 import { resolveVendorDisplayName } from './vendor-logos';
 import { optimizeMarkdownStyle } from './markdown-style';
+import {
+  clampAnswerText,
+  clampReasoningText,
+  clampStreamingReasoningText,
+  clampStreamingText,
+  clampToolStepText,
+} from './content-budget';
 import type { FooterSessionMetrics } from './reply-dispatcher-types';
 import { EMPTY_TOOL_USE_PLACEHOLDER, type ToolUseDisplayStep } from './tool-use-display';
 
@@ -607,20 +614,22 @@ function buildStreamingCard(
 
   if (!partialText && reasoningText) {
     // Reasoning phase: show reasoning content in notation style
+    // （流式思考：头截断——stream 覆盖语义全文重发，无预算时每帧重写超大 payload）
+    const clampedReasoning = clampStreamingReasoningText(reasoningText);
     elements.push({
       tag: 'markdown',
-      content: `💭 **Thinking...**\n\n${reasoningText}`,
+      content: `💭 **Thinking...**\n\n${clampedReasoning}`,
       i18n_content: {
-        zh_cn: `💭 **思考中...**\n\n${reasoningText}`,
-        en_us: `💭 **Thinking...**\n\n${reasoningText}`,
+        zh_cn: `💭 **思考中...**\n\n${clampedReasoning}`,
+        en_us: `💭 **Thinking...**\n\n${clampedReasoning}`,
       },
       text_size: 'notation',
     });
   } else if (partialText) {
-    // Answer phase: show answer content only
+    // Answer phase: show answer content only（流式帧：头截断，后续增量自然补全）
     elements.push({
       tag: 'markdown',
-      content: optimizeMarkdownStyle(partialText),
+      content: optimizeMarkdownStyle(clampStreamingText(partialText)),
     });
   }
 
@@ -706,9 +715,11 @@ function buildCompleteCard(params: {
   const elements: CardElement[] = [];
 
   // 🍤 fry 风格布局：答案置顶，底部单一统一面板收纳指标与过程
+  // 正文按 UTF-8 字节预算钳制（终态保尾：首 60% + 中段省略 + 尾 40%），
+  // 防单条长研究回复撑爆飞书单卡 ~30KB JSON 上限导致封卡失败/渲染截断
   elements.push({
     tag: 'markdown',
-    content: optimizeMarkdownStyle(text),
+    content: optimizeMarkdownStyle(clampAnswerText(text)),
   });
 
   const toolCount = toolUseSteps?.length ?? 0;
@@ -802,7 +813,7 @@ function buildCompleteCard(params: {
       });
       children.push({
         tag: 'markdown',
-        content: reasoningText!,
+        content: clampReasoningText(reasoningText!),
         text_size: 'notation',
       });
     }
@@ -1274,7 +1285,7 @@ function buildToolUseStepDetailElement(step: ToolUseDisplayStep): CardElement | 
     margin: TOOL_USE_STEP_CONTENT_INDENT,
     text: {
       tag: 'plain_text',
-      content: detail,
+      content: clampToolStepText(detail),
       text_color: 'grey',
       text_size: 'notation',
     },
@@ -1300,10 +1311,10 @@ function buildToolUseStepOutputMarkdown(step: ToolUseDisplayStep): string | unde
 
   if (step.errorBlock) {
     lines.push('**Error**');
-    lines.push(formatToolUseCodeBlock(step.errorBlock.content, step.errorBlock.language));
+    lines.push(formatToolUseCodeBlock(clampToolStepText(step.errorBlock.content), step.errorBlock.language));
   } else if (step.resultBlock) {
     lines.push('**Result**');
-    lines.push(formatToolUseCodeBlock(step.resultBlock.content, step.resultBlock.language));
+    lines.push(formatToolUseCodeBlock(clampToolStepText(step.resultBlock.content), step.resultBlock.language));
   }
 
   if (lines.length === 0) return undefined;

@@ -1,5 +1,14 @@
 # Changelog
 
+## 3.3.1 (2026-11-23)
+
+修复单条长研究回复溢出飞书卡片的问题（fnOS 群 2026-11-23 实测：小虾米一条超长研究回复正文 bullet 多 + 长段落，卡片在末尾被截断悬停）。
+
+- 📏 **正文/思考 UTF-8 字节预算（根治长回复溢出）**：此前卡片已有元素数收纳（v3.1.1 `MAX_DISPLAY_TOOL_STEPS=15`）与表格数降级（`FEISHU_CARD_TABLE_LIMIT=3`）两层防护，但正文由**单个 markdown 元素**承载且无任何体积预算——单条长回复直接撑爆飞书单卡 ~30KB JSON 上限，终态封卡失败/渲染截断。现参照 hermes-fry-cards `clamp_utf8` 口径补齐第三层防护：answer 元素 18KB（≈6000 汉字）、reasoning 元素 10KB（流式覆盖语义全文重发，无预算时每秒重写 20–28KB 会打满客户端渲染）、工具步骤 detail/result/error 代码块 per-item 4KB
+- ✂️ **截断保尾语义（hermes 同款）**：终态封卡截断保留首 60% + 中段省略标记 + 尾 40%——长研究回复的末尾核心结论不丢；流式进行中头截断（渐进补全）。UTF-8 字节级钳制（二分查找 + 不切割代理对），CJK 3 字节/字场景下字符数估算不可靠
+- 🔧 **渲染链全路径覆盖**：终态卡正文与思考（`prepareTerminalCardContent` 统一收口——onIdle 封卡/错误卡/中止卡/降级重试全走此路径）、流式帧（CardKit streamCardContent + IM patch fallback 双路径）、onIdle 无增量补偿的打字机全文、静态 markdown 元素（工具步骤 detail/output）
+- 🧪 新增 18 项单测：字节计长（CJK/emoji）、保尾截断（首标记+尾结论存活）、代理对不切割、极小预算回落、builder 集成回归（36KB 长回复封卡后卡片 JSON < 30KB、尾结论保留、reasoning ≤10KB、普通长度原样通过）。全套 536 过 / 2 skip，typecheck / lint(0 error) / build 全绿
+
 ## 3.3.0 (2026-11-23)
 
 卡片健壮化专项：修复 fnOS 生产实例复盘出的「拒答空壳卡」「重启僵尸卡」两类悬空卡问题（小虾米装机补丁进源码，重装不再丢），并按用户反馈把统一面板字段改成复选框显隐、官方模型名映射与 logo 显隐解耦。
