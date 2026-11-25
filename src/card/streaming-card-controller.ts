@@ -74,6 +74,16 @@ import { resolveVendorLogoImageKey } from './vendor-logos';
 
 const log = larkLogger('card/streaming');
 
+/**
+ * 关机/重载中止时的兜底终态文案（治标①）。区分两种中止源：
+ * - 宿主重载/关机/强杀（shutdown hook / notifyCardInterrupted 路径）：
+ *   配置正在更新，这轮回复没有结果，提示用户稍后重问；
+ * - 用户主动停止（abort fast-path）：沿用简洁的已停止语义。
+ */
+const CONFIG_RELOAD_NOTICE =
+  '配置更新中，本轮回复已中断。请稍后重发消息重新提问。';
+const USER_ABORTED_NOTICE = '已按要求停止本轮回复。';
+
 interface TerminalCardTextImageResolver {
   resolveImages(text: string): string;
 }
@@ -127,6 +137,8 @@ export class StreamingCardController {
   private createEpoch = 0;
   private _terminalReason: TerminalReason | null = null;
   private dispatchFullyComplete = false;
+  /** abortCard 正在收尾中——onEnterTerminalPhase 据此跳过兜底通知避免并发写卡 */
+  private _inFlightAbort = false;
   private cardCreationPromise: Promise<void> | null = null;
   private disposeShutdownHook: (() => void) | null = null;
   private readonly dispatchStartTime = Date.now();
@@ -450,14 +462,103 @@ export class StreamingCardController {
     this.flush.complete();
     this.disposeShutdownHook?.();
     this.disposeShutdownHook = null;
-    // 终态即出 journal：在途记录只在「卡已发出但进程没走到终态」时留存，
-    // 供下次启动 card-recovery 收尾（正常路径关机 hook 已原卡收尾）
-    if (this.cardKit.cardMessageId) {
+    // journal 收尾时机（3.3.3 修正）：'terminated'（消息被撤回/删除，卡已不存在，
+    // 没有任何 API 能再收尾它）与 'creation_failed'（卡从未发出）立即出 journal；
+    // 'completed'/'aborted' 的条目保留到终态更新真正成功后再移除（见 abortCard/
+    // onError/onIdle 的成功路径）——若进程在终态更新落定前被热重载/强杀，条目
+    // 留给下次启动的 card-recovery 补终态，不再出现「卡悬死但 journal 已清」的
+    // 收尾黑洞（2026-11-25 群级配置热重载中断在途卡事故根因之一）。
+    if (
+      (this.phase === 'terminated' || this.phase === 'creation_failed') &&
+      this.cardKit.cardMessageId
+    ) {
       removeStreamingCard(this.deps.accountId, this.cardKit.cardMessageId);
     }
     if (this.phase === 'terminated' || this.phase === 'creation_failed') {
       clearToolUseTraceRun(this.deps.sessionKey);
     }
+    // 治标兜底：重载/强杀路径下进入 aborted 终态后，abortCard 的全量收尾可能
+    // 永远没机会跑完（进程马上被卸载/事件循环关闭）。这里独立改写一次卡面为
+    // 「配置更新中」终态，不依赖 abortCard；若 abortCard 正在本轮调用栈里
+    // 收尾（_inFlightAbort 置位），跳过以免同序列并发写卡。
+    if (this.phase === 'aborted' && !this._inFlightAbort) {
+      void this._notifyCardInterrupted();
+    }
+  }
+
+  /**
+   * 重载/关机场景的兜底终态改写：把在途卡面板替换为「配置更新中，请重问」，
+   * 保留已流出的正文/思考。fire-and-forget、自捕获错误，绝不拖慢关机链路。
+   * CardKit 与 IM 兜底双路径均尝试；卡面改写成功后立即出 journal。
+   */
+  private async _notifyCardInterrupted(): Promise<void> {
+    const effectiveCardId = this.cardKit.cardKitCardId ?? this.cardKit.originalCardKitCardId;
+    const messageId = this.cardKit.cardMessageId;
+    if (!effectiveCardId && !messageId) return;
+    const displayText = this.buildInterruptedDisplayText();
+    const noticeText = `${displayText ? displayText + '\n\n---\n' : ''}⚙️ ${CONFIG_RELOAD_NOTICE}`;
+    const fallbackCard = buildCardContent('complete', {
+      text: noticeText,
+      showToolUse: false,
+    });
+    try {
+      if (effectiveCardId) {
+        try {
+          await this.closeStreamingAndUpdate(effectiveCardId, fallbackCard, 'notifyCardInterrupted');
+        } catch (err) {
+          log.warn('notifyCardInterrupted: CardKit close/update failed, falling back to im.message.patch', {
+            cardId: effectiveCardId,
+            error: String(err),
+          });
+          if (messageId) {
+            await updateCardFeishu({
+              cfg: this.deps.cfg,
+              messageId,
+              card: toCardKit2(fallbackCard) as unknown as Record<string, unknown>,
+              accountId: this.deps.accountId,
+            });
+          }
+        }
+      } else if (messageId) {
+        await updateCardFeishu({
+          cfg: this.deps.cfg,
+          messageId,
+          card: toCardKit2(fallbackCard) as unknown as Record<string, unknown>,
+          accountId: this.deps.accountId,
+        });
+      }
+      // 兜底终态已落卡，journal 出条目（下次启动 recovery 不再重复覆盖）
+      if (messageId) {
+        removeStreamingCard(this.deps.accountId, messageId);
+      }
+      log.info('notifyCardInterrupted: interrupted-notice card written', {
+        effectiveCardId,
+        messageId,
+      });
+    } catch (err) {
+      // 写失败：journal 条目保留，下次启动 card-recovery 会再补终态
+      log.warn('notifyCardInterrupted: interrupted-notice write failed, keeping journal entry', {
+        effectiveCardId,
+        messageId,
+        error: String(err),
+      });
+    }
+  }
+
+  /**
+   * 关机中止时「已流出的内容」快照：纯思考阶段（正文为空）时给出思考摘要，
+   * 杜绝只剩裸 'Aborted.' 的空壳卡（2026-11-25 11:49 热重载事故截图特征）。
+   * 供 abortCard 与 notifyCardInterrupted 共用。
+   */
+  private buildInterruptedDisplayText(): string {
+    const answer = this.text.accumulatedText;
+    if (answer && answer.trim()) return answer;
+    const reasoning = this.reasoning.accumulatedReasoningText;
+    if (reasoning && reasoning.trim()) {
+      const clamped = clampReasoningText(reasoning);
+      return `💭 **Thinking…**\n\n${clamped}`;
+    }
+    return '';
   }
 
   private markToolUseActivity(): void {
@@ -681,6 +782,10 @@ export class StreamingCardController {
             accountId: this.deps.accountId,
           });
         }
+        // 错误卡已成功落卡，journal 出条目（3.3.3 修正：条目不再在进终态时提前移除）
+        if (this.cardKit.cardMessageId) {
+          removeStreamingCard(this.deps.accountId, this.cardKit.cardMessageId);
+        }
       }
     } catch {
       // Ignore update failures during error handling
@@ -727,6 +832,10 @@ export class StreamingCardController {
             log.info('onIdle: silent reply, placeholder card recalled', {
               messageId: this.cardKit.cardMessageId,
             });
+            // 卡已撤回 = 收尾完成，journal 出条目（3.3.3 修正后条目在此阶段仍留存）
+            if (this.cardKit.cardMessageId) {
+              removeStreamingCard(this.deps.accountId, this.cardKit.cardMessageId);
+            }
             return;
           } catch (recallErr) {
             log.warn('onIdle: silent reply card recall failed, finalizing with fallback text', {
@@ -910,6 +1019,10 @@ export class StreamingCardController {
           elapsedMs: this.elapsed(),
           isCardKit: !!idleEffectiveCardId,
         });
+        // 终态卡已成功落卡，journal 出条目（3.3.3 修正：条目不再在进终态时提前移除）
+        if (this.cardKit.cardMessageId) {
+          removeStreamingCard(this.deps.accountId, this.cardKit.cardMessageId);
+        }
       }
     } catch (err) {
       log.warn('final card update failed', { error: String(err) });
@@ -930,9 +1043,20 @@ export class StreamingCardController {
     this.dispatchFullyComplete = true;
   }
 
-  async abortCard(): Promise<void> {
+  /**
+   * 中止在途卡并收尾。
+   *
+   * @param opts.reason 中止来源：
+   *   - `user-stop`（默认）：用户停止指令 / 消息不可用终止，卡面提示「已按要求停止」；
+   *   - `shutdown`：宿主优雅关机 hook（含配置热重载）触发的中止，卡面提示
+   *     「配置更新中，请重问」并说明本轮无输出，杜绝裸 'Aborted.' 空壳卡
+   *     （2026-11-25 11:49 群级配置热重载事故）。
+   */
+  async abortCard(opts: { reason?: 'user-stop' | 'shutdown' } = {}): Promise<void> {
+    const abortNotice = opts.reason === 'shutdown' ? CONFIG_RELOAD_NOTICE : USER_ABORTED_NOTICE;
     try {
       this.captureToolUseElapsed();
+      this._inFlightAbort = true;
       if (!this.transition('aborted', 'abortCard', 'abort')) return;
 
       // transition() already executed onEnterTerminalPhase (cancel + complete + dispose hook)
@@ -944,10 +1068,15 @@ export class StreamingCardController {
       const effectiveCardId = this.cardKit.cardKitCardId ?? this.cardKit.originalCardKitCardId;
       const elapsedMs = Date.now() - this.dispatchStartTime;
       const abortToolUseDisplay = this.computeToolUseDisplay();
+      const interruptedText = this.buildInterruptedDisplayText();
       const terminalContent = prepareTerminalCardContent(
         {
-          text: this.text.accumulatedText || 'Aborted.',
-          reasoningText: this.reasoning.accumulatedReasoningText || undefined,
+          // 思考阶段被中止时正文为空——兜底终态写「配置更新中/已停止」提示而非裸 'Aborted.'；
+          // 思考内容只在 buildInterruptedDisplayText 内联展示一次，不再重复传 reasoningText
+          text: interruptedText ? `${interruptedText}\n\n---\n${abortNotice}` : abortNotice,
+          reasoningText: this.text.accumulatedText?.trim()
+            ? this.reasoning.accumulatedReasoningText || undefined
+            : undefined,
         },
         this.imageResolver,
       );
@@ -968,8 +1097,19 @@ export class StreamingCardController {
           footerMetrics,
           routingLogo,
         });
-        await this.closeStreamingAndUpdate(effectiveCardId, abortCardContent, 'abortCard');
-        log.info('abortCard completed', { effectiveCardId });
+        const updated = await this.closeStreamingAndUpdate(effectiveCardId, abortCardContent, 'abortCard');
+        log.info('abortCard completed', {
+          effectiveCardId,
+          reason: opts.reason ?? 'user-stop',
+          updated,
+        });
+        // 终态更新成功后 journal 才出条目（3.3.3 修正）：条目在 onEnterTerminalPhase
+        // 已被保留，这里更新落定即移除；若所有更新路径都失败，条目留给下次启动
+        // card-recovery 补终态——不再出现「卡悬死但 journal 已清」。
+        if (updated && this.cardKit.cardMessageId) {
+          removeStreamingCard(this.deps.accountId, this.cardKit.cardMessageId);
+        }
+        return;
       } else if (this.cardKit.cardMessageId) {
         // IM fallback: 卡片不是通过 CardKit 发的，用 im.message.patch 更新
         const abortCard = buildCardContent('complete', {
@@ -995,11 +1135,17 @@ export class StreamingCardController {
         });
         log.info('abortCard completed (IM fallback)', {
           messageId: this.cardKit.cardMessageId,
+          reason: opts.reason ?? 'user-stop',
         });
+        // IM 兜底更新成功，journal 出条目（同上：更新失败则条目留给 recovery）
+        if (this.cardKit.cardMessageId) {
+          removeStreamingCard(this.deps.accountId, this.cardKit.cardMessageId);
+        }
       }
     } catch (err) {
       log.warn('abortCard failed', { error: String(err) });
     } finally {
+      this._inFlightAbort = false;
       clearToolUseTraceRun(this.deps.sessionKey);
     }
   }
@@ -1042,7 +1188,9 @@ export class StreamingCardController {
             this.cardKit.cardKitCardId = cId;
             this.cardKit.originalCardKitCardId = cId;
             this.cardKit.cardKitSequence = 1;
-            this.disposeShutdownHook = registerShutdownHook(`streaming-card:${cId}`, () => this.abortCard());
+            this.disposeShutdownHook = registerShutdownHook(`streaming-card:${cId}`, () =>
+        this.abortCard({ reason: 'shutdown' }),
+      );
             log.info('created CardKit entity', {
               cardId: cId,
               initialSequence: this.cardKit.cardKitSequence,
@@ -1304,12 +1452,15 @@ export class StreamingCardController {
 
   /**
    * Close streaming mode then update card content (shared by onError and abortCard).
+   *
+   * @returns 是否有任一更新路径真正落卡（CardKit update 或 IM patch 成功）。
+   *          调用方（abortCard）据此决定 journal 出条目还是留给 recovery 重试。
    */
   private async closeStreamingAndUpdate(
     cardId: string,
     card: ReturnType<typeof buildCardContent>,
     label: string,
-  ): Promise<void> {
+  ): Promise<boolean> {
     const seqBeforeClose = this.cardKit.cardKitSequence;
     this.cardKit.cardKitSequence += 1;
     log.info(`${label}: closing streaming mode`, {
@@ -1341,6 +1492,7 @@ export class StreamingCardController {
         sequence: this.cardKit.cardKitSequence,
         accountId: this.deps.accountId,
       });
+      return true;
     } catch (updateErr) {
       log.warn(`${label}: updateCardKitCard failed, attempting degraded update`, { error: String(updateErr) });
       if (this.cardKit.cardMessageId) {
@@ -1352,10 +1504,12 @@ export class StreamingCardController {
             accountId: this.deps.accountId,
           });
           log.info(`${label}: im.message.patch fallback succeeded`);
+          return true;
         } catch (patchErr) {
           log.warn(`${label}: im.message.patch fallback failed`, { error: String(patchErr) });
         }
       }
+      return false;
     }
   }
 }
