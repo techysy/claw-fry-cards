@@ -80,8 +80,7 @@ const log = larkLogger('card/streaming');
  *   配置正在更新，这轮回复没有结果，提示用户稍后重问；
  * - 用户主动停止（abort fast-path）：沿用简洁的已停止语义。
  */
-const CONFIG_RELOAD_NOTICE =
-  '配置更新中，本轮回复已中断。请稍后重发消息重新提问。';
+const CONFIG_RELOAD_NOTICE = '配置更新中，本轮回复已中断。请稍后重发消息重新提问。';
 const USER_ABORTED_NOTICE = '已按要求停止本轮回复。';
 
 interface TerminalCardTextImageResolver {
@@ -194,7 +193,10 @@ export class StreamingCardController {
         let sawOutput = false;
         for (const row of rows) {
           if (!row?.event_json) continue;
-          let ev: { timestamp?: unknown; message?: { model?: unknown; provider?: unknown; responseModel?: unknown; usage?: unknown } };
+          let ev: {
+            timestamp?: unknown;
+            message?: { model?: unknown; provider?: unknown; responseModel?: unknown; usage?: unknown };
+          };
           try {
             ev = JSON.parse(row.event_json) as typeof ev;
           } catch {
@@ -250,7 +252,10 @@ export class StreamingCardController {
     }
   }
 
-  /** 面板指标 + 厂商路由 logo（响应体 responseModel 命中厂商资产时懒上传换 image_key） */
+  /**
+   * 面板指标 + 面板头 logo（厂商命中优先，未识别模型回退智能体/宿主品牌图，
+   * 懒上传换 image_key）。agentId 是 OpenClaw 智能体 id，供智能体词兜底判定。
+   */
   private async resolvePanelMetrics(): Promise<{
     footerMetrics: FooterSessionMetrics | undefined;
     routingLogo: { imageKey: string; model: string } | undefined;
@@ -258,9 +263,11 @@ export class StreamingCardController {
     const footerMetrics = this.needsFooterMetrics() ? await this.getFooterSessionMetrics() : undefined;
     const model = footerMetrics?.responseModel?.trim() || footerMetrics?.model?.trim() || '';
     if (!model) return { footerMetrics, routingLogo: undefined };
-    // panel.vendorLogo=false 关闭厂商 logo 条；默认开启
+    // panel.vendorLogo=false 关闭面板头 logo：厂商图与兜底图都不出（右侧箭头 + 🍤）；默认开启
     if (this.resolvePanelConfig()?.vendorLogo === false) return { footerMetrics, routingLogo: undefined };
-    const imageKey = await resolveVendorLogoImageKey(this.deps.cfg, this.deps.accountId, model);
+    const imageKey = await resolveVendorLogoImageKey(this.deps.cfg, this.deps.accountId, model, {
+      agentId: this.deps.agentId,
+    });
     return { footerMetrics, routingLogo: imageKey ? { imageKey, model } : undefined };
   }
 
@@ -468,10 +475,7 @@ export class StreamingCardController {
     // onError/onIdle 的成功路径）——若进程在终态更新落定前被热重载/强杀，条目
     // 留给下次启动的 card-recovery 补终态，不再出现「卡悬死但 journal 已清」的
     // 收尾黑洞（2026-11-25 群级配置热重载中断在途卡事故根因之一）。
-    if (
-      (this.phase === 'terminated' || this.phase === 'creation_failed') &&
-      this.cardKit.cardMessageId
-    ) {
+    if ((this.phase === 'terminated' || this.phase === 'creation_failed') && this.cardKit.cardMessageId) {
       removeStreamingCard(this.deps.accountId, this.cardKit.cardMessageId);
     }
     if (this.phase === 'terminated' || this.phase === 'creation_failed') {
@@ -1189,8 +1193,8 @@ export class StreamingCardController {
             this.cardKit.originalCardKitCardId = cId;
             this.cardKit.cardKitSequence = 1;
             this.disposeShutdownHook = registerShutdownHook(`streaming-card:${cId}`, () =>
-        this.abortCard({ reason: 'shutdown' }),
-      );
+              this.abortCard({ reason: 'shutdown' }),
+            );
             log.info('created CardKit entity', {
               cardId: cId,
               initialSequence: this.cardKit.cardKitSequence,
@@ -1533,7 +1537,9 @@ export function prepareTerminalCardContent(
   const sanitizedSegments = sanitizeTextSegmentsForCard(
     resolvedReasoningText ? [resolvedReasoningText, resolvedText] : [resolvedText],
     tableLimit,
-  ).map((segment, index) => (index === 0 && resolvedReasoningText ? clampReasoningText(segment) : clampAnswerText(segment)));
+  ).map((segment, index) =>
+    index === 0 && resolvedReasoningText ? clampReasoningText(segment) : clampAnswerText(segment),
+  );
 
   if (resolvedReasoningText) {
     return {

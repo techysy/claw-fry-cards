@@ -533,7 +533,7 @@ export function buildCardContent(
       model?: boolean;
     };
     footerMetrics?: FooterSessionMetrics;
-    /** 面板展开区顶部的「厂商 logo + 实际路由模型」条；未取到 logo 时省略 */
+    /** 面板头左侧 logo（厂商图或宿主/智能体兜底图）+ 实际路由模型；未取到 logo 时省略 */
     routingLogo?: { imageKey: string; model: string };
   } = {},
 ): FeishuCard {
@@ -695,7 +695,7 @@ function buildCompleteCard(params: {
     provider?: boolean;
   };
   footerMetrics?: FooterSessionMetrics;
-  /** 面板展开区顶部的「厂商 logo + 实际路由模型」条；未取到 logo 时省略 */
+  /** 面板头左侧 logo（厂商图或宿主/智能体兜底图）+ 实际路由模型；未取到 logo 时省略 */
   routingLogo?: { imageKey: string; model: string };
 }): FeishuCard {
   const {
@@ -741,8 +741,8 @@ function buildCompleteCard(params: {
 
     const fieldValues: Record<PanelField, string | undefined> = {
       // 实际模型名：路由器响应体回传的 responseModel 优先（组合名不上卡，维护者自知），
-      // 直连时回落请求模型。厂商 PNG logo 条渲染在展开区顶部时模型段为纯名；
-      // logo 未渲染（开关关/未命中厂商/上传失败）时回落 🍤 品牌图标。
+      // 直连时回落请求模型。面板头左侧渲染 logo（厂商图，或未识别模型时的
+      // 宿主/智能体兜底图）时模型段为纯名；logo 未渲染（开关关/上传失败）时回落 🍤 品牌图标。
       model: (() => {
         const actual = (footerMetrics?.responseModel ?? '').trim() || rawModel;
         if (!actual) return undefined;
@@ -793,8 +793,8 @@ function buildCompleteCard(params: {
       elapsed: elapsed > 0 ? `⏱️ ${formatElapsed(elapsed)}` : undefined,
     };
 
-    // header 图标槽位已被厂商 logo 占用时,不再叠加独立的 🍤 段(避免双品牌图标);
-    // 未命中厂商时 🍤 保留,维持 fry 品牌存在感
+    // header 图标槽位已被 logo 占用时(厂商图,或未识别模型的宿主/智能体兜底图),
+    // 不再叠加独立的 🍤 段(避免双品牌图标);只有开关关/上传失败时 🍤 才保留,维持 fry 品牌存在感
     const parts: string[] = routingLogo ? [] : ['🍤'];
     for (const field of activeFields) {
       // 过滤未知字段（配置手写错误时静默跳过，避免渲染出 undefined）
@@ -834,9 +834,10 @@ function buildCompleteCard(params: {
           i18n_content: { zh_cn: parts.join(' · '), en_us: parts.join(' · ') },
         },
         vertical_align: 'center',
-        // 厂商路由 logo 命中时,header 图标槽位放家族 PNG（icon_position=left 即原
-        // 展开箭头位,不展开也可见;icon_position/icon_expanded_angle 是 header 层级
-        // 字段,嵌进 icon 对象里服务端不识别）。未命中保持默认展开箭头（右侧,旋转 -180°）
+        // 取到 logo 时,header 图标槽位放该 PNG（厂商家族图,或未识别模型时的宿主/
+        // 智能体兜底图;icon_position=left 即原展开箭头位,不展开也可见;
+        // icon_position/icon_expanded_angle 是 header 层级字段,嵌进 icon 对象里
+        // 服务端不识别）。开关关闭/上传失败时保持默认展开箭头（右侧,旋转 -180°）
         ...(routingLogo
           ? {
               icon: {
@@ -1157,10 +1158,7 @@ function buildToolUsePanel(params: {
     enTitleParts.push(titleSuffix.en);
   }
 
-  const stepElements =
-    toolUseSteps.length > 0
-      ? renderToolUseStepList(toolUseSteps)
-      : [buildToolUsePlaceholder()];
+  const stepElements = toolUseSteps.length > 0 ? renderToolUseStepList(toolUseSteps) : [buildToolUsePlaceholder()];
 
   return {
     tag: 'collapsible_panel',

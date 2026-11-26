@@ -406,15 +406,23 @@ export const PluginConfigSchema = z
           .boolean()
           .meta({ title: '厂商路由 logo' })
           .describe(
-            '面板展开区顶部显示「厂商 logo + 本轮路由模型」条（logo 为内置厂商图标 PNG，首次渲染上传缓存）。关闭或未命中厂商时不显示 logo 条，模型段回落 🦐 品牌图标。默认开启',
+            '面板头左侧显示 logo（内置 PNG，首次渲染上传缓存）：命中厂商用厂商图标；开启时未识别模型回退宿主/智能体图标。关闭时不显示任何 logo，模型段回落 🍤 品牌图标、图标槽位回到右侧展开箭头。默认开启',
           )
           .optional(),
         fieldToggles: z
           .object({
-            model: z.boolean().meta({ title: '模型段' }).describe('显示 model 段（厂商 logo/品牌图标 + 模型名）').optional(),
+            model: z
+              .boolean()
+              .meta({ title: '模型段' })
+              .describe('显示 model 段（厂商 logo/品牌图标 + 模型名）')
+              .optional(),
             reasoning: z.boolean().meta({ title: '思考计数段' }).describe('显示 💭N 思考计数段').optional(),
             tools: z.boolean().meta({ title: '工具计数段' }).describe('显示 🔧N 工具计数段').optional(),
-            context: z.boolean().meta({ title: '上下文段' }).describe('显示上下文占用段（样式见 contextDisplayMode）').optional(),
+            context: z
+              .boolean()
+              .meta({ title: '上下文段' })
+              .describe('显示上下文占用段（样式见 contextDisplayMode）')
+              .optional(),
             cache: z.boolean().meta({ title: '缓存段' }).describe('显示 💾 缓存命中率段').optional(),
             output: z.boolean().meta({ title: '输出段' }).describe('显示 🎫 会话累计输出 tokens 段').optional(),
             speed: z.boolean().meta({ title: '速度段' }).describe('显示 ⚡ 本轮生成速度段').optional(),

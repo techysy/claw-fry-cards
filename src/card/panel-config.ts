@@ -21,7 +21,11 @@ export interface UnifiedPanelSettings {
   modelAliases?: Record<string, ModelAliasEntry>;
   modelAliasesEnabled?: boolean;
   truncateModelName?: boolean;
-  /** 厂商路由 logo 条开关（默认开启）：面板展开区顶部显示「厂商 PNG logo + 本轮路由模型」 */
+  /**
+   * 面板头 logo 开关（默认开启）：面板头左侧显示 PNG logo + 本轮路由模型。
+   * 开启时命中厂商用厂商图，未识别模型回退宿主/智能体图标（不会空着）；
+   * 关闭时厂商图与兜底图都不出，回到右侧展开箭头 + 标题 🍤。
+   */
   vendorLogo?: boolean;
   peakValley?: PeakValleyConfig[];
   /**

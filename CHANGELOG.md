@@ -1,5 +1,18 @@
 # Changelog
 
+## 3.3.4 (2026-11-26)
+
+认不出模型不再等于没有图标：厂商未命中时回退智能体图标，连智能体也认不出就用本宿主（OpenClaw 网关）品牌图兜底；同时修掉 7 张在白底卡片上等于隐形的厂商 Logo，以及 doctor 报假版本号。
+
+- 🎯 **未识别模型兜底智能体图标**：面板头左侧原来只在命中厂商家族时才有图标，代理池 / 自建网关的模型名（`10router/10r-free`、`zzz/pool` 一类）一律空着。现在三级取图——厂商命中优先（口径不变）→ 模型串或宿主 `agentId` 里的智能体词（OpenClaw / Hermes / Claude Code / Codex / ZCode / kimi-code / Antigravity）→ **本宿主品牌图 `openclaw.png`** 兜到最后一档。新增 `assets/agent-logos/` 7 张资产（640×640 / 8 位调色板，与厂商资产同规格），并登记进 `package.json` 的 `files` 白名单（不登记就是往 npm 包里塞死资产，运行时读不到文件静默降级、极难查）
+- 🎚 **开关语义不变**：`panel.vendorLogo === false` 时厂商图与兜底图**都**不出（判定仍在 `resolvePanelMetrics` 早退），回到右侧展开箭头 + 标题 🍤 的旧观感；官方模型名映射本来就与 logo 显隐解耦，不受影响
+- 🐛 **7 张厂商 Logo 白底上看不见**：`openai` / `moonshot` / `grok` / `dotsstudio` / `upstage` / `xiaomimimo` / `kimi` 取的是 lobehub 的 **dark 变体**（纯白或近纯白），画在浅色面板头上等于没画（`kimi.png` 深色像素仅 8.5%）。全部换成白底可见版本，并加纯 `node:zlib` 手写 PNG 解码的亮度守卫测试（**零新增依赖**），锁住「每张资产都必须有足够深色像素」
+- 🔁 **上传缓存键带 app 维度 + 内容摘要**：memo 键原来只有裸文件名——换过像素仍命中旧 `image_key`（修复在早已发过卡的进程里永远显不出来），且多账号配置下 B 账号会复用 A 应用的 key 导致渲染失败。键改为 `<appId>|<目录>/<文件>:<sha256[:12]>`，换图即重传、跨 app 不串图；两目录文件名零交集由测试守卫
+- 🔒 `logoAssetPath` 对目录名与文件名双向做纯名校验，`../` 与路径分隔符一律拒绝
+- 🩺 **doctor 报假版本号**：`src/commands/diagnose.ts` 写死 `PLUGIN_VERSION = '2026.2.10'` 并当 `pluginVersion` 输出，与 `getPluginVersion()`（doctor / 启动卡 / help 同源）报的版本不一致。改用 `getPluginVersion()`，删除写死常量
+- 📝 文案三处同口径（`config-schema.ts` / `openclaw.plugin.json` / `panel-config.ts`）：说清「开启时未识别模型回退宿主/智能体图标，关闭时不显示任何 logo」；顺带修掉描述里的错字 🦐 → 🍤（代码里一直是 🍤）
+- 🧪 新增 `tests/vendor-logos-fallback.test.ts` 24 例：兜底优先级 / 长词优先 / agentId 命中 / 官方名解耦 / 缓存按内容失效 / 多账号不串图 / 两目录不串图 / 路径穿越 / 资产亮度与规格守卫 / npm files 白名单守卫 / 开关四态。全套 **573 过 / 2 skip**（上版 549），typecheck / lint(0 error) / **format:check** / build 全绿（format:check 此前在 HEAD 即为红，本版顺带修齐）
+
 ## 3.3.3 (2026-11-25)
 
 修复配置热重载中断在途流式卡的问题（fnOS 生产实例 2026-11-25 11:49 实测：群级配置热重载落地时，正在流式生成的卡片被强制中止，群里只留一张裸 **Aborted.** 卡——无正文无思考无提示，用户截图确认）。

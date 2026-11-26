@@ -26,6 +26,7 @@ import type * as Lark from '@larksuiteoapi/node-sdk';
 import { probeFeishu } from '../channel/probe';
 import { getEnabledLarkAccounts, getLarkAccount, getLarkAccountIds } from '../core/accounts';
 import { LarkClient } from '../core/lark-client';
+import { getPluginVersion } from '../core/version';
 
 /**
  * Resolve the global config for cross-account operations.
@@ -80,7 +81,6 @@ interface DiagReport {
 // Constants
 // ---------------------------------------------------------------------------
 
-const PLUGIN_VERSION = '2026.2.10';
 const LOG_READ_BYTES = 256 * 1024; // read last 256KB of log
 const MAX_ERROR_LINES = 20;
 /** Matches a timestamped log line: 2026-02-13T09:23:35.038Z [level]: ... */
@@ -337,7 +337,8 @@ export async function runDiagnosis(params: { config: OpenClawConfig; logger?: Di
       nodeVersion: process.version,
       platform: process.platform,
       arch: process.arch,
-      pluginVersion: PLUGIN_VERSION,
+      // 真实版本号来自 package.json（与 doctor 同源），不再写死假版本
+      pluginVersion: getPluginVersion(),
     },
     accounts: accountResults,
     toolsRegistered: tools,
